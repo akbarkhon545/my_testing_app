@@ -4,6 +4,10 @@ import createNextIntlPlugin from "next-intl/plugin";
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
+  turbopack: {
+    // Explicitly set workspace root to avoid picking parent lockfile
+    root: __dirname,
+  },
   allowedDevOrigins: [
     "http://localhost:3000",
     "http://127.0.0.1:64582",

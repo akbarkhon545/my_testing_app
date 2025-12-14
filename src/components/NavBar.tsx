@@ -18,6 +18,9 @@ export default function NavBar() {
           <Link href={`/${locale}/dashboard`} className="text-sm hover:underline">
             {t("nav.dashboard")}
           </Link>
+          <Link href={`/${locale}/tests`} className="text-sm hover:underline">
+            {t("nav.tests")}
+          </Link>
           <Link href={`/${locale}/auth/login`} className="text-sm hover:underline">
             {t("nav.login")}
           </Link>

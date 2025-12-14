@@ -81,7 +81,7 @@ export default function SignupPage() {
       <p className="mt-4 text-sm text-gray-600">
         {t("haveAccount")} {" "}
         <a href={`/${locale}/auth/login`} className="text-indigo-600 hover:underline">
-          {t("login")}
+          {t("signin")}
         </a>
       </p>
     </div>
