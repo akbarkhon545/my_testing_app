@@ -16,7 +16,8 @@ import {
   User,
   HelpCircle,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  Crown
 } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
@@ -66,6 +67,7 @@ export default function NavBar() {
     { href: `/${locale}`, label: t("nav.home"), icon: Home },
     { href: `/${locale}/dashboard`, label: t("nav.dashboard"), icon: LayoutDashboard },
     { href: `/${locale}/tests`, label: t("nav.tests"), icon: FileQuestion },
+    { href: `/${locale}/pricing`, label: t("nav.pricing"), icon: Crown },
     { href: `/${locale}/admin`, label: t("nav.admin"), icon: Shield },
   ];
 
@@ -95,8 +97,8 @@ export default function NavBar() {
                   key={link.href}
                   href={link.href}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(link.href)
-                      ? "bg-[var(--primary-light)] text-[var(--primary)]"
-                      : "text-[var(--foreground-secondary)] hover:bg-[var(--border)] hover:text-[var(--foreground)]"
+                    ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                    : "text-[var(--foreground-secondary)] hover:bg-[var(--border)] hover:text-[var(--foreground)]"
                     }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -209,8 +211,8 @@ export default function NavBar() {
                     href={link.href}
                     onClick={() => setIsOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${isActive(link.href)
-                        ? "bg-[var(--primary-light)] text-[var(--primary)]"
-                        : "text-[var(--foreground-secondary)] hover:bg-[var(--border)]"
+                      ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                      : "text-[var(--foreground-secondary)] hover:bg-[var(--border)]"
                       }`}
                   >
                     <Icon className="w-5 h-5" />

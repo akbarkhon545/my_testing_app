@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import supabase from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
+import Link from "next/link";
 import {
     User,
     Mail,
@@ -15,8 +16,18 @@ import {
     ArrowLeft,
     CheckCircle,
     AlertCircle,
-    GraduationCap
+    GraduationCap,
+    Crown,
+    CreditCard,
+    Clock,
+    AlertTriangle
 } from "lucide-react";
+
+interface Subscription {
+    plan: "monthly" | "yearly" | null;
+    status: "active" | "expired" | "none";
+    expiresAt: Date | null;
+}
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -38,6 +49,13 @@ export default function ProfilePage() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [changingPassword, setChangingPassword] = useState(false);
 
+    // Subscription (mock for demo)
+    const [subscription, setSubscription] = useState<Subscription>({
+        plan: "monthly",
+        status: "active",
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+    });
+
     useEffect(() => {
         async function loadProfile() {
             const { data: { session } } = await supabase.auth.getSession();
@@ -54,7 +72,6 @@ export default function ProfilePage() {
         setSaving(true);
         setMessage(null);
 
-        // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         setMessage({ type: "success", text: "Профиль успешно сохранён" });
@@ -89,6 +106,20 @@ export default function ProfilePage() {
         setChangingPassword(false);
     };
 
+    const formatDate = (date: Date) => {
+        return new Intl.DateTimeFormat("ru-RU", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+        }).format(date);
+    };
+
+    const getDaysRemaining = () => {
+        if (!subscription.expiresAt) return 0;
+        const diff = subscription.expiresAt.getTime() - Date.now();
+        return Math.ceil(diff / (1000 * 60 * 60 * 24));
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
@@ -109,7 +140,7 @@ export default function ProfilePage() {
                 </button>
                 <div>
                     <h1 className="text-2xl font-bold text-[var(--foreground)]">Мой профиль</h1>
-                    <p className="text-[var(--foreground-secondary)]">Управление личными данными</p>
+                    <p className="text-[var(--foreground-secondary)]">Управление личными данными и подпиской</p>
                 </div>
             </div>
 
@@ -142,15 +173,99 @@ export default function ProfilePage() {
                                     <Camera className="w-4 h-4" />
                                 </button>
                             </div>
-                            <div>
+                            <div className="flex-1">
                                 <h2 className="text-xl font-semibold text-[var(--foreground)]">{name}</h2>
                                 <p className="text-[var(--foreground-secondary)]">{email}</p>
-                                <p className="text-sm text-[var(--foreground-muted)] mt-1">
-                                    <GraduationCap className="w-4 h-4 inline mr-1" />
-                                    Студент
-                                </p>
+                                <div className="flex items-center gap-2 mt-2">
+                                    {subscription.status === "active" ? (
+                                        <span className="badge badge-success flex items-center gap-1">
+                                            <Crown className="w-3 h-3" />
+                                            Премиум
+                                        </span>
+                                    ) : (
+                                        <span className="badge badge-warning">Бесплатный</span>
+                                    )}
+                                </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* Subscription Card */}
+                <div className="card">
+                    <div className="card-header flex justify-between items-center">
+                        <h3 className="font-semibold flex items-center gap-2">
+                            <Crown className="w-5 h-5" />
+                            Подписка
+                        </h3>
+                        {subscription.status === "active" && (
+                            <span className="badge badge-success">Активна</span>
+                        )}
+                    </div>
+                    <div className="card-body">
+                        {subscription.status === "active" ? (
+                            <>
+                                <div className="grid sm:grid-cols-3 gap-4 mb-6">
+                                    <div className="p-4 rounded-lg bg-[var(--background)] border border-[var(--border)]">
+                                        <div className="flex items-center gap-2 text-[var(--foreground-muted)] text-sm mb-1">
+                                            <CreditCard className="w-4 h-4" />
+                                            Тариф
+                                        </div>
+                                        <p className="font-semibold text-[var(--foreground)]">
+                                            {subscription.plan === "monthly" ? "Месячный" : "Годовой"}
+                                        </p>
+                                    </div>
+
+                                    <div className="p-4 rounded-lg bg-[var(--background)] border border-[var(--border)]">
+                                        <div className="flex items-center gap-2 text-[var(--foreground-muted)] text-sm mb-1">
+                                            <Calendar className="w-4 h-4" />
+                                            Действует до
+                                        </div>
+                                        <p className="font-semibold text-[var(--foreground)]">
+                                            {subscription.expiresAt && formatDate(subscription.expiresAt)}
+                                        </p>
+                                    </div>
+
+                                    <div className="p-4 rounded-lg bg-[var(--background)] border border-[var(--border)]">
+                                        <div className="flex items-center gap-2 text-[var(--foreground-muted)] text-sm mb-1">
+                                            <Clock className="w-4 h-4" />
+                                            Осталось
+                                        </div>
+                                        <p className={`font-semibold ${getDaysRemaining() <= 7 ? "text-[var(--warning)]" : "text-[var(--foreground)]"}`}>
+                                            {getDaysRemaining()} дней
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {getDaysRemaining() <= 7 && (
+                                    <div className="alert alert-warning mb-4">
+                                        <AlertTriangle className="w-5 h-5" />
+                                        <span>Ваша подписка скоро истекает. Продлите для продолжения доступа.</span>
+                                    </div>
+                                )}
+
+                                <div className="flex gap-3">
+                                    <Link href={`/${locale}/pricing`} className="btn btn-primary">
+                                        <Crown className="w-4 h-4" />
+                                        Продлить подписку
+                                    </Link>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-center py-6">
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--warning-light)] mb-4">
+                                    <Crown className="w-8 h-8 text-[var(--warning)]" />
+                                </div>
+                                <h4 className="font-semibold text-[var(--foreground)] mb-2">У вас нет активной подписки</h4>
+                                <p className="text-[var(--foreground-secondary)] mb-4">
+                                    Оформите подписку для полного доступа ко всем функциям
+                                </p>
+                                <Link href={`/${locale}/pricing`} className="btn btn-primary">
+                                    <Crown className="w-4 h-4" />
+                                    Оформить подписку
+                                </Link>
+                            </div>
+                        )}
                     </div>
                 </div>
 
