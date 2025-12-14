@@ -2,6 +2,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import NavBar from "@/components/NavBar";
+import Footer from "@/components/Footer";
 
 export default async function LocaleLayout({
   children,
@@ -23,8 +24,12 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <NavBar />
-      <main className="mx-auto max-w-6xl px-4 py-10">{children}</main>
+      <div className="min-h-screen flex flex-col">
+        <NavBar />
+        <main className="mx-auto max-w-6xl px-4 py-10 flex-1 w-full">{children}</main>
+        <Footer />
+      </div>
     </NextIntlClientProvider>
   );
 }
+

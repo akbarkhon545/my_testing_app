@@ -7,7 +7,9 @@
     "tests": "Testlar",
     "login": "Kirish",
     "signup": "Ro'yxatdan o'tish",
-    "logout": "Chiqish"
+    "logout": "Chiqish",
+    "profile": "Profil",
+    "support": "Yordam"
   },
   "lang": {
     "ru": "RU",
@@ -29,7 +31,11 @@
   "dashboard": {
     "title": "Boshqaruv paneli",
     "welcome": "Xush kelibsiz",
-    "signout": "Chiqish"
+    "signout": "Chiqish",
+    "stats": "Statistika",
+    "achievements": "Yutuqlar",
+    "startTest": "Testni boshlash",
+    "tips": "Foydali maslahatlar"
   },
   "tests": {
     "title": "Test tanlash",
@@ -42,7 +48,8 @@
     "prev": "Oldingi",
     "next": "Keyingi",
     "finish": "Tugatish",
-    "timeRemaining": "Qolgan vaqt"
+    "timeRemaining": "Qolgan vaqt",
+    "answered": "Javob berildi"
   },
   "result": {
     "title": "Test natijalari",
@@ -53,11 +60,49 @@
     "time": "Sarflangan vaqt",
     "passingScore": "O'tish bali",
     "tryAgain": "Qayta urinish",
-    "backToTests": "Testlarga qaytish"
+    "backToTests": "Testlarga qaytish",
+    "backToHome": "Bosh sahifaga"
+  },
+  "admin": {
+    "title": "Admin panel",
+    "faculties": "Fakultetlar",
+    "subjects": "Fanlar",
+    "questions": "Savollar",
+    "users": "Foydalanuvchilar",
+    "add": "Qo'shish",
+    "edit": "Tahrirlash",
+    "delete": "O'chirish",
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "search": "Qidirish",
+    "uploadExcel": "Exceldan yuklash"
+  },
+  "profile": {
+    "title": "Profil",
+    "personalData": "Shaxsiy ma'lumotlar",
+    "changePassword": "Parolni o'zgartirish",
+    "name": "Ism",
+    "phone": "Telefon",
+    "birthDate": "Tug'ilgan sana",
+    "currentPassword": "Joriy parol",
+    "newPassword": "Yangi parol",
+    "confirmPassword": "Tasdiqlash",
+    "save": "Saqlash"
+  },
+  "support": {
+    "title": "Yordam",
+    "faq": "Ko'p so'raladigan savollar",
+    "contactUs": "Biz bilan bog'laning"
   },
   "common": {
     "loading": "Yuklanmoqda...",
     "error": "Xato",
-    "noData": "Ma'lumot yo'q"
+    "noData": "Ma'lumot yo'q",
+    "success": "Muvaffaqiyatli",
+    "back": "Orqaga"
+  },
+  "errors": {
+    "notFound": "Sahifa topilmadi",
+    "serverError": "Nimadir xato ketdi"
   }
 }

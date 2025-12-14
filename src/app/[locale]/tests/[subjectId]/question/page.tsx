@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import Link from "next/link";
@@ -9,15 +9,15 @@ import {
     ChevronLeft,
     ChevronRight,
     CheckCircle,
-    XCircle,
     StopCircle
 } from "lucide-react";
+import { use } from "react";
 
 // Mock data for testing (will be replaced with Supabase queries)
 const mockQuestions = [
     {
         id: 1,
-        question_text: "Какой оператор используется для присваивания значения переменой в Python?",
+        question_text: "Какой оператор используется для присваивания значения переменной в Python?",
         correct_answer: "=",
         answer2: "==",
         answer3: ":=",
@@ -72,7 +72,12 @@ function formatTime(seconds: number): string {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 }
 
-export default function QuestionPage() {
+interface QuestionPageProps {
+    params: Promise<{ locale: string; subjectId: string }>;
+}
+
+export default function QuestionPage({ params }: QuestionPageProps) {
+    const resolvedParams = use(params);
     const router = useRouter();
     const locale = useLocale();
     const searchParams = useSearchParams();
@@ -80,26 +85,28 @@ export default function QuestionPage() {
 
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<number, string>>({});
-    const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
-    const [timeRemaining, setTimeRemaining] = useState(mode === "training" ? 25 * 60 : 0); // 25 minutes for training
+    const [timeRemaining, setTimeRemaining] = useState(mode === "training" ? 25 * 60 : 0);
     const [isFinishing, setIsFinishing] = useState(false);
 
     const questions = mockQuestions;
     const currentQuestion = questions[currentIndex];
     const isTraining = mode === "training";
 
-    // Shuffle options when question changes
-    useEffect(() => {
-        if (currentQuestion) {
-            const options = [
-                currentQuestion.correct_answer,
-                currentQuestion.answer2,
-                currentQuestion.answer3,
-                currentQuestion.answer4,
-            ];
-            setShuffledOptions(shuffleArray(options));
-        }
-    }, [currentQuestion]);
+    // Memoize shuffled options per question
+    const shuffledOptionsMap = useMemo(() => {
+        const map: Record<number, string[]> = {};
+        questions.forEach(q => {
+            map[q.id] = shuffleArray([
+                q.correct_answer,
+                q.answer2,
+                q.answer3,
+                q.answer4,
+            ]);
+        });
+        return map;
+    }, []);
+
+    const shuffledOptions = shuffledOptionsMap[currentQuestion.id];
 
     // Timer for training mode
     useEffect(() => {
@@ -117,7 +124,7 @@ export default function QuestionPage() {
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [isTraining, timeRemaining]);
+    }, [isTraining]);
 
     const handleAnswer = (answer: string) => {
         setAnswers((prev) => ({ ...prev, [currentQuestion.id]: answer }));
@@ -135,7 +142,7 @@ export default function QuestionPage() {
         }
     };
 
-    const handleFinish = useCallback(() => {
+    const handleFinish = () => {
         if (isFinishing) return;
         setIsFinishing(true);
 
@@ -159,8 +166,8 @@ export default function QuestionPage() {
             mode,
         }));
 
-        router.push(`/${locale}/tests/1/result`);
-    }, [answers, questions, isTraining, timeRemaining, locale, router, mode, isFinishing]);
+        router.push(`/${locale}/tests/${resolvedParams.subjectId}/result`);
+    };
 
     const progress = ((currentIndex + 1) / questions.length) * 100;
     const timerClass = timeRemaining <= 60 ? "danger" : timeRemaining <= 5 * 60 ? "warning" : "";

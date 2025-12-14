@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from "react";
 import Link from "next/link";
 import { useLocale } from "next-intl";
 import { Clock, CheckCircle, AlertCircle, ArrowRight, Book, Award } from "lucide-react";
@@ -10,12 +11,12 @@ interface InstructionsPageProps {
 }
 
 export default function InstructionsPage({ params, searchParams }: InstructionsPageProps) {
+    const resolvedParams = use(params);
+    const resolvedSearchParams = use(searchParams);
     const locale = useLocale();
 
-    // In a real app, we'd await these, but for now using defaults
-    const mode = "training"; // Default mode
-    const subjectId = "1"; // Will be extracted from params
-
+    const mode = resolvedSearchParams.mode || "training";
+    const subjectId = resolvedParams.subjectId;
     const isTraining = mode === "training";
 
     return (
@@ -115,9 +116,9 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
                                     <span className="text-[var(--info)] font-semibold text-sm">3</span>
                                 </div>
                                 <div>
-                                    <h3 className="font-medium text-[var(--foreground)]">Мгновенная обратная связь</h3>
+                                    <h3 className="font-medium text-[var(--foreground)]">Полная проверка знаний</h3>
                                     <p className="text-sm text-[var(--foreground-secondary)]">
-                                        После каждого ответа вы увидите правильный ответ
+                                        Идеально подходит для финальной подготовки к экзамену
                                     </p>
                                 </div>
                             </div>

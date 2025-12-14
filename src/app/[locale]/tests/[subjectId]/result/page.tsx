@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useLocale } from "next-intl";
+import { use } from "react";
 import {
     Trophy,
     Frown,
@@ -22,7 +23,12 @@ interface TestResult {
     mode: string;
 }
 
-export default function ResultPage() {
+interface ResultPageProps {
+    params: Promise<{ locale: string; subjectId: string }>;
+}
+
+export default function ResultPage({ params }: ResultPageProps) {
+    const resolvedParams = use(params);
     const locale = useLocale();
     const [result, setResult] = useState<TestResult | null>(null);
     const [animatedScore, setAnimatedScore] = useState(0);
@@ -182,7 +188,7 @@ export default function ResultPage() {
                         </Link>
 
                         {!passed && (
-                            <Link href={`/${locale}/tests/1/question?mode=${result.mode}`} className="btn btn-success btn-lg">
+                            <Link href={`/${locale}/tests/${resolvedParams.subjectId}/question?mode=${result.mode}`} className="btn btn-success btn-lg">
                                 <RotateCcw className="w-5 h-5" />
                                 Попробовать снова
                             </Link>

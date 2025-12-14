@@ -7,7 +7,9 @@
     "tests": "Тесты",
     "login": "Войти",
     "signup": "Регистрация",
-    "logout": "Выйти"
+    "logout": "Выйти",
+    "profile": "Профиль",
+    "support": "Поддержка"
   },
   "lang": {
     "ru": "РУ",
@@ -29,7 +31,11 @@
   "dashboard": {
     "title": "Панель управления",
     "welcome": "Добро пожаловать",
-    "signout": "Выйти"
+    "signout": "Выйти",
+    "stats": "Статистика",
+    "achievements": "Достижения",
+    "startTest": "Начать тестирование",
+    "tips": "Полезные советы"
   },
   "tests": {
     "title": "Выбор теста",
@@ -42,7 +48,8 @@
     "prev": "Предыдущий",
     "next": "Следующий",
     "finish": "Завершить",
-    "timeRemaining": "Осталось времени"
+    "timeRemaining": "Осталось времени",
+    "answered": "Отвечено"
   },
   "result": {
     "title": "Результаты теста",
@@ -53,11 +60,49 @@
     "time": "Затраченное время",
     "passingScore": "Проходной балл",
     "tryAgain": "Попробовать снова",
-    "backToTests": "К выбору теста"
+    "backToTests": "К выбору теста",
+    "backToHome": "На главную"
+  },
+  "admin": {
+    "title": "Админ-панель",
+    "faculties": "Факультеты",
+    "subjects": "Предметы",
+    "questions": "Вопросы",
+    "users": "Пользователи",
+    "add": "Добавить",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "search": "Поиск",
+    "uploadExcel": "Загрузить из Excel"
+  },
+  "profile": {
+    "title": "Профиль",
+    "personalData": "Личные данные",
+    "changePassword": "Смена пароля",
+    "name": "Имя",
+    "phone": "Телефон",
+    "birthDate": "Дата рождения",
+    "currentPassword": "Текущий пароль",
+    "newPassword": "Новый пароль",
+    "confirmPassword": "Подтверждение",
+    "save": "Сохранить"
+  },
+  "support": {
+    "title": "Поддержка",
+    "faq": "Часто задаваемые вопросы",
+    "contactUs": "Свяжитесь с нами"
   },
   "common": {
     "loading": "Загрузка...",
     "error": "Ошибка",
-    "noData": "Нет данных"
+    "noData": "Нет данных",
+    "success": "Успешно",
+    "back": "Назад"
+  },
+  "errors": {
+    "notFound": "Страница не найдена",
+    "serverError": "Что-то пошло не так"
   }
 }
