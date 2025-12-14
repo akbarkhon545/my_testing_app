@@ -14,8 +14,8 @@
     "uz": "UZ"
   },
   "hero": {
-    "title": "Ta'limiy test platformasi",
-    "subtitle": "Mashq qiling, yutuqlaringizni kuzating va kontentni boshqaring.",
+    "title": "Ta'lim test platformasi",
+    "subtitle": "Mashqlarni bajaring, natijalaringizni kuzating va kontentni boshqaring.",
     "cta": "Boshlash"
   },
   "auth": {
@@ -23,12 +23,41 @@
     "password": "Parol",
     "signin": "Kirish",
     "signup": "Ro'yxatdan o'tish",
-    "haveAccount": "Hisobingiz bormi?",
-    "noAccount": "Hisob yo'qmi?"
+    "haveAccount": "Akkauntingiz bormi?",
+    "noAccount": "Akkauntingiz yo'qmi?"
   },
   "dashboard": {
     "title": "Boshqaruv paneli",
     "welcome": "Xush kelibsiz",
     "signout": "Chiqish"
+  },
+  "tests": {
+    "title": "Test tanlash",
+    "selectSubject": "Fanni tanlang",
+    "training": "Mashq",
+    "full": "To'liq test",
+    "start": "Boshlash",
+    "question": "Savol",
+    "of": "dan",
+    "prev": "Oldingi",
+    "next": "Keyingi",
+    "finish": "Tugatish",
+    "timeRemaining": "Qolgan vaqt"
+  },
+  "result": {
+    "title": "Test natijalari",
+    "passed": "Test o'tdi",
+    "failed": "Test o'tmadi",
+    "score": "Natija",
+    "correct": "To'g'ri javoblar",
+    "time": "Sarflangan vaqt",
+    "passingScore": "O'tish bali",
+    "tryAgain": "Qayta urinish",
+    "backToTests": "Testlarga qaytish"
+  },
+  "common": {
+    "loading": "Yuklanmoqda...",
+    "error": "Xato",
+    "noData": "Ma'lumot yo'q"
   }
 }
