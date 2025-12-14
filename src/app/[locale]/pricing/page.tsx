@@ -11,8 +11,12 @@ import {
     Shield,
     Clock,
     Star,
-    ArrowRight,
-    CreditCard
+    CreditCard,
+    Copy,
+    CheckCircle,
+    Send,
+    MessageCircle,
+    Phone
 } from "lucide-react";
 
 interface PricingPlan {
@@ -61,26 +65,34 @@ const plans: PricingPlan[] = [
     },
 ];
 
+// Номер карты для оплаты
+const CARD_NUMBER = "9860 1604 1780 2420";
+const CARD_HOLDER = "AKBARKHON FAKHRIDDINOV";
+const TELEGRAM_USERNAME = "@akbarkhonfakhriddinov";
+const PHONE_NUMBER = "+998 93 167 49 59";
+
 export default function PricingPage() {
     const locale = useLocale();
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-    const [isProcessing, setIsProcessing] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat("ru-RU").format(price);
     };
 
-    const handleSubscribe = async (planId: string) => {
-        setSelectedPlan(planId);
-        setIsProcessing(true);
-
-        // Simulate payment processing
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        // In a real app, redirect to payment gateway (Click, Payme, etc.)
-        alert(`Перенаправление на оплату плана: ${planId}`);
-        setIsProcessing(false);
+    const handleCopyCard = async () => {
+        await navigator.clipboard.writeText(CARD_NUMBER.replace(/\s/g, ""));
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
     };
+
+    const handleSelectPlan = (planId: string) => {
+        setSelectedPlan(planId);
+        setShowPaymentModal(true);
+    };
+
+    const selectedPlanData = plans.find(p => p.id === selectedPlan);
 
     return (
         <div className="animate-fadeIn">
@@ -104,8 +116,8 @@ export default function PricingPage() {
                     <div
                         key={plan.id}
                         className={`relative card ${plan.popular
-                                ? "border-2 border-[var(--primary)] shadow-lg scale-105"
-                                : ""
+                            ? "border-2 border-[var(--primary)] shadow-lg scale-105"
+                            : ""
                             }`}
                     >
                         {plan.popular && (
@@ -121,8 +133,8 @@ export default function PricingPage() {
                             {/* Plan Header */}
                             <div className="text-center mb-6">
                                 <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 ${plan.popular
-                                        ? "bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)]"
-                                        : "bg-[var(--primary-light)]"
+                                    ? "bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)]"
+                                    : "bg-[var(--primary-light)]"
                                     }`}>
                                     {plan.popular ? (
                                         <Crown className="w-7 h-7 text-white" />
@@ -165,123 +177,185 @@ export default function PricingPage() {
 
                             {/* CTA Button */}
                             <button
-                                onClick={() => handleSubscribe(plan.id)}
-                                disabled={isProcessing && selectedPlan === plan.id}
+                                onClick={() => handleSelectPlan(plan.id)}
                                 className={`btn btn-lg w-full ${plan.popular ? "btn-primary" : "btn-outline"
                                     }`}
                             >
-                                {isProcessing && selectedPlan === plan.id ? (
-                                    <>Обработка...</>
-                                ) : (
-                                    <>
-                                        <CreditCard className="w-5 h-5" />
-                                        Оформить подписку
-                                    </>
-                                )}
+                                <CreditCard className="w-5 h-5" />
+                                Оформить подписку
                             </button>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Features Section */}
-            <div className="card max-w-4xl mx-auto">
+            {/* How to Pay Section */}
+            <div className="card max-w-3xl mx-auto mb-12">
                 <div className="card-header">
                     <h2 className="font-semibold flex items-center gap-2">
                         <Zap className="w-5 h-5" />
-                        Что включено в подписку
+                        Как оплатить
                     </h2>
                 </div>
                 <div className="card-body">
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[var(--primary-light)] flex items-center justify-center">
-                                <Check className="w-5 h-5 text-[var(--primary)]" />
+                    <div className="grid gap-6">
+                        <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-bold">
+                                1
                             </div>
                             <div>
-                                <h4 className="font-medium text-[var(--foreground)]">Все тесты</h4>
-                                <p className="text-sm text-[var(--foreground-secondary)]">Неограниченный доступ ко всем предметам</p>
+                                <h4 className="font-medium text-[var(--foreground)]">Выберите тариф</h4>
+                                <p className="text-sm text-[var(--foreground-secondary)]">
+                                    Нажмите кнопку "Оформить подписку" на понравившемся тарифе
+                                </p>
                             </div>
                         </div>
 
-                        <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[var(--success-light)] flex items-center justify-center">
-                                <Clock className="w-5 h-5 text-[var(--success)]" />
+                        <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-bold">
+                                2
                             </div>
                             <div>
-                                <h4 className="font-medium text-[var(--foreground)]">Без ограничений</h4>
-                                <p className="text-sm text-[var(--foreground-secondary)]">Проходите тесты сколько угодно</p>
+                                <h4 className="font-medium text-[var(--foreground)]">Переведите оплату</h4>
+                                <p className="text-sm text-[var(--foreground-secondary)]">
+                                    Переведите сумму на указанную карту через любое банковское приложение
+                                </p>
                             </div>
                         </div>
 
-                        <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[var(--warning-light)] flex items-center justify-center">
-                                <Star className="w-5 h-5 text-[var(--warning)]" />
+                        <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-bold">
+                                3
                             </div>
                             <div>
-                                <h4 className="font-medium text-[var(--foreground)]">Статистика</h4>
-                                <p className="text-sm text-[var(--foreground-secondary)]">Подробный анализ результатов</p>
+                                <h4 className="font-medium text-[var(--foreground)]">Отправьте скриншот</h4>
+                                <p className="text-sm text-[var(--foreground-secondary)]">
+                                    Отправьте скриншот чека в Telegram и укажите ваш email
+                                </p>
                             </div>
                         </div>
 
-                        <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[var(--info-light)] flex items-center justify-center">
-                                <Shield className="w-5 h-5 text-[var(--info)]" />
+                        <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--success)] text-white flex items-center justify-center font-bold">
+                                ✓
                             </div>
                             <div>
-                                <h4 className="font-medium text-[var(--foreground)]">Поддержка</h4>
-                                <p className="text-sm text-[var(--foreground-secondary)]">Приоритетная помощь 24/7</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-[var(--danger-light)] flex items-center justify-center">
-                                <Crown className="w-5 h-5 text-[var(--danger)]" />
-                            </div>
-                            <div>
-                                <h4 className="font-medium text-[var(--foreground)]">Эксклюзив</h4>
-                                <p className="text-sm text-[var(--foreground-secondary)]">Доступ к новым материалам</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center">
-                                <Sparkles className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                                <h4 className="font-medium text-[var(--foreground)]">Обновления</h4>
-                                <p className="text-sm text-[var(--foreground-secondary)]">Новые функции и контент</p>
+                                <h4 className="font-medium text-[var(--foreground)]">Получите доступ</h4>
+                                <p className="text-sm text-[var(--foreground-secondary)]">
+                                    Мы активируем вашу подписку в течение 5-10 минут
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Payment Methods */}
-            <div className="text-center mt-8">
-                <p className="text-sm text-[var(--foreground-muted)] mb-4">Принимаем к оплате:</p>
-                <div className="flex justify-center gap-4 flex-wrap">
-                    <div className="px-4 py-2 rounded-lg bg-[var(--background-secondary)] border border-[var(--border)]">
-                        <span className="font-medium text-[var(--foreground)]">💳 Click</span>
-                    </div>
-                    <div className="px-4 py-2 rounded-lg bg-[var(--background-secondary)] border border-[var(--border)]">
-                        <span className="font-medium text-[var(--foreground)]">💳 Payme</span>
-                    </div>
-                    <div className="px-4 py-2 rounded-lg bg-[var(--background-secondary)] border border-[var(--border)]">
-                        <span className="font-medium text-[var(--foreground)]">💳 Uzcard</span>
-                    </div>
-                    <div className="px-4 py-2 rounded-lg bg-[var(--background-secondary)] border border-[var(--border)]">
-                        <span className="font-medium text-[var(--foreground)]">💳 Humo</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* FAQ */}
-            <div className="max-w-2xl mx-auto mt-12 text-center">
-                <p className="text-[var(--foreground-secondary)]">
+            {/* Contact Info */}
+            <div className="text-center">
+                <p className="text-[var(--foreground-secondary)] mb-4">
                     Есть вопросы? <Link href={`/${locale}/support`} className="text-[var(--primary)] hover:underline">Свяжитесь с нами</Link>
                 </p>
             </div>
+
+            {/* Payment Modal */}
+            {showPaymentModal && selectedPlanData && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fadeIn p-4">
+                    <div className="bg-[var(--background-secondary)] rounded-2xl shadow-2xl w-full max-w-md animate-scaleIn">
+                        {/* Modal Header */}
+                        <div className="p-6 border-b border-[var(--border)] text-center">
+                            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] mb-4">
+                                <CreditCard className="w-7 h-7 text-white" />
+                            </div>
+                            <h3 className="text-xl font-bold text-[var(--foreground)]">Оплата подписки</h3>
+                            <p className="text-[var(--foreground-secondary)]">{selectedPlanData.name}</p>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-6 space-y-6">
+                            {/* Amount */}
+                            <div className="text-center p-4 rounded-lg bg-[var(--primary-light)]">
+                                <p className="text-sm text-[var(--foreground-secondary)] mb-1">Сумма к оплате</p>
+                                <p className="text-3xl font-bold text-[var(--primary)]">
+                                    {formatPrice(selectedPlanData.price)} сум
+                                </p>
+                            </div>
+
+                            {/* Card Number */}
+                            <div>
+                                <label className="label">Номер карты для перевода</label>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex-1 p-4 rounded-lg bg-[var(--background)] border border-[var(--border)] font-mono text-lg text-[var(--foreground)] text-center tracking-wider">
+                                        {CARD_NUMBER}
+                                    </div>
+                                    <button
+                                        onClick={handleCopyCard}
+                                        className="btn btn-secondary"
+                                        title="Скопировать"
+                                    >
+                                        {copied ? (
+                                            <CheckCircle className="w-5 h-5 text-[var(--success)]" />
+                                        ) : (
+                                            <Copy className="w-5 h-5" />
+                                        )}
+                                    </button>
+                                </div>
+                                <p className="text-sm text-[var(--foreground-muted)] mt-2 text-center">
+                                    {CARD_HOLDER}
+                                </p>
+                            </div>
+
+                            {/* Telegram Contact */}
+                            <div className="p-4 rounded-lg bg-[#229ED9]/10 border border-[#229ED9]/20">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <Send className="w-5 h-5 text-[#229ED9]" />
+                                    <span className="font-medium text-[var(--foreground)]">Отправьте скриншот чека:</span>
+                                </div>
+                                <a
+                                    href={`https://t.me/${TELEGRAM_USERNAME.replace("@", "")}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-lg w-full"
+                                    style={{ backgroundColor: "#229ED9", color: "white" }}
+                                >
+                                    <MessageCircle className="w-5 h-5" />
+                                    Открыть Telegram
+                                </a>
+                                <p className="text-sm text-[var(--foreground-muted)] mt-2 text-center">
+                                    {TELEGRAM_USERNAME}
+                                </p>
+                            </div>
+
+                            {/* Instructions */}
+                            <div className="p-4 rounded-lg bg-[var(--warning-light)] border border-[var(--warning)]/20">
+                                <p className="text-sm text-[var(--foreground)]">
+                                    <strong>Важно!</strong> При отправке скриншота укажите:
+                                </p>
+                                <ul className="text-sm text-[var(--foreground-secondary)] mt-2 space-y-1">
+                                    <li>• Ваш email аккаунта</li>
+                                    <li>• Выбранный тариф ({selectedPlanData.name})</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-6 border-t border-[var(--border)] flex gap-3">
+                            <button
+                                onClick={() => setShowPaymentModal(false)}
+                                className="btn btn-secondary flex-1"
+                            >
+                                Закрыть
+                            </button>
+                            <a
+                                href={`tel:${PHONE_NUMBER.replace(/\s/g, "")}`}
+                                className="btn btn-outline flex-1"
+                            >
+                                <Phone className="w-4 h-4" />
+                                Позвонить
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
