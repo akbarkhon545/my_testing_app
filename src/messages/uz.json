@@ -1,0 +1,33 @@
+{
+  "brand": "EduPlatform",
+  "nav": {
+    "home": "Bosh sahifa",
+    "dashboard": "Panel",
+    "admin": "Admin",
+    "login": "Kirish",
+    "signup": "Ro'yxatdan o'tish",
+    "logout": "Chiqish"
+  },
+  "lang": {
+    "ru": "RU",
+    "uz": "UZ"
+  },
+  "hero": {
+    "title": "Ta'limiy test platformasi",
+    "subtitle": "Mashq qiling, yutuqlaringizni kuzating va kontentni boshqaring.",
+    "cta": "Boshlash"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Parol",
+    "signin": "Kirish",
+    "signup": "Ro'yxatdan o'tish",
+    "haveAccount": "Hisobingiz bormi?",
+    "noAccount": "Hisob yo'qmi?"
+  },
+  "dashboard": {
+    "title": "Boshqaruv paneli",
+    "welcome": "Xush kelibsiz",
+    "signout": "Chiqish"
+  }
+}
