@@ -583,7 +583,15 @@ a:hover {
    Responsive
    ─────────────────────────────────────────────────────────────────────────── */
 
+/* Mobile first responsive styles */
 @media (max-width: 768px) {
+  /* Container */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Cards */
   .card-body {
     padding: 1rem;
   }
@@ -592,12 +600,136 @@ a:hover {
     padding: 0.875rem 1rem;
   }
   
+  /* Stats */
   .stats-number {
     font-size: 1.5rem;
   }
   
+  /* Buttons */
   .btn-lg {
     padding: 0.75rem 1.25rem;
     font-size: 0.875rem;
+  }
+  
+  .btn-sm {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  /* Typography */
+  h1 {
+    font-size: 1.5rem !important;
+  }
+  
+  h2 {
+    font-size: 1.25rem !important;
+  }
+  
+  /* Tables */
+  table {
+    font-size: 0.875rem;
+  }
+  
+  th, td {
+    padding: 0.5rem 0.25rem !important;
+  }
+  
+  /* Hide less important columns on mobile */
+  .hide-mobile {
+    display: none;
+  }
+  
+  /* Stack elements on mobile */
+  .mobile-stack {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+  
+  /* Full width on mobile */
+  .mobile-full {
+    width: 100% !important;
+  }
+  
+  /* Modals */
+  .modal-content {
+    margin: 0.5rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  /* Navigation tabs */
+  .tabs-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  
+  .tabs-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Form inputs */
+  .input, .select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Badge */
+  .badge {
+    font-size: 0.625rem;
+    padding: 0.125rem 0.375rem;
+  }
+  
+  /* Fix fixed elements */
+  .fixed-bottom-mobile {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem;
+    background: var(--background-secondary);
+    border-top: 1px solid var(--border);
+    z-index: 40;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .card-body {
+    padding: 0.75rem;
+  }
+  
+  .btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+  
+  h1 {
+    font-size: 1.25rem !important;
+  }
+  
+  /* Hide actions column text */
+  .action-text {
+    display: none;
+  }
+}
+
+/* Tablet */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* Touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .btn:active {
+    transform: scale(0.98);
+  }
+  
+  /* Larger touch targets */
+  .btn-sm {
+    min-height: 36px;
+    min-width: 36px;
   }
 }
