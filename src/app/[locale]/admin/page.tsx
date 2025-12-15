@@ -87,6 +87,8 @@ export default function AdminPage() {
 
       if (session.user.email === ADMIN_EMAIL) {
         setIsAdmin(true);
+        // Load users from Supabase
+        loadUsersFromSupabase();
       } else {
         setIsAdmin(false);
       }
@@ -94,6 +96,39 @@ export default function AdminPage() {
     };
     checkAdmin();
   }, [locale, router]);
+
+  // Load users from Supabase profiles
+  const loadUsersFromSupabase = async () => {
+    try {
+      // Get users from profiles table (columns: id, email, role)
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, email, role");
+
+      if (error) {
+        console.error("Error loading profiles:", error);
+        // Fallback to admin only
+        setUsers(mockUsers);
+      } else if (data && data.length > 0) {
+        // Convert profiles to users with subscription info from localStorage
+        const allSubs = JSON.parse(localStorage.getItem('all_subscriptions') || '{}');
+        const usersFromProfiles: User[] = data.map((profile: any, idx: number) => ({
+          id: idx + 1,
+          name: profile.email?.split('@')[0] || "User",
+          email: profile.email || "",
+          role: profile.email === ADMIN_EMAIL ? "admin" : (profile.role === "user" ? "student" : profile.role || "student"),
+          active: true,
+          subscription: allSubs[profile.email] || null
+        }));
+        setUsers(usersFromProfiles);
+      } else {
+        setUsers(mockUsers);
+      }
+    } catch (e) {
+      console.error("Connection error:", e);
+      setUsers(mockUsers);
+    }
+  };
 
   // Show loading
   if (loading) {
