@@ -99,17 +99,21 @@ export default function AdminPage() {
 
   // Load users from Supabase profiles
   const loadUsersFromSupabase = async () => {
+    console.log("Loading users from Supabase...");
     try {
       // Get users from profiles table (columns: id, email, role)
       const { data, error } = await supabase
         .from("profiles")
         .select("id, email, role");
 
+      console.log("Supabase response:", { data, error });
+
       if (error) {
         console.error("Error loading profiles:", error);
         // Fallback to admin only
         setUsers(mockUsers);
       } else if (data && data.length > 0) {
+        console.log("Found profiles:", data.length);
         // Convert profiles to users with subscription info from localStorage
         const allSubs = JSON.parse(localStorage.getItem('all_subscriptions') || '{}');
         const usersFromProfiles: User[] = data.map((profile: any, idx: number) => ({
@@ -120,8 +124,10 @@ export default function AdminPage() {
           active: true,
           subscription: allSubs[profile.email] || null
         }));
+        console.log("Setting users:", usersFromProfiles);
         setUsers(usersFromProfiles);
       } else {
+        console.log("No profiles found, using mock");
         setUsers(mockUsers);
       }
     } catch (e) {
