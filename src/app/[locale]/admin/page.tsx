@@ -8,21 +8,23 @@ import {
   BookOpen,
   HelpCircle,
   Users,
-  Settings,
   LayoutDashboard,
-  ChevronRight,
   Plus,
   Search,
   Edit,
   Trash2,
-  MoreVertical,
   X,
   Save,
   Shield,
-  FileUp
+  FileUp,
+  Crown,
+  CheckCircle,
+  Clock,
+  Calendar,
+  CreditCard
 } from "lucide-react";
 
-type Tab = "faculties" | "subjects" | "questions" | "users";
+type Tab = "faculties" | "subjects" | "questions" | "users" | "subscriptions";
 
 // Mock data
 const mockFaculties = [
@@ -44,9 +46,10 @@ const mockQuestions = [
 ];
 
 const mockUsers = [
-  { id: 1, name: "Иванов Иван", email: "ivanov@example.com", role: "student", active: true },
-  { id: 2, name: "Петрова Анна", email: "petrova@example.com", role: "manager", active: true },
-  { id: 3, name: "Админ", email: "admin@example.com", role: "admin", active: true },
+  { id: 1, name: "Иванов Иван", email: "ivanov@example.com", role: "student", active: true, subscription: null },
+  { id: 2, name: "Петрова Анна", email: "petrova@example.com", role: "student", active: true, subscription: { plan: "monthly", expiresAt: "2025-01-15" } },
+  { id: 3, name: "Сидоров Петр", email: "sidorov@example.com", role: "student", active: true, subscription: { plan: "yearly", expiresAt: "2025-12-15" } },
+  { id: 4, name: "Админ", email: "admin@example.com", role: "admin", active: true, subscription: null },
 ];
 
 export default function AdminPage() {
@@ -55,6 +58,7 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [users, setUsers] = useState(mockUsers);
 
   // Form states
   const [formName, setFormName] = useState("");
@@ -62,11 +66,18 @@ export default function AdminPage() {
   const [formRole, setFormRole] = useState("student");
   const [formFacultyId, setFormFacultyId] = useState("");
 
+  // Subscription form
+  const [showSubModal, setShowSubModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [subPlan, setSubPlan] = useState<"monthly" | "yearly">("monthly");
+  const [subDuration, setSubDuration] = useState(1);
+
   const tabs: { id: Tab; label: string; icon: any; count: number }[] = [
     { id: "faculties", label: "Факультеты", icon: GraduationCap, count: mockFaculties.length },
     { id: "subjects", label: "Предметы", icon: BookOpen, count: mockSubjects.length },
     { id: "questions", label: "Вопросы", icon: HelpCircle, count: mockQuestions.length },
-    { id: "users", label: "Пользователи", icon: Users, count: mockUsers.length },
+    { id: "users", label: "Пользователи", icon: Users, count: users.length },
+    { id: "subscriptions", label: "Подписки", icon: Crown, count: users.filter(u => u.subscription).length },
   ];
 
   const handleAdd = () => {
@@ -88,9 +99,40 @@ export default function AdminPage() {
   };
 
   const handleSave = () => {
-    // In a real app, this would make an API call
     console.log("Saving:", { formName, formEmail, formRole, formFacultyId });
     setShowModal(false);
+  };
+
+  // Subscription management
+  const handleAddSubscription = (user: any) => {
+    setSelectedUser(user);
+    setSubPlan("monthly");
+    setSubDuration(1);
+    setShowSubModal(true);
+  };
+
+  const handleSaveSubscription = () => {
+    if (!selectedUser) return;
+
+    const days = subPlan === "monthly" ? subDuration * 30 : subDuration * 365;
+    const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+
+    setUsers(users.map(u =>
+      u.id === selectedUser.id
+        ? { ...u, subscription: { plan: subPlan, expiresAt: expiresAt.toISOString().split('T')[0] } }
+        : u
+    ));
+
+    setShowSubModal(false);
+    setSelectedUser(null);
+  };
+
+  const handleRemoveSubscription = (userId: number) => {
+    if (confirm("Удалить подписку пользователя?")) {
+      setUsers(users.map(u =>
+        u.id === userId ? { ...u, subscription: null } : u
+      ));
+    }
   };
 
   const getRoleBadge = (role: string) => {
@@ -105,6 +147,18 @@ export default function AdminPage() {
       student: "Студент",
     };
     return <span className={`badge ${badges[role] || "badge-primary"}`}>{labels[role] || role}</span>;
+  };
+
+  const getSubBadge = (sub: any) => {
+    if (!sub) return <span className="badge badge-secondary">Нет подписки</span>;
+    const isExpired = new Date(sub.expiresAt) < new Date();
+    if (isExpired) return <span className="badge badge-danger">Истекла</span>;
+    return (
+      <span className="badge badge-success flex items-center gap-1">
+        <Crown className="w-3 h-3" />
+        {sub.plan === "monthly" ? "Месячная" : "Годовая"}
+      </span>
+    );
   };
 
   const renderFaculties = () => (
@@ -222,15 +276,15 @@ export default function AdminPage() {
       <table className="w-full">
         <thead>
           <tr className="border-b border-[var(--border)]">
-            <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Имя</th>
+            <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Пользователь</th>
             <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Email</th>
             <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">Роль</th>
-            <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">Статус</th>
+            <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">Подписка</th>
             <th className="text-right py-3 px-4 font-medium text-[var(--foreground)]">Действия</th>
           </tr>
         </thead>
         <tbody>
-          {mockUsers.filter(u =>
+          {users.filter(u =>
             u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             u.email.toLowerCase().includes(searchQuery.toLowerCase())
           ).map(user => (
@@ -245,14 +299,11 @@ export default function AdminPage() {
               </td>
               <td className="py-3 px-4 text-[var(--foreground-secondary)]">{user.email}</td>
               <td className="py-3 px-4 text-center">{getRoleBadge(user.role)}</td>
-              <td className="py-3 px-4 text-center">
-                {user.active ? (
-                  <span className="badge badge-success">Активен</span>
-                ) : (
-                  <span className="badge badge-danger">Неактивен</span>
-                )}
-              </td>
+              <td className="py-3 px-4 text-center">{getSubBadge(user.subscription)}</td>
               <td className="py-3 px-4 text-right">
+                <button onClick={() => handleAddSubscription(user)} className="btn btn-sm btn-success mr-2" title="Добавить подписку">
+                  <Crown className="w-4 h-4" />
+                </button>
                 <button onClick={() => handleEdit(user)} className="btn btn-sm btn-secondary mr-2">
                   <Edit className="w-4 h-4" />
                 </button>
@@ -266,6 +317,146 @@ export default function AdminPage() {
       </table>
     </div>
   );
+
+  const renderSubscriptions = () => {
+    const usersWithSub = users.filter(u => u.subscription);
+    const usersWithoutSub = users.filter(u => !u.subscription && u.role === "student");
+
+    return (
+      <div className="space-y-6">
+        {/* Stats */}
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div className="p-4 rounded-lg bg-[var(--success-light)] border border-[var(--success)]/20">
+            <div className="flex items-center gap-2 mb-2">
+              <Crown className="w-5 h-5 text-[var(--success)]" />
+              <span className="font-medium text-[var(--foreground)]">Активных подписок</span>
+            </div>
+            <p className="text-2xl font-bold text-[var(--success)]">{usersWithSub.length}</p>
+          </div>
+          <div className="p-4 rounded-lg bg-[var(--warning-light)] border border-[var(--warning)]/20">
+            <div className="flex items-center gap-2 mb-2">
+              <Clock className="w-5 h-5 text-[var(--warning)]" />
+              <span className="font-medium text-[var(--foreground)]">Без подписки</span>
+            </div>
+            <p className="text-2xl font-bold text-[var(--warning)]">{usersWithoutSub.length}</p>
+          </div>
+          <div className="p-4 rounded-lg bg-[var(--primary-light)] border border-[var(--primary)]/20">
+            <div className="flex items-center gap-2 mb-2">
+              <CreditCard className="w-5 h-5 text-[var(--primary)]" />
+              <span className="font-medium text-[var(--foreground)]">Доход (примерно)</span>
+            </div>
+            <p className="text-2xl font-bold text-[var(--primary)]">
+              {(usersWithSub.filter(u => u.subscription?.plan === "monthly").length * 25000 +
+                usersWithSub.filter(u => u.subscription?.plan === "yearly").length * 50000).toLocaleString()} сум
+            </p>
+          </div>
+        </div>
+
+        {/* Active subscriptions */}
+        <div>
+          <h3 className="font-semibold text-[var(--foreground)] mb-4 flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-[var(--success)]" />
+            Активные подписки
+          </h3>
+          {usersWithSub.length === 0 ? (
+            <p className="text-[var(--foreground-muted)] text-center py-8">Нет активных подписок</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[var(--border)]">
+                    <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Пользователь</th>
+                    <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Email</th>
+                    <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">Тариф</th>
+                    <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">Истекает</th>
+                    <th className="text-right py-3 px-4 font-medium text-[var(--foreground)]">Действия</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {usersWithSub.map(user => (
+                    <tr key={user.id} className="border-b border-[var(--border)] hover:bg-[var(--border)]/30">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="avatar w-8 h-8 text-xs bg-gradient-to-br from-yellow-400 to-orange-500 text-white">
+                            {user.name[0]}
+                          </div>
+                          <span className="font-medium text-[var(--foreground)]">{user.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-[var(--foreground-secondary)]">{user.email}</td>
+                      <td className="py-3 px-4 text-center">
+                        <span className={`badge ${user.subscription?.plan === "yearly" ? "badge-success" : "badge-primary"}`}>
+                          {user.subscription?.plan === "monthly" ? "25 000 / мес" : "50 000 / год"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="flex items-center justify-center gap-1 text-[var(--foreground-secondary)]">
+                          <Calendar className="w-4 h-4" />
+                          {user.subscription?.expiresAt}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <button onClick={() => handleAddSubscription(user)} className="btn btn-sm btn-primary mr-2" title="Продлить">
+                          <Clock className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleRemoveSubscription(user.id)} className="btn btn-sm btn-danger" title="Отменить">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Users without subscription */}
+        <div>
+          <h3 className="font-semibold text-[var(--foreground)] mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-[var(--warning)]" />
+            Студенты без подписки
+          </h3>
+          {usersWithoutSub.length === 0 ? (
+            <p className="text-[var(--foreground-muted)] text-center py-8">Все студенты имеют подписку</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[var(--border)]">
+                    <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Пользователь</th>
+                    <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Email</th>
+                    <th className="text-right py-3 px-4 font-medium text-[var(--foreground)]">Действия</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {usersWithoutSub.map(user => (
+                    <tr key={user.id} className="border-b border-[var(--border)] hover:bg-[var(--border)]/30">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="avatar w-8 h-8 text-xs">
+                            {user.name[0]}
+                          </div>
+                          <span className="font-medium text-[var(--foreground)]">{user.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-[var(--foreground-secondary)]">{user.email}</td>
+                      <td className="py-3 px-4 text-right">
+                        <button onClick={() => handleAddSubscription(user)} className="btn btn-sm btn-success">
+                          <Crown className="w-4 h-4" />
+                          Добавить подписку
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="animate-fadeIn">
@@ -323,20 +514,23 @@ export default function AdminPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <button onClick={handleAdd} className="btn btn-primary">
-            <Plus className="w-4 h-4" />
-            Добавить
-          </button>
+          {activeTab !== "subscriptions" && (
+            <button onClick={handleAdd} className="btn btn-primary">
+              <Plus className="w-4 h-4" />
+              Добавить
+            </button>
+          )}
         </div>
         <div className="card-body">
           {activeTab === "faculties" && renderFaculties()}
           {activeTab === "subjects" && renderSubjects()}
           {activeTab === "questions" && renderQuestions()}
           {activeTab === "users" && renderUsers()}
+          {activeTab === "subscriptions" && renderSubscriptions()}
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fadeIn">
           <div className="bg-[var(--background-secondary)] rounded-xl shadow-lg w-full max-w-md mx-4 animate-scaleIn">
@@ -353,31 +547,15 @@ export default function AdminPage() {
                 <>
                   <div>
                     <label className="label">Имя</label>
-                    <input
-                      type="text"
-                      className="input"
-                      value={formName}
-                      onChange={(e) => setFormName(e.target.value)}
-                      placeholder="Имя пользователя"
-                    />
+                    <input type="text" className="input" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Имя пользователя" />
                   </div>
                   <div>
                     <label className="label">Email</label>
-                    <input
-                      type="email"
-                      className="input"
-                      value={formEmail}
-                      onChange={(e) => setFormEmail(e.target.value)}
-                      placeholder="email@example.com"
-                    />
+                    <input type="email" className="input" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="email@example.com" />
                   </div>
                   <div>
                     <label className="label">Роль</label>
-                    <select
-                      className="input"
-                      value={formRole}
-                      onChange={(e) => setFormRole(e.target.value)}
-                    >
+                    <select className="input" value={formRole} onChange={(e) => setFormRole(e.target.value)}>
                       <option value="student">Студент</option>
                       <option value="manager">Менеджер</option>
                       <option value="admin">Админ</option>
@@ -387,23 +565,13 @@ export default function AdminPage() {
               ) : (
                 <div>
                   <label className="label">Название</label>
-                  <input
-                    type="text"
-                    className="input"
-                    value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
-                    placeholder="Введите название"
-                  />
+                  <input type="text" className="input" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Введите название" />
                 </div>
               )}
               {activeTab === "subjects" && (
                 <div>
                   <label className="label">Факультет</label>
-                  <select
-                    className="input"
-                    value={formFacultyId}
-                    onChange={(e) => setFormFacultyId(e.target.value)}
-                  >
+                  <select className="input" value={formFacultyId} onChange={(e) => setFormFacultyId(e.target.value)}>
                     <option value="">Выберите факультет</option>
                     {mockFaculties.map(f => (
                       <option key={f.id} value={f.id}>{f.name}</option>
@@ -413,12 +581,86 @@ export default function AdminPage() {
               )}
             </div>
             <div className="flex justify-end gap-2 p-4 border-t border-[var(--border)]">
-              <button onClick={() => setShowModal(false)} className="btn btn-secondary">
-                Отмена
+              <button onClick={() => setShowModal(false)} className="btn btn-secondary">Отмена</button>
+              <button onClick={handleSave} className="btn btn-primary"><Save className="w-4 h-4" />Сохранить</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Subscription Modal */}
+      {showSubModal && selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fadeIn">
+          <div className="bg-[var(--background-secondary)] rounded-xl shadow-lg w-full max-w-md mx-4 animate-scaleIn">
+            <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
+              <h3 className="font-semibold text-[var(--foreground)] flex items-center gap-2">
+                <Crown className="w-5 h-5 text-yellow-500" />
+                Добавить подписку
+              </h3>
+              <button onClick={() => setShowSubModal(false)} className="text-[var(--foreground-muted)] hover:text-[var(--foreground)]">
+                <X className="w-5 h-5" />
               </button>
-              <button onClick={handleSave} className="btn btn-primary">
-                <Save className="w-4 h-4" />
-                Сохранить
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)]">
+                <p className="text-sm text-[var(--foreground-muted)]">Пользователь</p>
+                <p className="font-medium text-[var(--foreground)]">{selectedUser.name}</p>
+                <p className="text-sm text-[var(--foreground-secondary)]">{selectedUser.email}</p>
+              </div>
+
+              <div>
+                <label className="label">Тариф</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setSubPlan("monthly")}
+                    className={`p-4 rounded-lg border-2 text-center transition-all ${subPlan === "monthly"
+                        ? "border-[var(--primary)] bg-[var(--primary-light)]"
+                        : "border-[var(--border)]"
+                      }`}
+                  >
+                    <p className="font-bold text-[var(--foreground)]">25 000 сум</p>
+                    <p className="text-sm text-[var(--foreground-secondary)]">Месяц</p>
+                  </button>
+                  <button
+                    onClick={() => setSubPlan("yearly")}
+                    className={`p-4 rounded-lg border-2 text-center transition-all ${subPlan === "yearly"
+                        ? "border-[var(--primary)] bg-[var(--primary-light)]"
+                        : "border-[var(--border)]"
+                      }`}
+                  >
+                    <p className="font-bold text-[var(--foreground)]">50 000 сум</p>
+                    <p className="text-sm text-[var(--foreground-secondary)]">Год</p>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="label">Количество {subPlan === "monthly" ? "месяцев" : "лет"}</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="12"
+                  className="input"
+                  value={subDuration}
+                  onChange={(e) => setSubDuration(parseInt(e.target.value) || 1)}
+                />
+              </div>
+
+              <div className="p-3 rounded-lg bg-[var(--success-light)] border border-[var(--success)]/20">
+                <p className="text-sm text-[var(--foreground-muted)]">Итого</p>
+                <p className="font-bold text-lg text-[var(--success)]">
+                  {((subPlan === "monthly" ? 25000 : 50000) * subDuration).toLocaleString()} сум
+                </p>
+                <p className="text-xs text-[var(--foreground-secondary)]">
+                  Действует до: {new Date(Date.now() + (subPlan === "monthly" ? subDuration * 30 : subDuration * 365) * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 p-4 border-t border-[var(--border)]">
+              <button onClick={() => setShowSubModal(false)} className="btn btn-secondary">Отмена</button>
+              <button onClick={handleSaveSubscription} className="btn btn-success">
+                <CheckCircle className="w-4 h-4" />
+                Активировать
               </button>
             </div>
           </div>
