@@ -121,13 +121,27 @@ export default function AdminPage() {
 
   // Load faculties
   const loadFaculties = async () => {
+    console.log("Loading faculties...");
     const { data, error } = await supabase
       .from("faculties")
       .select("id, name")
       .order("name");
 
-    if (!error && data) {
+    console.log("Faculties response:", { data, error });
+
+    if (error) {
+      console.error("Error loading faculties:", error);
+      // Fallback for testing
+      setFaculties([
+        { id: 99, name: "Тестовый факультет (загрузка не удалась)" }
+      ]);
+    } else if (data && data.length > 0) {
       setFaculties(data);
+    } else {
+      // No faculties in database
+      setFaculties([
+        { id: 0, name: "Нет факультетов (добавьте сначала)" }
+      ]);
     }
   };
 
