@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useLocale } from "next-intl";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import * as XLSX from "xlsx";
 import supabase from "@/lib/supabase/client";
@@ -13,8 +14,11 @@ import {
     AlertCircle,
     X,
     Upload,
-    Loader2
+    Loader2,
+    Lock
 } from "lucide-react";
+
+const ADMIN_EMAIL = "akbarkhon545@gmail.com";
 
 interface Subject {
     id: number;
@@ -32,7 +36,10 @@ interface ParsedQuestion {
 
 export default function UploadPage() {
     const locale = useLocale();
+    const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [authLoading, setAuthLoading] = useState(true);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [selectedSubject, setSelectedSubject] = useState("");
     const [uploading, setUploading] = useState(false);
@@ -41,6 +48,22 @@ export default function UploadPage() {
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [loadingSubjects, setLoadingSubjects] = useState(true);
     const [parsedQuestions, setParsedQuestions] = useState<ParsedQuestion[]>([]);
+
+    // Check if user is admin
+    useEffect(() => {
+        const checkAdmin = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (!session) {
+                router.push(`/${locale}/auth/login`);
+                return;
+            }
+
+            setIsAdmin(session.user.email === ADMIN_EMAIL);
+            setAuthLoading(false);
+        };
+        checkAdmin();
+    }, [locale, router]);
 
     // Load subjects from Supabase
     useEffect(() => {
@@ -69,6 +92,35 @@ export default function UploadPage() {
         };
         loadSubjects();
     }, []);
+
+    // Show loading while checking auth
+    if (authLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[50vh]">
+                <div className="w-12 h-12 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
+
+    // Show access denied for non-admins
+    if (!isAdmin) {
+        return (
+            <div className="max-w-xl mx-auto text-center py-12 animate-fadeIn">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[var(--danger-light)] mb-6">
+                    <Lock className="w-10 h-10 text-[var(--danger)]" />
+                </div>
+                <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">
+                    Доступ запрещён
+                </h2>
+                <p className="text-[var(--foreground-secondary)] mb-8">
+                    Только администратор может загружать вопросы
+                </p>
+                <Link href={`/${locale}/dashboard`} className="btn btn-primary">
+                    Вернуться на главную
+                </Link>
+            </div>
+        );
+    }
 
     const handleFileSelect = (file: File | null) => {
         if (file) {

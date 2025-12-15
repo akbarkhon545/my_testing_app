@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocale } from "next-intl";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import supabase from "@/lib/supabase/client";
 import {
   GraduationCap,
   BookOpen,
@@ -21,10 +23,14 @@ import {
   CheckCircle,
   Clock,
   Calendar,
-  CreditCard
+  CreditCard,
+  Lock
 } from "lucide-react";
 
 type Tab = "faculties" | "subjects" | "questions" | "users" | "subscriptions";
+
+// Admin email - only this user can access admin panel
+const ADMIN_EMAIL = "akbarkhon545@gmail.com";
 
 // Data will be loaded from database
 const mockFaculties: { id: number; name: string; subjects_count: number }[] = [];
@@ -48,6 +54,9 @@ const mockUsers: User[] = [
 
 export default function AdminPage() {
   const locale = useLocale();
+  const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("faculties");
   const [searchQuery, setSearchQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -65,6 +74,55 @@ export default function AdminPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [subPlan, setSubPlan] = useState<"monthly" | "yearly">("monthly");
   const [subDuration, setSubDuration] = useState(1);
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.push(`/${locale}/auth/login`);
+        return;
+      }
+
+      if (session.user.email === ADMIN_EMAIL) {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+      setLoading(false);
+    };
+    checkAdmin();
+  }, [locale, router]);
+
+  // Show loading
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="w-12 h-12 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Show access denied for non-admins
+  if (!isAdmin) {
+    return (
+      <div className="max-w-xl mx-auto text-center py-12 animate-fadeIn">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[var(--danger-light)] mb-6">
+          <Lock className="w-10 h-10 text-[var(--danger)]" />
+        </div>
+        <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">
+          Доступ запрещён
+        </h2>
+        <p className="text-[var(--foreground-secondary)] mb-8">
+          У вас нет прав доступа к админ-панели
+        </p>
+        <Link href={`/${locale}/dashboard`} className="btn btn-primary">
+          Вернуться на главную
+        </Link>
+      </div>
+    );
+  }
 
   const tabs: { id: Tab; label: string; icon: any; count: number }[] = [
     { id: "faculties", label: "Факультеты", icon: GraduationCap, count: mockFaculties.length },
