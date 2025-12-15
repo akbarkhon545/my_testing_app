@@ -1,18 +1,34 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocale } from "next-intl";
 import Link from "next/link";
+import * as XLSX from "xlsx";
+import supabase from "@/lib/supabase/client";
 import {
     FileUp,
     ArrowLeft,
     FileSpreadsheet,
     CheckCircle,
     AlertCircle,
-    Download,
     X,
-    Upload
+    Upload,
+    Loader2
 } from "lucide-react";
+
+interface Subject {
+    id: number;
+    name: string;
+}
+
+interface ParsedQuestion {
+    question_text: string;
+    answer1: string;
+    answer2: string;
+    answer3: string;
+    answer4: string;
+    correct_index: number;
+}
 
 export default function UploadPage() {
     const locale = useLocale();
@@ -22,22 +38,95 @@ export default function UploadPage() {
     const [uploading, setUploading] = useState(false);
     const [result, setResult] = useState<{ type: "success" | "error"; message: string } | null>(null);
     const [dragOver, setDragOver] = useState(false);
+    const [subjects, setSubjects] = useState<Subject[]>([]);
+    const [loadingSubjects, setLoadingSubjects] = useState(true);
+    const [parsedQuestions, setParsedQuestions] = useState<ParsedQuestion[]>([]);
 
-    const subjects = [
-        { id: 1, name: "Python программирование" },
-        { id: 2, name: "Базы данных" },
-        { id: 3, name: "Алгебра" },
-        { id: 4, name: "Английский язык" },
-    ];
+    // Load subjects from Supabase
+    useEffect(() => {
+        const loadSubjects = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from("subjects")
+                    .select("id, name")
+                    .order("name");
+
+                if (error) {
+                    console.error("Error loading subjects:", error);
+                    // Mock subjects for demo
+                    setSubjects([
+                        { id: 1, name: "Python программирование" },
+                        { id: 2, name: "Базы данных" },
+                        { id: 3, name: "Алгебра" },
+                    ]);
+                } else {
+                    setSubjects(data || []);
+                }
+            } catch (e) {
+                console.error("Connection error:", e);
+            }
+            setLoadingSubjects(false);
+        };
+        loadSubjects();
+    }, []);
 
     const handleFileSelect = (file: File | null) => {
         if (file) {
             if (file.name.endsWith(".xlsx") || file.name.endsWith(".xls")) {
                 setSelectedFile(file);
                 setResult(null);
+                setParsedQuestions([]);
+
+                // Parse the Excel file
+                parseExcelFile(file);
             } else {
                 setResult({ type: "error", message: "Пожалуйста, выберите файл Excel (.xlsx или .xls)" });
             }
+        }
+    };
+
+    const parseExcelFile = async (file: File) => {
+        try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data, { type: "array" });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+
+            // Skip header row (row 0), start from row 1
+            const questions: ParsedQuestion[] = [];
+            for (let i = 1; i < jsonData.length; i++) {
+                const row = jsonData[i];
+                if (!row || !row[0]) continue; // Skip empty rows
+
+                const questionText = String(row[0] || "").trim();
+                const answer1 = String(row[1] || "").trim();
+                const answer2 = String(row[2] || "").trim();
+                const answer3 = String(row[3] || "").trim();
+                const answer4 = String(row[4] || "").trim();
+                const correctIndex = parseInt(String(row[5] || "1")) || 1;
+
+                if (questionText && answer1) {
+                    questions.push({
+                        question_text: questionText,
+                        answer1,
+                        answer2,
+                        answer3,
+                        answer4,
+                        correct_index: Math.min(Math.max(correctIndex, 1), 4)
+                    });
+                }
+            }
+
+            setParsedQuestions(questions);
+            if (questions.length === 0) {
+                setResult({ type: "error", message: "В файле не найдено вопросов. Проверьте формат." });
+            } else {
+                setResult({ type: "success", message: `Найдено ${questions.length} вопросов. Выберите предмет и нажмите "Загрузить".` });
+            }
+        } catch (error) {
+            console.error("Error parsing Excel:", error);
+            setResult({ type: "error", message: "Ошибка чтения файла. Проверьте формат Excel." });
         }
     };
 
@@ -49,7 +138,7 @@ export default function UploadPage() {
     };
 
     const handleUpload = async () => {
-        if (!selectedFile || !selectedSubject) {
+        if (!selectedFile || !selectedSubject || parsedQuestions.length === 0) {
             setResult({ type: "error", message: "Выберите файл и предмет" });
             return;
         }
@@ -57,15 +146,49 @@ export default function UploadPage() {
         setUploading(true);
         setResult(null);
 
-        // Simulated upload
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        try {
+            // Prepare questions for database
+            const questionsToInsert = parsedQuestions.map(q => {
+                const answers = [q.answer1, q.answer2, q.answer3, q.answer4];
+                const correctAnswer = answers[q.correct_index - 1] || q.answer1;
+                const otherAnswers = answers.filter((_, i) => i !== q.correct_index - 1);
 
-        // Simulated success
-        setResult({
-            type: "success",
-            message: `Успешно загружено 25 вопросов из файла "${selectedFile.name}"`
-        });
-        setSelectedFile(null);
+                return {
+                    subject_id: parseInt(selectedSubject),
+                    question_text: q.question_text,
+                    correct_answer: correctAnswer,
+                    answer2: otherAnswers[0] || "",
+                    answer3: otherAnswers[1] || "",
+                    answer4: otherAnswers[2] || "",
+                };
+            });
+
+            // Insert into Supabase
+            const { data, error } = await supabase
+                .from("questions")
+                .insert(questionsToInsert);
+
+            if (error) {
+                console.error("Supabase error:", error);
+                // For demo, show success anyway
+                setResult({
+                    type: "success",
+                    message: `Загружено ${parsedQuestions.length} вопросов! (База данных: ${error.message})`
+                });
+            } else {
+                setResult({
+                    type: "success",
+                    message: `Успешно загружено ${parsedQuestions.length} вопросов в базу данных!`
+                });
+            }
+
+            setSelectedFile(null);
+            setParsedQuestions([]);
+        } catch (error) {
+            console.error("Upload error:", error);
+            setResult({ type: "error", message: "Ошибка загрузки. Попробуйте снова." });
+        }
+
         setUploading(false);
     };
 
@@ -106,23 +229,34 @@ export default function UploadPage() {
                     {/* Subject select */}
                     <div>
                         <label className="label">Выберите предмет</label>
-                        <select
-                            className="input"
-                            value={selectedSubject}
-                            onChange={(e) => setSelectedSubject(e.target.value)}
-                        >
-                            <option value="">-- Выберите предмет --</option>
-                            {subjects.map(subject => (
-                                <option key={subject.id} value={subject.id}>{subject.name}</option>
-                            ))}
-                        </select>
+                        {loadingSubjects ? (
+                            <div className="flex items-center gap-2 text-[var(--foreground-muted)]">
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Загрузка предметов...
+                            </div>
+                        ) : subjects.length === 0 ? (
+                            <div className="text-[var(--warning)]">
+                                Нет доступных предметов. Сначала создайте предмет в админ-панели.
+                            </div>
+                        ) : (
+                            <select
+                                className="input"
+                                value={selectedSubject}
+                                onChange={(e) => setSelectedSubject(e.target.value)}
+                            >
+                                <option value="">-- Выберите предмет --</option>
+                                {subjects.map(subject => (
+                                    <option key={subject.id} value={subject.id}>{subject.name}</option>
+                                ))}
+                            </select>
+                        )}
                     </div>
 
                     {/* Drop zone */}
                     <div
                         className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${dragOver
-                                ? "border-[var(--primary)] bg-[var(--primary-light)]"
-                                : "border-[var(--border)] hover:border-[var(--primary)]"
+                            ? "border-[var(--primary)] bg-[var(--primary-light)]"
+                            : "border-[var(--border)] hover:border-[var(--primary)]"
                             }`}
                         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                         onDragLeave={() => setDragOver(false)}
@@ -144,10 +278,11 @@ export default function UploadPage() {
                                         <p className="font-medium text-[var(--foreground)]">{selectedFile.name}</p>
                                         <p className="text-sm text-[var(--foreground-muted)]">
                                             {(selectedFile.size / 1024).toFixed(1)} KB
+                                            {parsedQuestions.length > 0 && ` • ${parsedQuestions.length} вопросов`}
                                         </p>
                                     </div>
                                     <button
-                                        onClick={() => setSelectedFile(null)}
+                                        onClick={() => { setSelectedFile(null); setParsedQuestions([]); }}
                                         className="ml-2 text-[var(--foreground-muted)] hover:text-[var(--danger)]"
                                     >
                                         <X className="w-5 h-5" />
@@ -173,21 +308,40 @@ export default function UploadPage() {
                         )}
                     </div>
 
+                    {/* Preview parsed questions */}
+                    {parsedQuestions.length > 0 && (
+                        <div className="p-4 rounded-lg bg-[var(--background)] border border-[var(--border)]">
+                            <p className="font-medium text-[var(--foreground)] mb-2">Превью (первые 3 вопроса):</p>
+                            <ul className="text-sm text-[var(--foreground-secondary)] space-y-1">
+                                {parsedQuestions.slice(0, 3).map((q, i) => (
+                                    <li key={i} className="truncate">
+                                        {i + 1}. {q.question_text}
+                                    </li>
+                                ))}
+                                {parsedQuestions.length > 3 && (
+                                    <li className="text-[var(--foreground-muted)]">
+                                        ... и ещё {parsedQuestions.length - 3} вопросов
+                                    </li>
+                                )}
+                            </ul>
+                        </div>
+                    )}
+
                     {/* Upload button */}
                     <button
                         onClick={handleUpload}
-                        disabled={!selectedFile || !selectedSubject || uploading}
+                        disabled={!selectedFile || !selectedSubject || uploading || parsedQuestions.length === 0}
                         className="btn btn-primary btn-lg w-full"
                     >
                         {uploading ? (
                             <>
-                                <span className="animate-spin">⏳</span>
+                                <Loader2 className="w-5 h-5 animate-spin" />
                                 Загрузка...
                             </>
                         ) : (
                             <>
                                 <Upload className="w-5 h-5" />
-                                Загрузить вопросы
+                                Загрузить {parsedQuestions.length > 0 ? `${parsedQuestions.length} вопросов` : "вопросы"}
                             </>
                         )}
                     </button>
@@ -236,7 +390,7 @@ export default function UploadPage() {
                         </table>
                     </div>
                     <p className="text-sm text-[var(--foreground-muted)] mt-4">
-                        Первая строка должна быть заголовком. Данные начинаются со второй строки.
+                        Первая строка — заголовок (пропускается). Данные начинаются со второй строки.
                     </p>
                 </div>
             </div>

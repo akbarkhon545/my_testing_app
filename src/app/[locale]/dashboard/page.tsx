@@ -50,8 +50,8 @@ export default function DashboardPage() {
       const { data } = await supabase.auth.getSession();
       const session = data.session;
       if (!session) {
-        // For demo, allow access without login
-        setLoading(false);
+        // Redirect to login if not authenticated
+        router.push(`/${locale}/auth/login`);
         return;
       }
       setEmail(session.user.email ?? null);

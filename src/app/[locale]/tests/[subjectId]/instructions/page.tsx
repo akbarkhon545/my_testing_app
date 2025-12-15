@@ -1,9 +1,10 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { useLocale } from "next-intl";
-import { Clock, CheckCircle, AlertCircle, ArrowRight, Book, Award } from "lucide-react";
+import supabase from "@/lib/supabase/client";
+import { Clock, CheckCircle, AlertCircle, ArrowRight, Book, Award, Crown, Lock } from "lucide-react";
 
 interface InstructionsPageProps {
     params: Promise<{ locale: string; subjectId: string }>;
@@ -15,12 +16,122 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
     const resolvedSearchParams = use(searchParams);
     const locale = useLocale();
 
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [hasSubscription, setHasSubscription] = useState(false);
+    const [loading, setLoading] = useState(true);
+
     const mode = resolvedSearchParams.mode || "training";
     const subjectId = resolvedParams.subjectId;
     const isTraining = mode === "training";
 
+    useEffect(() => {
+        const checkAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            setIsLoggedIn(!!session);
+
+            if (session) {
+                // Check subscription by email
+                const userEmail = session.user.email;
+
+                // Admin bypass - full access
+                if (userEmail === "akbarkhon545@gmail.com") {
+                    setHasSubscription(true);
+                    setLoading(false);
+                    return;
+                }
+
+                const allSubs = JSON.parse(localStorage.getItem('all_subscriptions') || '{}');
+                const userSub = allSubs[userEmail || ''];
+
+                if (userSub && userSub.expiresAt) {
+                    const expiryDate = new Date(userSub.expiresAt);
+                    setHasSubscription(expiryDate > new Date());
+                } else {
+                    setHasSubscription(false);
+                }
+            }
+            setLoading(false);
+        };
+        checkAuth();
+    }, []);
+
+    // Show login prompt if not logged in
+    if (!loading && !isLoggedIn) {
+        return (
+            <div className="max-w-xl mx-auto text-center py-12 animate-fadeIn">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[var(--primary-light)] mb-6">
+                    <Lock className="w-10 h-10 text-[var(--primary)]" />
+                </div>
+                <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">
+                    Требуется авторизация
+                </h2>
+                <p className="text-[var(--foreground-secondary)] mb-8">
+                    Для прохождения тестов необходимо войти в систему
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <Link href={`/${locale}/auth/login`} className="btn btn-primary btn-lg">
+                        Войти в систему
+                    </Link>
+                    <Link href={`/${locale}/auth/signup`} className="btn btn-secondary btn-lg">
+                        Регистрация
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    // Show subscription prompt if no active subscription
+    if (!loading && !hasSubscription) {
+        return (
+            <div className="max-w-xl mx-auto text-center py-12 animate-fadeIn">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 mb-6">
+                    <Crown className="w-10 h-10 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">
+                    Требуется подписка
+                </h2>
+                <p className="text-[var(--foreground-secondary)] mb-8">
+                    Для прохождения тестов необходимо оформить подписку
+                </p>
+                <Link href={`/${locale}/pricing`} className="btn btn-primary btn-lg">
+                    <Crown className="w-5 h-5" />
+                    Оформить подписку
+                </Link>
+                <p className="mt-4 text-sm text-[var(--foreground-muted)]">
+                    Начните с 25 000 сум/месяц
+                </p>
+            </div>
+        );
+    }
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[50vh]">
+                <div className="w-12 h-12 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
+
     return (
         <div className="max-w-3xl mx-auto animate-fadeIn">
+            {/* Subscription banner for free users */}
+            {!hasSubscription && (
+                <div className="mb-6 p-4 rounded-lg bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20">
+                    <div className="flex items-center justify-between flex-wrap gap-4">
+                        <div className="flex items-center gap-3">
+                            <Crown className="w-6 h-6 text-yellow-500" />
+                            <div>
+                                <p className="font-medium text-[var(--foreground)]">Получите премиум доступ</p>
+                                <p className="text-sm text-[var(--foreground-secondary)]">Неограниченные тесты и статистика</p>
+                            </div>
+                        </div>
+                        <Link href={`/${locale}/pricing`} className="btn btn-sm" style={{ background: "linear-gradient(135deg, #f59e0b, #ea580c)", color: "white" }}>
+                            Подписка от 25 000 сум
+                        </Link>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div className="text-center mb-8">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--primary-light)] mb-4">

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import supabase from "@/lib/supabase/client";
 import { useLocale } from "next-intl";
 import Link from "next/link";
-import { Book, Award, ChevronRight, FileQuestion, GraduationCap } from "lucide-react";
+import { Book, Award, ChevronRight, FileQuestion, GraduationCap, AlertCircle, Crown } from "lucide-react";
 
 type Subject = {
   id: number;
@@ -12,21 +13,55 @@ type Subject = {
   faculty_id: number;
 };
 
-// Mock data for when Supabase is not connected
-const mockSubjects: Subject[] = [
-  { id: 1, name: "Python программирование", faculty_id: 1 },
-  { id: 2, name: "Математика", faculty_id: 1 },
-  { id: 3, name: "Физика", faculty_id: 1 },
-  { id: 4, name: "Английский язык", faculty_id: 2 },
-];
-
 export default function TestsIndexPage() {
+  const router = useRouter();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [hasSubscription, setHasSubscription] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const locale = useLocale();
 
+  // Check authentication first
   useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.push(`/${locale}/auth/login`);
+        return;
+      }
+
+      // Check subscription by email
+      const userEmail = session.user.email;
+
+      // Admin bypass - full access without subscription
+      if (userEmail === "akbarkhon545@gmail.com") {
+        setHasSubscription(true);
+        setAuthChecked(true);
+        return;
+      }
+
+      const allSubs = JSON.parse(localStorage.getItem('all_subscriptions') || '{}');
+      const userSub = allSubs[userEmail || ''];
+
+      // Check if subscription exists and is not expired
+      if (userSub && userSub.expiresAt) {
+        const expiryDate = new Date(userSub.expiresAt);
+        setHasSubscription(expiryDate > new Date());
+      } else {
+        setHasSubscription(false);
+      }
+
+      setAuthChecked(true);
+    };
+    checkAuth();
+  }, [locale, router]);
+
+  // Load subjects only after auth check
+  useEffect(() => {
+    if (!authChecked) return;
+
     (async () => {
       setError(null);
       setLoading(true);
@@ -37,18 +72,53 @@ export default function TestsIndexPage() {
           .order("name");
 
         if (error) {
-          console.warn("Supabase error, using mock data:", error.message);
-          setSubjects(mockSubjects);
+          console.warn("Supabase error:", error.message);
+          setError("Не удалось загрузить предметы");
+          setSubjects([]);
         } else {
-          setSubjects(data && data.length > 0 ? data : mockSubjects);
+          setSubjects(data || []);
         }
       } catch (e) {
-        console.warn("Connection error, using mock data");
-        setSubjects(mockSubjects);
+        console.warn("Connection error");
+        setError("Ошибка подключения к базе данных");
+        setSubjects([]);
       }
       setLoading(false);
     })();
-  }, []);
+  }, [authChecked]);
+
+  // Show loading while checking auth
+  if (!authChecked) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="w-12 h-12 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Show subscription required message
+  if (!hasSubscription) {
+    return (
+      <div className="max-w-xl mx-auto text-center py-12 animate-fadeIn">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 mb-6">
+          <Crown className="w-10 h-10 text-white" />
+        </div>
+        <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">
+          Требуется подписка
+        </h2>
+        <p className="text-[var(--foreground-secondary)] mb-8">
+          Для доступа к тестам необходимо оформить подписку
+        </p>
+        <Link href={`/${locale}/pricing`} className="btn btn-primary btn-lg">
+          <Crown className="w-5 h-5" />
+          Оформить подписку
+        </Link>
+        <p className="mt-4 text-sm text-[var(--foreground-muted)]">
+          Начните с 25 000 сум/месяц
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fadeIn">

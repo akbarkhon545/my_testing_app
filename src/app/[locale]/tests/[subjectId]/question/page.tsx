@@ -4,58 +4,25 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import Link from "next/link";
+import supabase from "@/lib/supabase/client";
 import {
     Clock,
     ChevronLeft,
     ChevronRight,
     CheckCircle,
-    StopCircle
+    StopCircle,
+    AlertCircle
 } from "lucide-react";
 import { use } from "react";
 
-// Mock data for testing (will be replaced with Supabase queries)
-const mockQuestions = [
-    {
-        id: 1,
-        question_text: "Какой оператор используется для присваивания значения переменной в Python?",
-        correct_answer: "=",
-        answer2: "==",
-        answer3: ":=",
-        answer4: "=>",
-    },
-    {
-        id: 2,
-        question_text: "Какой тип данных используется для хранения текста в Python?",
-        correct_answer: "str",
-        answer2: "text",
-        answer3: "string",
-        answer4: "char",
-    },
-    {
-        id: 3,
-        question_text: "Как объявить список в Python?",
-        correct_answer: "[]",
-        answer2: "{}",
-        answer3: "()",
-        answer4: "<>",
-    },
-    {
-        id: 4,
-        question_text: "Какой метод добавляет элемент в конец списка?",
-        correct_answer: "append()",
-        answer2: "add()",
-        answer3: "insert()",
-        answer4: "push()",
-    },
-    {
-        id: 5,
-        question_text: "Какое ключевое слово используется для определения функции?",
-        correct_answer: "def",
-        answer2: "function",
-        answer3: "func",
-        answer4: "fn",
-    },
-];
+interface Question {
+    id: number;
+    question_text: string;
+    correct_answer: string;
+    answer2: string;
+    answer3: string;
+    answer4: string;
+}
 
 function shuffleArray<T>(array: T[]): T[] {
     const shuffled = [...array];
@@ -83,14 +50,81 @@ export default function QuestionPage({ params }: QuestionPageProps) {
     const searchParams = useSearchParams();
     const mode = searchParams.get("mode") || "training";
 
+    const [questions, setQuestions] = useState<Question[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [hasSubscription, setHasSubscription] = useState(false);
+    const [authChecked, setAuthChecked] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<number, string>>({});
     const [timeRemaining, setTimeRemaining] = useState(mode === "training" ? 25 * 60 : 0);
     const [isFinishing, setIsFinishing] = useState(false);
 
-    const questions = mockQuestions;
-    const currentQuestion = questions[currentIndex];
     const isTraining = mode === "training";
+
+    // Check auth and subscription first
+    useEffect(() => {
+        const checkAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (!session) {
+                router.push(`/${locale}/auth/login`);
+                return;
+            }
+
+            // Check subscription by email
+            const userEmail = session.user.email;
+
+            // Admin bypass - full access
+            if (userEmail === "akbarkhon545@gmail.com") {
+                setHasSubscription(true);
+                setAuthChecked(true);
+                return;
+            }
+
+            const allSubs = JSON.parse(localStorage.getItem('all_subscriptions') || '{}');
+            const userSub = allSubs[userEmail || ''];
+
+            if (!userSub || !userSub.expiresAt || new Date(userSub.expiresAt) <= new Date()) {
+                router.push(`/${locale}/pricing`);
+                return;
+            }
+
+            setHasSubscription(true);
+            setAuthChecked(true);
+        };
+        checkAuth();
+    }, [locale, router]);
+
+    // Load questions from Supabase (only if subscription check passed)
+    useEffect(() => {
+        if (!authChecked || !hasSubscription) return;
+
+        (async () => {
+            setLoading(true);
+            try {
+                const { data, error } = await supabase
+                    .from("questions")
+                    .select("id, question_text, correct_answer, answer2, answer3, answer4")
+                    .eq("subject_id", resolvedParams.subjectId)
+                    .limit(mode === "training" ? 25 : 100);
+
+                if (error) {
+                    console.error("Error loading questions:", error);
+                    setQuestions([]);
+                } else {
+                    // Shuffle for training mode
+                    const shuffled = mode === "training" ? shuffleArray(data || []) : (data || []);
+                    setQuestions(shuffled);
+                }
+            } catch (e) {
+                console.error("Connection error:", e);
+                setQuestions([]);
+            }
+            setLoading(false);
+        })();
+    }, [resolvedParams.subjectId, mode, authChecked, hasSubscription]);
+
+    const currentQuestion = questions[currentIndex];
 
     // Memoize shuffled options per question
     const shuffledOptionsMap = useMemo(() => {
@@ -104,9 +138,7 @@ export default function QuestionPage({ params }: QuestionPageProps) {
             ]);
         });
         return map;
-    }, []);
-
-    const shuffledOptions = shuffledOptionsMap[currentQuestion.id];
+    }, [questions]);
 
     // Timer for training mode
     useEffect(() => {
@@ -169,8 +201,39 @@ export default function QuestionPage({ params }: QuestionPageProps) {
         router.push(`/${locale}/tests/${resolvedParams.subjectId}/result`);
     };
 
+    // Loading state
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[50vh]">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-[var(--foreground-secondary)]">Загрузка вопросов...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // No questions available
+    if (questions.length === 0) {
+        return (
+            <div className="max-w-xl mx-auto text-center py-12">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--warning-light)] mb-4">
+                    <AlertCircle className="w-8 h-8 text-[var(--warning)]" />
+                </div>
+                <h2 className="text-xl font-bold text-[var(--foreground)] mb-2">Нет вопросов</h2>
+                <p className="text-[var(--foreground-secondary)] mb-6">
+                    По этому предмету пока нет доступных вопросов. Обратитесь к администратору.
+                </p>
+                <Link href={`/${locale}/tests`} className="btn btn-primary">
+                    Вернуться к выбору теста
+                </Link>
+            </div>
+        );
+    }
+
     const progress = ((currentIndex + 1) / questions.length) * 100;
     const timerClass = timeRemaining <= 60 ? "danger" : timeRemaining <= 5 * 60 ? "warning" : "";
+    const shuffledOptions = shuffledOptionsMap[currentQuestion?.id] || [];
 
     return (
         <div className="max-w-3xl mx-auto animate-fadeIn">
@@ -283,10 +346,10 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                         key={q.id}
                         onClick={() => setCurrentIndex(idx)}
                         className={`w-8 h-8 rounded-full text-sm font-medium transition-all ${idx === currentIndex
-                                ? "bg-[var(--primary)] text-white"
-                                : answers[q.id]
-                                    ? "bg-[var(--success)] text-white"
-                                    : "bg-[var(--border)] text-[var(--foreground-secondary)] hover:bg-[var(--border-hover)]"
+                            ? "bg-[var(--primary)] text-white"
+                            : answers[q.id]
+                                ? "bg-[var(--success)] text-white"
+                                : "bg-[var(--border)] text-[var(--foreground-secondary)] hover:bg-[var(--border-hover)]"
                             }`}
                     >
                         {idx + 1}

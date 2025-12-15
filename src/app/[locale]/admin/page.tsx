@@ -26,30 +26,24 @@ import {
 
 type Tab = "faculties" | "subjects" | "questions" | "users" | "subscriptions";
 
-// Mock data
-const mockFaculties = [
-  { id: 1, name: "Информатика", subjects_count: 3 },
-  { id: 2, name: "Математика и физика", subjects_count: 2 },
-  { id: 3, name: "Языки", subjects_count: 4 },
-];
+// Data will be loaded from database
+const mockFaculties: { id: number; name: string; subjects_count: number }[] = [];
 
-const mockSubjects = [
-  { id: 1, name: "Python программирование", faculty_id: 1, faculty_name: "Информатика", questions_count: 50 },
-  { id: 2, name: "Базы данных", faculty_id: 1, faculty_name: "Информатика", questions_count: 30 },
-  { id: 3, name: "Алгебра", faculty_id: 2, faculty_name: "Математика и физика", questions_count: 45 },
-];
+const mockSubjects: { id: number; name: string; faculty_id: number; faculty_name: string; questions_count: number }[] = [];
 
-const mockQuestions = [
-  { id: 1, question_text: "Какой оператор используется для присваивания?", subject_name: "Python" },
-  { id: 2, question_text: "Что такое список в Python?", subject_name: "Python" },
-  { id: 3, question_text: "Как объявить функцию?", subject_name: "Python" },
-];
+const mockQuestions: { id: number; question_text: string; subject_name: string }[] = [];
 
-const mockUsers = [
-  { id: 1, name: "Иванов Иван", email: "ivanov@example.com", role: "student", active: true, subscription: null },
-  { id: 2, name: "Петрова Анна", email: "petrova@example.com", role: "student", active: true, subscription: { plan: "monthly", expiresAt: "2025-01-15" } },
-  { id: 3, name: "Сидоров Петр", email: "sidorov@example.com", role: "student", active: true, subscription: { plan: "yearly", expiresAt: "2025-12-15" } },
-  { id: 4, name: "Админ", email: "admin@example.com", role: "admin", active: true, subscription: null },
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  active: boolean;
+  subscription: { plan: "monthly" | "yearly"; expiresAt: string } | null;
+}
+
+const mockUsers: User[] = [
+  { id: 1, name: "Akbarkhon", email: "akbarkhon545@gmail.com", role: "admin", active: true, subscription: null },
 ];
 
 export default function AdminPage() {
@@ -116,22 +110,44 @@ export default function AdminPage() {
 
     const days = subPlan === "monthly" ? subDuration * 30 : subDuration * 365;
     const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    const subscriptionData = { plan: subPlan, expiresAt: expiresAt.toISOString().split('T')[0] };
 
+    // Update state
     setUsers(users.map(u =>
       u.id === selectedUser.id
-        ? { ...u, subscription: { plan: subPlan, expiresAt: expiresAt.toISOString().split('T')[0] } }
+        ? { ...u, subscription: subscriptionData }
         : u
     ));
 
+    // Save to localStorage by email (for test page to find)
+    localStorage.setItem(`subscription_${selectedUser.email}`, JSON.stringify(subscriptionData));
+
+    // Also save by a generic key for current user lookup
+    // The test pages will need to check this
+    const allSubs = JSON.parse(localStorage.getItem('all_subscriptions') || '{}');
+    allSubs[selectedUser.email] = subscriptionData;
+    localStorage.setItem('all_subscriptions', JSON.stringify(allSubs));
+
     setShowSubModal(false);
     setSelectedUser(null);
+
+    alert(`Подписка активирована для ${selectedUser.email}!`);
   };
 
   const handleRemoveSubscription = (userId: number) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
     if (confirm("Удалить подписку пользователя?")) {
       setUsers(users.map(u =>
         u.id === userId ? { ...u, subscription: null } : u
       ));
+
+      // Remove from localStorage
+      localStorage.removeItem(`subscription_${user.email}`);
+      const allSubs = JSON.parse(localStorage.getItem('all_subscriptions') || '{}');
+      delete allSubs[user.email];
+      localStorage.setItem('all_subscriptions', JSON.stringify(allSubs));
     }
   };
 
@@ -486,8 +502,8 @@ export default function AdminPage() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${activeTab === tab.id
-                  ? "bg-[var(--primary)] text-white"
-                  : "bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--border)]"
+                ? "bg-[var(--primary)] text-white"
+                : "bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--border)]"
                 }`}
             >
               <Icon className="w-4 h-4" />
@@ -614,8 +630,8 @@ export default function AdminPage() {
                   <button
                     onClick={() => setSubPlan("monthly")}
                     className={`p-4 rounded-lg border-2 text-center transition-all ${subPlan === "monthly"
-                        ? "border-[var(--primary)] bg-[var(--primary-light)]"
-                        : "border-[var(--border)]"
+                      ? "border-[var(--primary)] bg-[var(--primary-light)]"
+                      : "border-[var(--border)]"
                       }`}
                   >
                     <p className="font-bold text-[var(--foreground)]">25 000 сум</p>
@@ -624,8 +640,8 @@ export default function AdminPage() {
                   <button
                     onClick={() => setSubPlan("yearly")}
                     className={`p-4 rounded-lg border-2 text-center transition-all ${subPlan === "yearly"
-                        ? "border-[var(--primary)] bg-[var(--primary-light)]"
-                        : "border-[var(--border)]"
+                      ? "border-[var(--primary)] bg-[var(--primary-light)]"
+                      : "border-[var(--border)]"
                       }`}
                   >
                     <p className="font-bold text-[var(--foreground)]">50 000 сум</p>

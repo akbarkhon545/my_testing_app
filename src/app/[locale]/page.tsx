@@ -10,7 +10,10 @@ import {
   Award,
   BarChart3,
   Users,
-  Globe
+  Globe,
+  Crown,
+  Star,
+  Check
 } from "lucide-react";
 
 export default function HomePage() {
@@ -103,6 +106,86 @@ export default function HomePage() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="mb-12">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 text-sm font-medium mb-4">
+            <Crown className="w-4 h-4 text-yellow-500" />
+            <span className="text-[var(--foreground)]">Доступные тарифы</span>
+          </div>
+          <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">
+            Выберите подписку
+          </h2>
+          <p className="text-[var(--foreground-secondary)]">
+            Получите полный доступ ко всем тестам и возможностям
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          {/* Monthly Plan */}
+          <div className="card p-6 hover:scale-[1.02] transition-transform">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-lg bg-[var(--primary-light)] flex items-center justify-center">
+                <Star className="w-6 h-6 text-[var(--primary)]" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-[var(--foreground)]">Месячная</h3>
+                <p className="text-sm text-[var(--foreground-muted)]">Гибкий выбор</p>
+              </div>
+            </div>
+            <div className="mb-4">
+              <span className="text-3xl font-bold text-[var(--foreground)]">25 000</span>
+              <span className="text-[var(--foreground-secondary)]"> сум/месяц</span>
+            </div>
+            <ul className="space-y-2 mb-6">
+              {["Неограниченные тесты", "Полная статистика", "Приоритетная поддержка"].map((item, i) => (
+                <li key={i} className="flex items-center gap-2 text-sm text-[var(--foreground-secondary)]">
+                  <Check className="w-4 h-4 text-[var(--success)]" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <Link href={`/${locale}/pricing`} className="btn btn-outline w-full">
+              Выбрать
+            </Link>
+          </div>
+
+          {/* Yearly Plan */}
+          <div className="card p-6 border-2 border-[var(--primary)] hover:scale-[1.02] transition-transform relative">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <span className="px-3 py-1 rounded-full bg-[var(--primary)] text-white text-xs font-medium">
+                Выгодно!
+              </span>
+            </div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                <Crown className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-[var(--foreground)]">Годовая</h3>
+                <p className="text-sm text-[var(--success)]">Экономия 250 000 сум!</p>
+              </div>
+            </div>
+            <div className="mb-4">
+              <span className="text-3xl font-bold text-[var(--foreground)]">50 000</span>
+              <span className="text-[var(--foreground-secondary)]"> сум/год</span>
+            </div>
+            <ul className="space-y-2 mb-6">
+              {["Все преимущества месячной", "Эксклюзивные материалы", "Приоритетная поддержка 24/7"].map((item, i) => (
+                <li key={i} className="flex items-center gap-2 text-sm text-[var(--foreground-secondary)]">
+                  <Check className="w-4 h-4 text-[var(--success)]" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <Link href={`/${locale}/pricing`} className="btn btn-primary w-full">
+              <Crown className="w-4 h-4" />
+              Выбрать
+            </Link>
+          </div>
         </div>
       </section>
 
