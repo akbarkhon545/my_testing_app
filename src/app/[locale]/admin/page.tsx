@@ -61,13 +61,25 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
-  const [users, setUsers] = useState(mockUsers);
+  const [saving, setSaving] = useState(false);
+
+  // Data states - loaded from Supabase
+  const [faculties, setFaculties] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>(mockUsers);
 
   // Form states
   const [formName, setFormName] = useState("");
   const [formEmail, setFormEmail] = useState("");
   const [formRole, setFormRole] = useState("student");
   const [formFacultyId, setFormFacultyId] = useState("");
+  const [formQuestionText, setFormQuestionText] = useState("");
+  const [formCorrectAnswer, setFormCorrectAnswer] = useState("");
+  const [formAnswer2, setFormAnswer2] = useState("");
+  const [formAnswer3, setFormAnswer3] = useState("");
+  const [formAnswer4, setFormAnswer4] = useState("");
+  const [formSubjectId, setFormSubjectId] = useState("");
 
   // Subscription form
   const [showSubModal, setShowSubModal] = useState(false);
@@ -87,8 +99,8 @@ export default function AdminPage() {
 
       if (session.user.email === ADMIN_EMAIL) {
         setIsAdmin(true);
-        // Load users from Supabase
-        loadUsersFromSupabase();
+        // Load all data from Supabase
+        loadAllData();
       } else {
         setIsAdmin(false);
       }
@@ -96,6 +108,52 @@ export default function AdminPage() {
     };
     checkAdmin();
   }, [locale, router]);
+
+  // Load all data from Supabase
+  const loadAllData = async () => {
+    await Promise.all([
+      loadFaculties(),
+      loadSubjects(),
+      loadQuestions(),
+      loadUsersFromSupabase()
+    ]);
+  };
+
+  // Load faculties
+  const loadFaculties = async () => {
+    const { data, error } = await supabase
+      .from("faculties")
+      .select("id, name")
+      .order("name");
+
+    if (!error && data) {
+      setFaculties(data);
+    }
+  };
+
+  // Load subjects with faculty info
+  const loadSubjects = async () => {
+    const { data, error } = await supabase
+      .from("subjects")
+      .select("id, name, faculty_id")
+      .order("name");
+
+    if (!error && data) {
+      setSubjects(data);
+    }
+  };
+
+  // Load questions
+  const loadQuestions = async () => {
+    const { data, error } = await supabase
+      .from("questions")
+      .select("id, question_text, subject_id, correct_answer")
+      .limit(100);
+
+    if (!error && data) {
+      setQuestions(data);
+    }
+  };
 
   // Load users from Supabase profiles
   const loadUsersFromSupabase = async () => {
@@ -166,9 +224,9 @@ export default function AdminPage() {
   }
 
   const tabs: { id: Tab; label: string; icon: any; count: number }[] = [
-    { id: "faculties", label: "Факультеты", icon: GraduationCap, count: mockFaculties.length },
-    { id: "subjects", label: "Предметы", icon: BookOpen, count: mockSubjects.length },
-    { id: "questions", label: "Вопросы", icon: HelpCircle, count: mockQuestions.length },
+    { id: "faculties", label: "Факультеты", icon: GraduationCap, count: faculties.length },
+    { id: "subjects", label: "Предметы", icon: BookOpen, count: subjects.length },
+    { id: "questions", label: "Вопросы", icon: HelpCircle, count: questions.length },
     { id: "users", label: "Пользователи", icon: Users, count: users.length },
     { id: "subscriptions", label: "Подписки", icon: Crown, count: users.filter(u => u.subscription).length },
   ];
@@ -179,6 +237,12 @@ export default function AdminPage() {
     setFormEmail("");
     setFormRole("student");
     setFormFacultyId("");
+    setFormQuestionText("");
+    setFormCorrectAnswer("");
+    setFormAnswer2("");
+    setFormAnswer3("");
+    setFormAnswer4("");
+    setFormSubjectId("");
     setShowModal(true);
   };
 
@@ -187,13 +251,85 @@ export default function AdminPage() {
     setFormName(item.name || "");
     setFormEmail(item.email || "");
     setFormRole(item.role || "student");
-    setFormFacultyId(item.faculty_id || "");
+    setFormFacultyId(String(item.faculty_id || ""));
+    setFormQuestionText(item.question_text || "");
+    setFormCorrectAnswer(item.correct_answer || "");
+    setFormAnswer2(item.answer2 || "");
+    setFormAnswer3(item.answer3 || "");
+    setFormAnswer4(item.answer4 || "");
+    setFormSubjectId(String(item.subject_id || ""));
     setShowModal(true);
   };
 
-  const handleSave = () => {
-    console.log("Saving:", { formName, formEmail, formRole, formFacultyId });
-    setShowModal(false);
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      if (activeTab === "faculties") {
+        if (editingItem) {
+          // Update faculty
+          await supabase.from("faculties").update({ name: formName }).eq("id", editingItem.id);
+        } else {
+          // Create faculty
+          await supabase.from("faculties").insert({ name: formName });
+        }
+        await loadFaculties();
+      } else if (activeTab === "subjects") {
+        if (editingItem) {
+          // Update subject
+          await supabase.from("subjects").update({
+            name: formName,
+            faculty_id: parseInt(formFacultyId)
+          }).eq("id", editingItem.id);
+        } else {
+          // Create subject
+          await supabase.from("subjects").insert({
+            name: formName,
+            faculty_id: parseInt(formFacultyId)
+          });
+        }
+        await loadSubjects();
+      } else if (activeTab === "questions") {
+        const questionData = {
+          question_text: formQuestionText,
+          correct_answer: formCorrectAnswer,
+          answer2: formAnswer2,
+          answer3: formAnswer3,
+          answer4: formAnswer4,
+          subject_id: parseInt(formSubjectId)
+        };
+        if (editingItem) {
+          await supabase.from("questions").update(questionData).eq("id", editingItem.id);
+        } else {
+          await supabase.from("questions").insert(questionData);
+        }
+        await loadQuestions();
+      }
+      setShowModal(false);
+      alert("Сохранено!");
+    } catch (e) {
+      console.error("Save error:", e);
+      alert("Ошибка сохранения");
+    }
+    setSaving(false);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Удалить?")) return;
+
+    try {
+      if (activeTab === "faculties") {
+        await supabase.from("faculties").delete().eq("id", id);
+        await loadFaculties();
+      } else if (activeTab === "subjects") {
+        await supabase.from("subjects").delete().eq("id", id);
+        await loadSubjects();
+      } else if (activeTab === "questions") {
+        await supabase.from("questions").delete().eq("id", id);
+        await loadQuestions();
+      }
+    } catch (e) {
+      console.error("Delete error:", e);
+    }
   };
 
   // Subscription management
@@ -288,18 +424,18 @@ export default function AdminPage() {
           </tr>
         </thead>
         <tbody>
-          {mockFaculties.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase())).map(faculty => (
+          {faculties.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase())).map(faculty => (
             <tr key={faculty.id} className="border-b border-[var(--border)] hover:bg-[var(--border)]/30">
               <td className="py-3 px-4 text-[var(--foreground-muted)]">{faculty.id}</td>
               <td className="py-3 px-4 font-medium text-[var(--foreground)]">{faculty.name}</td>
               <td className="py-3 px-4 text-center">
-                <span className="badge badge-primary">{faculty.subjects_count}</span>
+                <span className="badge badge-primary">{subjects.filter(s => s.faculty_id === faculty.id).length}</span>
               </td>
               <td className="py-3 px-4 text-right">
                 <button onClick={() => handleEdit(faculty)} className="btn btn-sm btn-secondary mr-2">
                   <Edit className="w-4 h-4" />
                 </button>
-                <button className="btn btn-sm btn-danger">
+                <button onClick={() => handleDelete(faculty.id)} className="btn btn-sm btn-danger">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </td>
@@ -322,18 +458,20 @@ export default function AdminPage() {
           </tr>
         </thead>
         <tbody>
-          {mockSubjects.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())).map(subject => (
+          {subjects.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())).map(subject => (
             <tr key={subject.id} className="border-b border-[var(--border)] hover:bg-[var(--border)]/30">
               <td className="py-3 px-4 font-medium text-[var(--foreground)]">{subject.name}</td>
-              <td className="py-3 px-4 text-[var(--foreground-secondary)]">{subject.faculty_name}</td>
+              <td className="py-3 px-4 text-[var(--foreground-secondary)]">
+                {faculties.find(f => f.id === subject.faculty_id)?.name || "-"}
+              </td>
               <td className="py-3 px-4 text-center">
-                <span className="badge badge-success">{subject.questions_count}</span>
+                <span className="badge badge-success">{questions.filter(q => q.subject_id === subject.id).length}</span>
               </td>
               <td className="py-3 px-4 text-right">
                 <button onClick={() => handleEdit(subject)} className="btn btn-sm btn-secondary mr-2">
                   <Edit className="w-4 h-4" />
                 </button>
-                <button className="btn btn-sm btn-danger">
+                <button onClick={() => handleDelete(subject.id)} className="btn btn-sm btn-danger">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </td>
@@ -363,18 +501,20 @@ export default function AdminPage() {
             </tr>
           </thead>
           <tbody>
-            {mockQuestions.filter(q => q.question_text.toLowerCase().includes(searchQuery.toLowerCase())).map(question => (
+            {questions.filter(q => q.question_text?.toLowerCase().includes(searchQuery.toLowerCase())).map(question => (
               <tr key={question.id} className="border-b border-[var(--border)] hover:bg-[var(--border)]/30">
                 <td className="py-3 px-4 text-[var(--foreground-muted)]">{question.id}</td>
                 <td className="py-3 px-4 font-medium text-[var(--foreground)] max-w-md truncate">
                   {question.question_text}
                 </td>
-                <td className="py-3 px-4 text-[var(--foreground-secondary)]">{question.subject_name}</td>
+                <td className="py-3 px-4 text-[var(--foreground-secondary)]">
+                  {subjects.find(s => s.id === question.subject_id)?.name || "-"}
+                </td>
                 <td className="py-3 px-4 text-right">
                   <button onClick={() => handleEdit(question)} className="btn btn-sm btn-secondary mr-2">
                     <Edit className="w-4 h-4" />
                   </button>
-                  <button className="btn btn-sm btn-danger">
+                  <button onClick={() => handleDelete(question.id)} className="btn btn-sm btn-danger">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </td>
