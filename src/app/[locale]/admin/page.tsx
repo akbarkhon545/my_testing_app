@@ -828,7 +828,7 @@ export default function AdminPage() {
                   <label className="label">Факультет</label>
                   <select className="input" value={formFacultyId} onChange={(e) => setFormFacultyId(e.target.value)}>
                     <option value="">Выберите факультет</option>
-                    {mockFaculties.map(f => (
+                    {faculties.map(f => (
                       <option key={f.id} value={f.id}>{f.name}</option>
                     ))}
                   </select>
