@@ -166,20 +166,20 @@ export default function NavBar() {
                 )}
               </div>
             ) : (
-              <div className="hidden md:flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 <Link
                   href={`/${locale}/auth/login`}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-[var(--foreground-secondary)] hover:bg-[var(--border)] transition-all"
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-sm font-medium text-[var(--foreground-secondary)] hover:bg-[var(--border)] transition-all"
                 >
                   <LogIn className="w-4 h-4" />
-                  {t("nav.login")}
+                  <span className="hidden sm:inline">{t("nav.login")}</span>
                 </Link>
                 <Link
                   href={`/${locale}/auth/signup`}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-all"
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-sm font-medium bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-all"
                 >
                   <UserPlus className="w-4 h-4" />
-                  {t("nav.signup")}
+                  <span className="hidden sm:inline">{t("nav.signup")}</span>
                 </Link>
               </div>
             )}
