@@ -109,7 +109,7 @@ export default function NavBar() {
           </nav>
 
           {/* Right side actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0 overflow-visible">
             <ThemeToggle />
             <LanguageSwitcher />
 
@@ -166,20 +166,21 @@ export default function NavBar() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-1 sm:gap-2">
+              <div className="flex items-center gap-2">
                 <Link
                   href={`/${locale}/auth/login`}
-                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-sm font-medium text-[var(--foreground-secondary)] hover:bg-[var(--border)] transition-all"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-[var(--foreground-secondary)] hover:bg-[var(--border)] transition-all whitespace-nowrap"
                 >
-                  <LogIn className="w-4 h-4" />
-                  <span className="hidden sm:inline">{t("nav.login")}</span>
+                  <LogIn className="w-4 h-4 flex-shrink-0" />
+                  {t("nav.login")}
                 </Link>
                 <Link
                   href={`/${locale}/auth/signup`}
-                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-sm font-medium bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-all"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 hover:bg-indigo-700 transition-all whitespace-nowrap shadow-sm"
+                  style={{ color: '#ffffff' }}
                 >
-                  <UserPlus className="w-4 h-4" />
-                  <span className="hidden sm:inline">{t("nav.signup")}</span>
+                  <UserPlus className="w-4 h-4" style={{ color: '#ffffff' }} />
+                  {t("nav.signup")}
                 </Link>
               </div>
             )}
