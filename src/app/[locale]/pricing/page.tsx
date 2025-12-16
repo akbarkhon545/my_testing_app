@@ -34,7 +34,7 @@ const plans: PricingPlan[] = [
     {
         id: "monthly",
         name: "Месячная подписка",
-        price: 25000,
+        price: 24990,
         period: "month",
         periodLabel: "/месяц",
         features: [
@@ -48,19 +48,14 @@ const plans: PricingPlan[] = [
     {
         id: "yearly",
         name: "Годовая подписка",
-        price: 50000,
+        price: 44990,
         period: "year",
         periodLabel: "/год",
         popular: true,
-        savings: "Экономия 250 000 сум!",
         features: [
             "Все преимущества месячной",
-            "Неограниченные тесты",
-            "Доступ ко всем предметам",
-            "Подробная статистика",
-            "История результатов",
-            "Приоритетная поддержка",
             "Эксклюзивные материалы",
+            "Приоритетная поддержка 24/7",
         ],
     },
 ];
@@ -259,19 +254,19 @@ export default function PricingPage() {
 
             {/* Payment Modal */}
             {showPaymentModal && selectedPlanData && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fadeIn p-4">
-                    <div className="bg-[var(--background-secondary)] rounded-2xl shadow-2xl w-full max-w-md animate-scaleIn">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fadeIn p-2 sm:p-4">
+                    <div className="bg-[var(--background-secondary)] rounded-2xl shadow-2xl w-full max-w-md md:max-w-lg max-h-[90vh] overflow-y-auto animate-scaleIn">
                         {/* Modal Header */}
-                        <div className="p-6 border-b border-[var(--border)] text-center">
-                            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] mb-4">
-                                <CreditCard className="w-7 h-7 text-white" />
+                        <div className="p-4 sm:p-6 border-b border-[var(--border)] text-center">
+                            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] mb-3 sm:mb-4">
+                                <CreditCard className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                             </div>
-                            <h3 className="text-xl font-bold text-[var(--foreground)]">Оплата подписки</h3>
-                            <p className="text-[var(--foreground-secondary)]">{selectedPlanData.name}</p>
+                            <h3 className="text-lg sm:text-xl font-bold text-[var(--foreground)]">Оплата подписки</h3>
+                            <p className="text-sm sm:text-base text-[var(--foreground-secondary)]">{selectedPlanData.name}</p>
                         </div>
 
                         {/* Modal Body */}
-                        <div className="p-6 space-y-6">
+                        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                             {/* Amount */}
                             <div className="text-center p-4 rounded-lg bg-[var(--primary-light)]">
                                 <p className="text-sm text-[var(--foreground-secondary)] mb-1">Сумма к оплате</p>
@@ -338,7 +333,7 @@ export default function PricingPage() {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="p-6 border-t border-[var(--border)] flex gap-3">
+                        <div className="p-4 sm:p-6 border-t border-[var(--border)] flex gap-2 sm:gap-3">
                             <button
                                 onClick={() => setShowPaymentModal(false)}
                                 className="btn btn-secondary flex-1"

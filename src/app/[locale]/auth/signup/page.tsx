@@ -89,10 +89,11 @@ export default function SignupPage() {
               <div>
                 <label className="label">{t("email")}</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-muted)]" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-muted)] pointer-events-none z-10" />
                   <input
                     type="email"
-                    className="input pl-10"
+                    className="input"
+                    style={{ paddingLeft: '2.5rem' }}
                     placeholder="name@example.com"
                     {...register("email")}
                   />
@@ -105,10 +106,11 @@ export default function SignupPage() {
               <div>
                 <label className="label">{t("password")}</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-muted)]" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-muted)] pointer-events-none z-10" />
                   <input
                     type={showPassword ? "text" : "password"}
-                    className="input pl-10 pr-10"
+                    className="input"
+                    style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
                     placeholder="••••••••"
                     {...register("password")}
                   />
@@ -141,10 +143,11 @@ export default function SignupPage() {
               <div>
                 <label className="label">Подтверждение пароля</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-muted)]" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-muted)] pointer-events-none z-10" />
                   <input
                     type={showPassword ? "text" : "password"}
-                    className="input pl-10"
+                    className="input"
+                    style={{ paddingLeft: '2.5rem' }}
                     placeholder="••••••••"
                     {...register("confirmPassword")}
                   />

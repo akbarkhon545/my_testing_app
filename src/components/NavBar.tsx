@@ -80,11 +80,9 @@ export default function NavBar() {
           {/* Logo */}
           <Link
             href={`/${locale}`}
-            className="flex items-center gap-2 font-bold text-xl text-[var(--foreground)] hover:text-[var(--primary)] transition-colors"
+            className="flex items-center gap-2 font-bold text-xl text-[var(--foreground)] hover:opacity-80 transition-opacity"
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center">
-              <FileQuestion className="w-5 h-5 text-white" />
-            </div>
+            <img src="/logo.png" alt="EduPlatform" className="w-8 h-8 rounded-lg object-contain" />
             <span className="hidden sm:inline">{t("brand")}</span>
           </Link>
 
@@ -176,7 +174,7 @@ export default function NavBar() {
                 </Link>
                 <Link
                   href={`/${locale}/auth/signup`}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 hover:bg-indigo-700 transition-all whitespace-nowrap shadow-sm"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[var(--primary)] hover:bg-[var(--primary-hover)] transition-all whitespace-nowrap shadow-sm"
                   style={{ color: '#ffffff' }}
                 >
                   <UserPlus className="w-4 h-4" style={{ color: '#ffffff' }} />

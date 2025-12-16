@@ -46,14 +46,14 @@ export default function HomePage() {
   return (
     <div className="animate-fadeIn">
       {/* Hero Section */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--primary)] via-indigo-600 to-[var(--secondary)] p-8 md:p-12 mb-12">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#2a3a4a] via-[#3a4a5a] to-[#4a5a6a] p-8 md:p-12 mb-12">
         {/* Background decorations */}
-        <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-64 h-64 rounded-full bg-cyan-400/20 blur-3xl" />
+        <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-[#4fc8e8]/20 blur-3xl" />
+        <div className="absolute -bottom-24 -left-24 w-64 h-64 rounded-full bg-[#5a7a94]/30 blur-3xl" />
 
         <div className="relative z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 text-white text-sm font-medium mb-6">
-            <Sparkles className="w-4 h-4" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 text-white text-sm font-medium mb-6 backdrop-blur-sm border border-white/20">
+            <Sparkles className="w-4 h-4 text-[#4fc8e8]" />
             Платформа для тестирования знаний
           </div>
 
@@ -68,14 +68,15 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
               href={`/${locale}/auth/login`}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-white text-[var(--primary)] font-semibold hover:bg-white/90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-white text-[#3a4a5a] font-semibold hover:bg-white/90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
             >
               {t("cta")}
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
               href={`/${locale}/tests`}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-white/20 text-white font-semibold hover:bg-white/30 transition-all border border-white/30"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#4fc8e8]/20 font-semibold hover:bg-[#4fc8e8]/30 transition-all border border-[#4fc8e8]/50"
+              style={{ color: '#ffffff' }}
             >
               Начать тестирование
             </Link>
@@ -137,7 +138,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="mb-4">
-              <span className="text-3xl font-bold text-[var(--foreground)]">25 000</span>
+              <span className="text-3xl font-bold text-[var(--foreground)]">24 990</span>
               <span className="text-[var(--foreground-secondary)]"> сум/месяц</span>
             </div>
             <ul className="space-y-2 mb-6">
@@ -166,11 +167,11 @@ export default function HomePage() {
               </div>
               <div>
                 <h3 className="font-semibold text-[var(--foreground)]">Годовая</h3>
-                <p className="text-sm text-[var(--success)]">Экономия 250 000 сум!</p>
+                <p className="text-sm text-[var(--foreground-muted)]">Лучший выбор</p>
               </div>
             </div>
             <div className="mb-4">
-              <span className="text-3xl font-bold text-[var(--foreground)]">50 000</span>
+              <span className="text-3xl font-bold text-[var(--foreground)]">44 990</span>
               <span className="text-[var(--foreground-secondary)]"> сум/год</span>
             </div>
             <ul className="space-y-2 mb-6">

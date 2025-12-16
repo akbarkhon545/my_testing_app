@@ -774,11 +774,12 @@ export default function AdminPage() {
       <div className="card">
         <div className="card-header flex justify-between items-center flex-wrap gap-4">
           <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-muted)]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-muted)] pointer-events-none z-10" />
             <input
               type="text"
               placeholder="Поиск..."
-              className="input pl-10 py-2"
+              className="input py-2"
+              style={{ paddingLeft: '2.5rem' }}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />

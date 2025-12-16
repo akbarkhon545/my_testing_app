@@ -29,36 +29,74 @@ interface Stats {
   avgScore: number;
 }
 
-// Mock stats for demo
-const mockStats: Stats[] = [
-  { subject: { id: 1, name: "Python программирование" }, attempts: 5, avgScore: 78 },
-  { subject: { id: 2, name: "Математика" }, attempts: 3, avgScore: 65 },
-  { subject: { id: 3, name: "Физика" }, attempts: 2, avgScore: 82 },
-];
-
 export default function DashboardPage() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("dashboard");
   const [email, setEmail] = useState<string | null>(null);
   const [name, setName] = useState<string>("Студент");
-  const [stats, setStats] = useState<Stats[]>(mockStats);
+  const [stats, setStats] = useState<Stats[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function checkSession() {
+    async function loadDashboard() {
       const { data } = await supabase.auth.getSession();
       const session = data.session;
       if (!session) {
-        // Redirect to login if not authenticated
         router.push(`/${locale}/auth/login`);
         return;
       }
       setEmail(session.user.email ?? null);
       setName(session.user.email?.split("@")[0] ?? "Студент");
+
+      // Fetch real test results
+      const { data: results, error } = await supabase
+        .from("test_results")
+        .select(`
+          id,
+          score,
+          total_questions,
+          subject_id,
+          subjects (id, name)
+        `)
+        .eq("user_id", session.user.id);
+
+      if (!error && results && results.length > 0) {
+        // Aggregate results by subject
+        const subjectMap = new Map<number, { subject: Subject; scores: number[]; attempts: number }>();
+
+        results.forEach((result: any) => {
+          const subjectId = result.subject_id;
+          const percentage = result.total_questions > 0
+            ? Math.round((result.score / result.total_questions) * 100)
+            : 0;
+
+          if (subjectMap.has(subjectId)) {
+            const existing = subjectMap.get(subjectId)!;
+            existing.scores.push(percentage);
+            existing.attempts += 1;
+          } else {
+            subjectMap.set(subjectId, {
+              subject: result.subjects,
+              scores: [percentage],
+              attempts: 1
+            });
+          }
+        });
+
+        // Convert to Stats array
+        const aggregatedStats: Stats[] = Array.from(subjectMap.values()).map(item => ({
+          subject: item.subject,
+          attempts: item.attempts,
+          avgScore: Math.round(item.scores.reduce((a, b) => a + b, 0) / item.scores.length)
+        }));
+
+        setStats(aggregatedStats);
+      }
+
       setLoading(false);
     }
-    checkSession();
+    loadDashboard();
   }, [router, locale]);
 
   const signOut = async () => {
@@ -96,23 +134,19 @@ export default function DashboardPage() {
           </h1>
         </div>
         <div className="card-body">
-          <div className="flex items-center gap-4">
-            <div className="avatar avatar-lg">
+          <div className="flex items-center gap-5">
+            <div
+              className="flex-shrink-0 flex items-center justify-center w-11 h-11 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] text-white font-bold text-lg"
+              style={{ borderRadius: '6px', minWidth: '44px', minHeight: '44px' }}
+            >
               {name[0].toUpperCase()}
             </div>
-            <div>
-              <h2 className="text-xl font-semibold text-[var(--foreground)]">
+            <div className="ml-1">
+              <h2 className="text-lg sm:text-xl font-semibold text-[var(--foreground)]">
                 {t("welcome")}, {name}!
               </h2>
-              <p className="text-[var(--foreground-secondary)]">{email || "Гость"}</p>
+              <p className="text-sm text-[var(--foreground-secondary)]">{email || "Гость"}</p>
             </div>
-            <button
-              onClick={signOut}
-              className="ml-auto btn btn-secondary"
-            >
-              <LogOut className="w-4 h-4" />
-              {t("signout")}
-            </button>
           </div>
 
           <div className="mt-4 alert alert-info">
