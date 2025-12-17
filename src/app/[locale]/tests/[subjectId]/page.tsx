@@ -150,11 +150,12 @@ export default function SubjectTestPage() {
     if (finished) return;
     setFinished(true);
 
+    console.log("=== FINISHING TEST ===");
+
     const correctCount = questions.reduce((acc, q) => {
       const chosen = answersMap[q.id];
       return acc + (chosen === q.correctIndex ? 1 : 0);
     }, 0);
-    const score = total > 0 ? (correctCount / total) * 100 : 0;
 
     const seconds = (() => {
       const start = startedAt.current;
@@ -162,12 +163,25 @@ export default function SubjectTestPage() {
       return Math.max(0, Math.round((Date.now() - start) / 1000));
     })();
 
+    console.log("Correct count:", correctCount);
+    console.log("Total questions:", total);
+    console.log("Subject ID:", subjectId);
+    console.log("Mode:", mode);
+    console.log("Time:", seconds);
+
     const { data: sessionData } = await supabase.auth.getSession();
     const session = sessionData.session;
-    if (!session) return; // already redirected earlier
 
-    // Save result
-    const { error: insertErr } = await supabase.from("test_results").insert({
+    console.log("Session:", session ? "exists" : "null");
+
+    if (!session) {
+      console.error("No session! Cannot save result.");
+      return;
+    }
+
+    console.log("User ID:", session.user.id);
+
+    const insertData = {
       user_id: session.user.id,
       subject_id: subjectId,
       mode,
@@ -175,13 +189,23 @@ export default function SubjectTestPage() {
       total_questions: total,
       correct_count: correctCount,
       total_time: seconds,
-    });
+    };
+
+    console.log("Inserting data:", insertData);
+
+    // Save result
+    const { data, error: insertErr } = await supabase
+      .from("test_results")
+      .insert(insertData)
+      .select();
+
+    console.log("Insert response:", { data, error: insertErr });
 
     if (insertErr) {
       console.error("Error saving test result:", insertErr);
       setError(insertErr.message);
     } else {
-      console.log("Test result saved successfully");
+      console.log("✅ Test result saved successfully!", data);
     }
 
     // Save history (best-effort)
