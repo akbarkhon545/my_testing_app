@@ -49,35 +49,60 @@ export default function DashboardPage() {
       setEmail(session.user.email ?? null);
       setName(session.user.email?.split("@")[0] ?? "Студент");
 
-      // Fetch real test results
+      // Fetch real test results - simple query without join
+      console.log("Fetching results for user:", session.user.id);
+
       const { data: results, error } = await supabase
         .from("test_results")
-        .select(`
-          id,
-          score,
-          total_questions,
-          subject_id,
-          subjects (id, name)
-        `)
+        .select("id, score, total_questions, subject_id")
         .eq("user_id", session.user.id);
 
-      if (!error && results && results.length > 0) {
+      console.log("Query results:", results);
+      console.log("Query error:", error);
+
+      if (error) {
+        console.error("Error fetching results:", error);
+        setLoading(false);
+        return;
+      }
+
+      if (results && results.length > 0) {
+        console.log("Found", results.length, "results");
+
+        // Get unique subject IDs
+        const subjectIds = [...new Set(results.map((r: any) => r.subject_id))];
+
+        // Fetch subjects separately
+        const { data: subjects } = await supabase
+          .from("subjects")
+          .select("id, name")
+          .in("id", subjectIds);
+
+        console.log("Subjects:", subjects);
+
+        // Create subjects map
+        const subjectsMap = new Map<number, Subject>();
+        if (subjects) {
+          subjects.forEach((s: any) => subjectsMap.set(s.id, s));
+        }
+
         // Aggregate results by subject
-        const subjectMap = new Map<number, { subject: Subject; scores: number[]; attempts: number }>();
+        const statsMap = new Map<number, { subject: Subject; scores: number[]; attempts: number }>();
 
         results.forEach((result: any) => {
           const subjectId = result.subject_id;
+          const subject = subjectsMap.get(subjectId);
           const percentage = result.total_questions > 0
             ? Math.round((result.score / result.total_questions) * 100)
             : 0;
 
-          if (subjectMap.has(subjectId)) {
-            const existing = subjectMap.get(subjectId)!;
+          if (statsMap.has(subjectId)) {
+            const existing = statsMap.get(subjectId)!;
             existing.scores.push(percentage);
             existing.attempts += 1;
-          } else {
-            subjectMap.set(subjectId, {
-              subject: result.subjects,
+          } else if (subject) {
+            statsMap.set(subjectId, {
+              subject,
               scores: [percentage],
               attempts: 1
             });
@@ -85,13 +110,16 @@ export default function DashboardPage() {
         });
 
         // Convert to Stats array
-        const aggregatedStats: Stats[] = Array.from(subjectMap.values()).map(item => ({
+        const aggregatedStats: Stats[] = Array.from(statsMap.values()).map(item => ({
           subject: item.subject,
           attempts: item.attempts,
           avgScore: Math.round(item.scores.reduce((a, b) => a + b, 0) / item.scores.length)
         }));
 
+        console.log("Aggregated stats:", aggregatedStats);
         setStats(aggregatedStats);
+      } else {
+        console.log("No results found");
       }
 
       setLoading(false);
