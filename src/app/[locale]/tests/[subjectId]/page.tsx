@@ -171,13 +171,17 @@ export default function SubjectTestPage() {
       user_id: session.user.id,
       subject_id: subjectId,
       mode,
-      score,
+      score: correctCount,
+      total_questions: total,
       correct_count: correctCount,
       total_time: seconds,
     });
 
     if (insertErr) {
+      console.error("Error saving test result:", insertErr);
       setError(insertErr.message);
+    } else {
+      console.log("Test result saved successfully");
     }
 
     // Save history (best-effort)
