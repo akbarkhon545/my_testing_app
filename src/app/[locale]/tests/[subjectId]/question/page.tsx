@@ -174,7 +174,7 @@ export default function QuestionPage({ params }: QuestionPageProps) {
         }
     };
 
-    const handleFinish = () => {
+    const handleFinish = async () => {
         if (isFinishing) return;
         setIsFinishing(true);
 
@@ -188,6 +188,39 @@ export default function QuestionPage({ params }: QuestionPageProps) {
 
         const score = Math.round((correct / questions.length) * 100);
         const timeSpent = isTraining ? (25 * 60 - timeRemaining) : 0;
+
+        console.log("=== FINISHING TRAINING TEST ===");
+        console.log("Correct:", correct, "Total:", questions.length, "Score:", score);
+
+        // Save to Supabase (only for training mode)
+        if (mode === "training") {
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (session) {
+                console.log("Saving result to Supabase for user:", session.user.id);
+
+                const { data, error } = await supabase
+                    .from("test_results")
+                    .insert({
+                        user_id: session.user.id,
+                        subject_id: parseInt(resolvedParams.subjectId),
+                        mode: mode,
+                        score: correct,
+                        total_questions: questions.length,
+                        correct_count: correct,
+                        total_time: timeSpent,
+                    })
+                    .select();
+
+                if (error) {
+                    console.error("Error saving to Supabase:", error);
+                } else {
+                    console.log("✅ Result saved to Supabase!", data);
+                }
+            } else {
+                console.error("No session - cannot save result");
+            }
+        }
 
         // Store results in sessionStorage for the results page
         sessionStorage.setItem("testResult", JSON.stringify({
