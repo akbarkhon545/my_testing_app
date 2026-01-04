@@ -89,6 +89,9 @@ export default function AdminPage() {
   const [subPlan, setSubPlan] = useState<"monthly" | "yearly">("monthly");
   const [subDuration, setSubDuration] = useState(1);
 
+  // State for expanded folders (subjects) in questions view
+  const [expandedSubjects, setExpandedSubjects] = useState<Record<number, boolean>>({});
+
   // Check if user is admin
   useEffect(() => {
     const checkAdmin = async () => {
@@ -497,9 +500,6 @@ export default function AdminPage() {
       </table>
     </div>
   );
-
-  // State for expanded folders (subjects)
-  const [expandedSubjects, setExpandedSubjects] = useState<Record<number, boolean>>({});
 
   const toggleSubjectFolder = (subjectId: number) => {
     setExpandedSubjects(prev => ({
