@@ -50,27 +50,55 @@ export default function ProfilePage() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [changingPassword, setChangingPassword] = useState(false);
 
-    // Subscription (mock for demo)
+    // Subscription - loaded from localStorage
     const [subscription, setSubscription] = useState<Subscription>({
-        plan: "monthly",
-        status: "active",
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        plan: null,
+        status: "none",
+        expiresAt: null,
     });
 
     useEffect(() => {
         async function loadProfile() {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
-                setEmail(session.user.email || "");
-                setName(session.user.email?.split("@")[0] || "Student");
+                const userEmail = session.user.email || "";
+                setEmail(userEmail);
+                setName(userEmail.split("@")[0] || "Student");
 
                 // Super admin bypass - always show as Premium
-                if (session.user.email === "akbarkhon545@gmail.com") {
+                if (userEmail === "akbarkhon545@gmail.com") {
                     setSubscription({
                         plan: "yearly",
                         status: "active",
                         expiresAt: new Date("2099-12-31"), // Permanent access
                     });
+                } else {
+                    // Load subscription from localStorage
+                    const allSubs = JSON.parse(localStorage.getItem('all_subscriptions') || '{}');
+                    const userSub = allSubs[userEmail];
+
+                    if (userSub && userSub.expiresAt) {
+                        const expiryDate = new Date(userSub.expiresAt);
+                        if (expiryDate > new Date()) {
+                            setSubscription({
+                                plan: userSub.plan || "monthly",
+                                status: "active",
+                                expiresAt: expiryDate,
+                            });
+                        } else {
+                            setSubscription({
+                                plan: userSub.plan || "monthly",
+                                status: "expired",
+                                expiresAt: expiryDate,
+                            });
+                        }
+                    } else {
+                        setSubscription({
+                            plan: null,
+                            status: "none",
+                            expiresAt: null,
+                        });
+                    }
                 }
             }
             setLoading(false);
