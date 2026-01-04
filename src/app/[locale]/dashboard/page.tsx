@@ -32,7 +32,7 @@ interface Stats {
 export default function DashboardPage() {
   const router = useRouter();
   const locale = useLocale();
-  const t = useTranslations("dashboard");
+  const t = useTranslations();
   const [email, setEmail] = useState<string | null>(null);
   const [name, setName] = useState<string>("Студент");
   const [stats, setStats] = useState<Stats[]>([]);
@@ -146,7 +146,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="text-[var(--foreground-secondary)]">Загрузка...</div>
+        <div className="text-[var(--foreground-secondary)]">{t("common.loading")}</div>
       </div>
     );
   }
@@ -158,7 +158,7 @@ export default function DashboardPage() {
         <div className="card-header">
           <h1 className="text-xl font-semibold flex items-center gap-2">
             <BarChart3 className="w-5 h-5" />
-            {t("title")}
+            {t("dashboard.title")}
           </h1>
         </div>
         <div className="card-body">
@@ -171,7 +171,7 @@ export default function DashboardPage() {
             </div>
             <div className="ml-1">
               <h2 className="text-lg sm:text-xl font-semibold text-[var(--foreground)]">
-                {t("welcome")}, {name}!
+                {t("dashboard.welcome")}, {name}!
               </h2>
               <p className="text-sm text-[var(--foreground-secondary)]">{email || "Гость"}</p>
             </div>
@@ -179,7 +179,7 @@ export default function DashboardPage() {
 
           <div className="mt-4 alert alert-info">
             <Lightbulb className="w-5 h-5 flex-shrink-0" />
-            <span>Ниже представлена ваша статистика по тестам и доступные действия.</span>
+            <span>{t("dashboard.infoMessage")}</span>
           </div>
         </div>
       </div>
@@ -191,10 +191,10 @@ export default function DashboardPage() {
             <div className="card-header flex justify-between items-center">
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
-                Ваша статистика
+                {t("dashboard.stats")}
               </h2>
               <span className="badge badge-primary">
-                Всего предметов: {stats.length}
+                {t("dashboard.totalSubjects")}: {stats.length}
               </span>
             </div>
             <div className="card-body">
@@ -203,10 +203,10 @@ export default function DashboardPage() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-[var(--border)]">
-                        <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Предмет</th>
-                        <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">Попытки</th>
-                        <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">Средний балл</th>
-                        <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Прогресс</th>
+                        <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("dashboard.subject")}</th>
+                        <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">{t("dashboard.attempts")}</th>
+                        <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">{t("dashboard.avgScore")}</th>
+                        <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("dashboard.progress")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -235,7 +235,7 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-[var(--foreground-secondary)]">
-                  У вас пока нет статистики. Начните тестирование!
+                  {t("dashboard.noStats")}
                 </div>
               )}
             </div>
@@ -247,7 +247,7 @@ export default function DashboardPage() {
           <div className="card-header">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Trophy className="w-5 h-5" />
-              Достижения
+              {t("dashboard.achievements")}
             </h2>
           </div>
           <div className="card-body">
@@ -257,7 +257,7 @@ export default function DashboardPage() {
                   <CheckCircle className="w-8 h-8 mx-auto" />
                 </div>
                 <div className="stats-number">{totalAttempts}</div>
-                <div className="stats-label">Всего тестов</div>
+                <div className="stats-label">{t("dashboard.totalTests")}</div>
               </div>
 
               <div className="stats-card">
@@ -265,7 +265,7 @@ export default function DashboardPage() {
                   <Trophy className="w-8 h-8 mx-auto" />
                 </div>
                 <div className="stats-number">{avgTotalScore}%</div>
-                <div className="stats-label">Средний балл</div>
+                <div className="stats-label">{t("dashboard.avgScore")}</div>
               </div>
             </div>
           </div>
@@ -279,30 +279,30 @@ export default function DashboardPage() {
           <div className="card-header">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Play className="w-5 h-5" />
-              Начать тестирование
+              {t("dashboard.startTest")}
             </h2>
           </div>
           <div className="card-body">
             <p className="text-[var(--foreground-secondary)] mb-4">
-              Проверьте свои знания, выбрав один из доступных предметов.
+              {t("dashboard.checkKnowledge")}
             </p>
             <ul className="space-y-2 mb-6">
               <li className="flex items-center gap-2 text-[var(--foreground-secondary)]">
                 <CheckCircle className="w-4 h-4 text-[var(--success)]" />
-                Выберите предмет для тестирования
+                {t("dashboard.selectSubject")}
               </li>
               <li className="flex items-center gap-2 text-[var(--foreground-secondary)]">
                 <CheckCircle className="w-4 h-4 text-[var(--success)]" />
-                Ответьте на вопросы теста
+                {t("dashboard.answerQuestions")}
               </li>
               <li className="flex items-center gap-2 text-[var(--foreground-secondary)]">
                 <CheckCircle className="w-4 h-4 text-[var(--success)]" />
-                Получите мгновенный результат
+                {t("dashboard.getResult")}
               </li>
             </ul>
             <Link href={`/${locale}/tests`} className="btn btn-primary btn-lg w-full">
               <BookOpen className="w-5 h-5" />
-              Начать тестирование
+              {t("dashboard.startTest")}
             </Link>
           </div>
         </div>
@@ -312,37 +312,37 @@ export default function DashboardPage() {
           <div className="card-header">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Lightbulb className="w-5 h-5" />
-              Полезные советы
+              {t("dashboard.tips")}
             </h2>
           </div>
           <div className="card-body space-y-4">
             <div className="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)]">
               <div className="flex items-center gap-2 font-medium text-[var(--foreground)] mb-1">
                 <Clock className="w-4 h-4 text-[var(--primary)]" />
-                Управляйте временем
+                {t("dashboard.manageTime")}
               </div>
               <p className="text-sm text-[var(--foreground-secondary)]">
-                Распределяйте время на каждый вопрос равномерно.
+                {t("dashboard.manageTimeDesc")}
               </p>
             </div>
 
             <div className="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)]">
               <div className="flex items-center gap-2 font-medium text-[var(--foreground)] mb-1">
                 <BookOpen className="w-4 h-4 text-[var(--primary)]" />
-                Читайте внимательно
+                {t("dashboard.readCarefully")}
               </div>
               <p className="text-sm text-[var(--foreground-secondary)]">
-                Внимательно читайте вопросы и все варианты ответов.
+                {t("dashboard.readCarefullyDesc")}
               </p>
             </div>
 
             <div className="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)]">
               <div className="flex items-center gap-2 font-medium text-[var(--foreground)] mb-1">
                 <TrendingUp className="w-4 h-4 text-[var(--primary)]" />
-                Практикуйтесь
+                {t("dashboard.practice")}
               </div>
               <p className="text-sm text-[var(--foreground-secondary)]">
-                Регулярное прохождение тестов улучшает результаты.
+                {t("dashboard.practiceDesc")}
               </p>
             </div>
           </div>

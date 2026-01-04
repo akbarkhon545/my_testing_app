@@ -64,7 +64,8 @@ export default function NavBar() {
   };
 
   const navLinks = [
-    { href: `/${locale}`, label: t("nav.home"), icon: Home },
+    // Home only for non-authenticated users
+    ...(!isLoggedIn ? [{ href: `/${locale}`, label: t("nav.home"), icon: Home }] : []),
     { href: `/${locale}/dashboard`, label: t("nav.dashboard"), icon: LayoutDashboard },
     { href: `/${locale}/tests`, label: t("nav.tests"), icon: FileQuestion },
     { href: `/${locale}/pricing`, label: t("nav.pricing"), icon: Crown },
@@ -76,38 +77,40 @@ export default function NavBar() {
   return (
     <header className="sticky top-0 z-50 bg-[var(--background-secondary)]/80 backdrop-blur-md border-b border-[var(--border)]">
       <div className="mx-auto max-w-6xl px-4">
-        <div className="h-16 flex items-center justify-between">
-          {/* Logo */}
-          <Link
-            href={`/${locale}`}
-            className="flex items-center gap-2 font-bold text-xl text-[var(--foreground)] hover:opacity-80 transition-opacity"
-          >
-            <img src="/logo.png" alt="EduPlatform" className="w-8 h-8 rounded-lg object-contain" />
-            <span className="hidden sm:inline">{t("brand")}</span>
-          </Link>
+        <div className="h-16 flex items-center">
+          {/* Logo and Navigation together */}
+          <div className="flex items-center gap-6">
+            <Link
+              href={isLoggedIn ? `/${locale}/dashboard` : `/${locale}`}
+              className="flex items-center gap-2 font-bold text-xl text-[var(--foreground)] hover:opacity-80 transition-opacity"
+            >
+              <img src="/logo.png" alt="EduPlatform" className="w-8 h-8 rounded-lg object-contain" />
+              <span className="hidden sm:inline">{t("brand")}</span>
+            </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => {
-              const Icon = link.icon;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(link.href)
-                    ? "bg-[var(--primary-light)] text-[var(--primary)]"
-                    : "text-[var(--foreground-secondary)] hover:bg-[var(--border)] hover:text-[var(--foreground)]"
-                    }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {link.label}
-                </Link>
-              );
-            })}
-          </nav>
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(link.href)
+                      ? "bg-[var(--primary-light)] text-[var(--primary)]"
+                      : "text-[var(--foreground-secondary)] hover:bg-[var(--border)] hover:text-[var(--foreground)]"
+                      }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
 
           {/* Right side actions */}
-          <div className="flex items-center gap-2 flex-shrink-0 overflow-visible">
+          <div className="flex items-center gap-2 flex-shrink-0 overflow-visible ml-auto">
             <ThemeToggle />
             <LanguageSwitcher />
 
@@ -140,7 +143,7 @@ export default function NavBar() {
                           className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[var(--foreground-secondary)] hover:bg-[var(--border)] hover:text-[var(--foreground)]"
                         >
                           <User className="w-4 h-4" />
-                          Профиль
+                          {t("nav.profile")}
                         </Link>
                         <Link
                           href={`/${locale}/support`}
@@ -148,7 +151,7 @@ export default function NavBar() {
                           className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[var(--foreground-secondary)] hover:bg-[var(--border)] hover:text-[var(--foreground)]"
                         >
                           <HelpCircle className="w-4 h-4" />
-                          Поддержка
+                          {t("nav.support")}
                         </Link>
                         <div className="h-px bg-[var(--border)] my-2" />
                         <button
@@ -156,7 +159,7 @@ export default function NavBar() {
                           className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[var(--danger)] hover:bg-[var(--danger-light)] w-full"
                         >
                           <LogOut className="w-4 h-4" />
-                          Выйти
+                          {t("nav.logout")}
                         </button>
                       </div>
                     </div>
@@ -230,7 +233,7 @@ export default function NavBar() {
                     className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[var(--foreground-secondary)] hover:bg-[var(--border)]"
                   >
                     <User className="w-5 h-5" />
-                    Профиль
+                    {t("nav.profile")}
                   </Link>
                   <Link
                     href={`/${locale}/support`}
@@ -238,14 +241,14 @@ export default function NavBar() {
                     className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[var(--foreground-secondary)] hover:bg-[var(--border)]"
                   >
                     <HelpCircle className="w-5 h-5" />
-                    Поддержка
+                    {t("nav.support")}
                   </Link>
                   <button
                     onClick={() => { handleSignOut(); setIsOpen(false); }}
                     className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[var(--danger)] hover:bg-[var(--danger-light)]"
                   >
                     <LogOut className="w-5 h-5" />
-                    Выйти
+                    {t("nav.logout")}
                   </button>
                 </>
               ) : (

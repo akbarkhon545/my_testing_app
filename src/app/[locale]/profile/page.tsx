@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import supabase from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import {
     User,
@@ -32,12 +32,13 @@ interface Subscription {
 export default function ProfilePage() {
     const router = useRouter();
     const locale = useLocale();
+    const t = useTranslations();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
     // Profile data
-    const [name, setName] = useState("Студент");
+    const [name, setName] = useState("Student");
     const [email, setEmail] = useState("student@example.com");
     const [phone, setPhone] = useState("");
     const [birthDate, setBirthDate] = useState("");
@@ -61,7 +62,16 @@ export default function ProfilePage() {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
                 setEmail(session.user.email || "");
-                setName(session.user.email?.split("@")[0] || "Студент");
+                setName(session.user.email?.split("@")[0] || "Student");
+
+                // Super admin bypass - always show as Premium
+                if (session.user.email === "akbarkhon545@gmail.com") {
+                    setSubscription({
+                        plan: "yearly",
+                        status: "active",
+                        expiresAt: new Date("2099-12-31"), // Permanent access
+                    });
+                }
             }
             setLoading(false);
         }
@@ -74,17 +84,17 @@ export default function ProfilePage() {
 
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        setMessage({ type: "success", text: "Профиль успешно сохранён" });
+        setMessage({ type: "success", text: t("profile.profileSaved") });
         setSaving(false);
     };
 
     const handleChangePassword = async () => {
         if (newPassword !== confirmPassword) {
-            setMessage({ type: "error", text: "Пароли не совпадают" });
+            setMessage({ type: "error", text: t("profile.passwordMismatch") });
             return;
         }
         if (newPassword.length < 8) {
-            setMessage({ type: "error", text: "Пароль должен содержать минимум 8 символов" });
+            setMessage({ type: "error", text: t("profile.passwordTooShort") });
             return;
         }
 
@@ -95,19 +105,19 @@ export default function ProfilePage() {
             const { error } = await supabase.auth.updateUser({ password: newPassword });
             if (error) throw error;
 
-            setMessage({ type: "success", text: "Пароль успешно изменён" });
+            setMessage({ type: "success", text: t("profile.passwordChanged") });
             setCurrentPassword("");
             setNewPassword("");
             setConfirmPassword("");
         } catch (error: any) {
-            setMessage({ type: "error", text: error.message || "Ошибка при смене пароля" });
+            setMessage({ type: "error", text: error.message || t("profile.passwordChangeError") });
         }
 
         setChangingPassword(false);
     };
 
     const formatDate = (date: Date) => {
-        return new Intl.DateTimeFormat("ru-RU", {
+        return new Intl.DateTimeFormat(locale === "uz" ? "uz-UZ" : "ru-RU", {
             day: "numeric",
             month: "long",
             year: "numeric",
@@ -123,7 +133,7 @@ export default function ProfilePage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
-                <div className="text-[var(--foreground-secondary)]">Загрузка...</div>
+                <div className="text-[var(--foreground-secondary)]">{t("common.loading")}</div>
             </div>
         );
     }
@@ -139,8 +149,8 @@ export default function ProfilePage() {
                     <ArrowLeft className="w-4 h-4" />
                 </button>
                 <div>
-                    <h1 className="text-2xl font-bold text-[var(--foreground)]">Мой профиль</h1>
-                    <p className="text-[var(--foreground-secondary)]">Управление личными данными и подпиской</p>
+                    <h1 className="text-2xl font-bold text-[var(--foreground)]">{t("profile.title")}</h1>
+                    <p className="text-[var(--foreground-secondary)]">{t("profile.subtitle")}</p>
                 </div>
             </div>
 
@@ -180,10 +190,10 @@ export default function ProfilePage() {
                                     {subscription.status === "active" ? (
                                         <span className="badge badge-success flex items-center gap-1">
                                             <Crown className="w-3 h-3" />
-                                            Премиум
+                                            {t("profile.premium")}
                                         </span>
                                     ) : (
-                                        <span className="badge badge-warning">Бесплатный</span>
+                                        <span className="badge badge-warning">{t("profile.free")}</span>
                                     )}
                                 </div>
                             </div>
@@ -196,10 +206,10 @@ export default function ProfilePage() {
                     <div className="card-header flex justify-between items-center">
                         <h3 className="font-semibold flex items-center gap-2">
                             <Crown className="w-5 h-5" />
-                            Подписка
+                            {t("profile.subscription")}
                         </h3>
                         {subscription.status === "active" && (
-                            <span className="badge badge-success">Активна</span>
+                            <span className="badge badge-success">{t("profile.active")}</span>
                         )}
                     </div>
                     <div className="card-body">
@@ -209,17 +219,17 @@ export default function ProfilePage() {
                                     <div className="p-4 rounded-lg bg-[var(--background)] border border-[var(--border)]">
                                         <div className="flex items-center gap-2 text-[var(--foreground-muted)] text-sm mb-1">
                                             <CreditCard className="w-4 h-4" />
-                                            Тариф
+                                            {t("profile.plan")}
                                         </div>
                                         <p className="font-semibold text-[var(--foreground)]">
-                                            {subscription.plan === "monthly" ? "Месячный" : "Годовой"}
+                                            {subscription.plan === "monthly" ? t("profile.monthlyPlan") : t("profile.yearlyPlan")}
                                         </p>
                                     </div>
 
                                     <div className="p-4 rounded-lg bg-[var(--background)] border border-[var(--border)]">
                                         <div className="flex items-center gap-2 text-[var(--foreground-muted)] text-sm mb-1">
                                             <Calendar className="w-4 h-4" />
-                                            Действует до
+                                            {t("profile.validUntil")}
                                         </div>
                                         <p className="font-semibold text-[var(--foreground)]">
                                             {subscription.expiresAt && formatDate(subscription.expiresAt)}
@@ -229,10 +239,10 @@ export default function ProfilePage() {
                                     <div className="p-4 rounded-lg bg-[var(--background)] border border-[var(--border)]">
                                         <div className="flex items-center gap-2 text-[var(--foreground-muted)] text-sm mb-1">
                                             <Clock className="w-4 h-4" />
-                                            Осталось
+                                            {t("profile.remaining")}
                                         </div>
                                         <p className={`font-semibold ${getDaysRemaining() <= 7 ? "text-[var(--warning)]" : "text-[var(--foreground)]"}`}>
-                                            {getDaysRemaining()} дней
+                                            {getDaysRemaining()} {t("profile.days")}
                                         </p>
                                     </div>
                                 </div>
@@ -240,14 +250,14 @@ export default function ProfilePage() {
                                 {getDaysRemaining() <= 7 && (
                                     <div className="alert alert-warning mb-4">
                                         <AlertTriangle className="w-5 h-5" />
-                                        <span>Ваша подписка скоро истекает. Продлите для продолжения доступа.</span>
+                                        <span>{t("profile.subExpiringWarning")}</span>
                                     </div>
                                 )}
 
                                 <div className="flex gap-3">
                                     <Link href={`/${locale}/pricing`} className="btn btn-primary">
                                         <Crown className="w-4 h-4" />
-                                        Продлить подписку
+                                        {t("profile.extendSubscription")}
                                     </Link>
                                 </div>
                             </>
@@ -256,13 +266,13 @@ export default function ProfilePage() {
                                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--warning-light)] mb-4">
                                     <Crown className="w-8 h-8 text-[var(--warning)]" />
                                 </div>
-                                <h4 className="font-semibold text-[var(--foreground)] mb-2">У вас нет активной подписки</h4>
+                                <h4 className="font-semibold text-[var(--foreground)] mb-2">{t("profile.noActiveSubscription")}</h4>
                                 <p className="text-[var(--foreground-secondary)] mb-4">
-                                    Оформите подписку для полного доступа ко всем функциям
+                                    {t("profile.getSubscriptionDesc")}
                                 </p>
                                 <Link href={`/${locale}/pricing`} className="btn btn-primary">
                                     <Crown className="w-4 h-4" />
-                                    Оформить подписку
+                                    {t("profile.getSubscription")}
                                 </Link>
                             </div>
                         )}
@@ -274,13 +284,13 @@ export default function ProfilePage() {
                     <div className="card-header">
                         <h3 className="font-semibold flex items-center gap-2">
                             <User className="w-5 h-5" />
-                            Личные данные
+                            {t("profile.personalData")}
                         </h3>
                     </div>
                     <div className="card-body space-y-4">
                         <div className="grid sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="label">Имя</label>
+                                <label className="label">{t("profile.name")}</label>
                                 <div className="relative">
                                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-muted)]" />
                                     <input
@@ -288,7 +298,7 @@ export default function ProfilePage() {
                                         className="input pl-10"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
-                                        placeholder="Ваше имя"
+                                        placeholder={t("profile.namePlaceholder")}
                                     />
                                 </div>
                             </div>
@@ -305,11 +315,11 @@ export default function ProfilePage() {
                                         placeholder="email@example.com"
                                     />
                                 </div>
-                                <p className="text-xs text-[var(--foreground-muted)] mt-1">Email нельзя изменить</p>
+                                <p className="text-xs text-[var(--foreground-muted)] mt-1">{t("profile.emailCantChange")}</p>
                             </div>
 
                             <div>
-                                <label className="label">Телефон</label>
+                                <label className="label">{t("profile.phone")}</label>
                                 <div className="relative">
                                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-muted)]" />
                                     <input
@@ -323,7 +333,7 @@ export default function ProfilePage() {
                             </div>
 
                             <div>
-                                <label className="label">Дата рождения</label>
+                                <label className="label">{t("profile.birthDate")}</label>
                                 <div className="relative">
                                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-muted)]" />
                                     <input
@@ -343,7 +353,7 @@ export default function ProfilePage() {
                                 className="btn btn-primary"
                             >
                                 <Save className="w-4 h-4" />
-                                {saving ? "Сохранение..." : "Сохранить"}
+                                {saving ? t("profile.saving") : t("profile.save")}
                             </button>
                         </div>
                     </div>
@@ -354,12 +364,12 @@ export default function ProfilePage() {
                     <div className="card-header">
                         <h3 className="font-semibold flex items-center gap-2">
                             <Lock className="w-5 h-5" />
-                            Смена пароля
+                            {t("profile.changePassword")}
                         </h3>
                     </div>
                     <div className="card-body space-y-4">
                         <div>
-                            <label className="label">Текущий пароль</label>
+                            <label className="label">{t("profile.currentPassword")}</label>
                             <input
                                 type="password"
                                 className="input"
@@ -371,24 +381,24 @@ export default function ProfilePage() {
 
                         <div className="grid sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="label">Новый пароль</label>
+                                <label className="label">{t("profile.newPassword")}</label>
                                 <input
                                     type="password"
                                     className="input"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
-                                    placeholder="Минимум 8 символов"
+                                    placeholder={t("profile.newPasswordPlaceholder")}
                                 />
                             </div>
 
                             <div>
-                                <label className="label">Подтверждение</label>
+                                <label className="label">{t("profile.confirmPassword")}</label>
                                 <input
                                     type="password"
                                     className="input"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="Повторите пароль"
+                                    placeholder={t("profile.confirmPasswordPlaceholder")}
                                 />
                             </div>
                         </div>
@@ -400,7 +410,7 @@ export default function ProfilePage() {
                                 className="btn btn-secondary"
                             >
                                 <Lock className="w-4 h-4" />
-                                {changingPassword ? "Изменение..." : "Изменить пароль"}
+                                {changingPassword ? t("profile.changingPassword") : t("profile.changePasswordBtn")}
                             </button>
                         </div>
                     </div>

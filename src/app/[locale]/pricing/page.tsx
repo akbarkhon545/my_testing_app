@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import {
     Check,
@@ -68,6 +68,7 @@ const PHONE_NUMBER = "+998 93 167 49 59";
 
 export default function PricingPage() {
     const locale = useLocale();
+    const t = useTranslations();
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -87,7 +88,38 @@ export default function PricingPage() {
         setShowPaymentModal(true);
     };
 
-    const selectedPlanData = plans.find(p => p.id === selectedPlan);
+    // Override plans with translated values
+    const translatedPlans: PricingPlan[] = [
+        {
+            id: "monthly",
+            name: t("pricing.monthly"),
+            price: 24990,
+            period: "month",
+            periodLabel: "/" + (locale === 'ru' ? 'месяц' : 'oy'),
+            features: [
+                t("pricing.unlimitedTests"),
+                t("pricing.allSubjects"),
+                t("pricing.detailedStats"),
+                t("pricing.resultHistory"),
+                t("pricing.prioritySupport"),
+            ],
+        },
+        {
+            id: "yearly",
+            name: t("pricing.yearly"),
+            price: 44990,
+            period: "year",
+            periodLabel: "/" + (locale === 'ru' ? 'год' : 'yil'),
+            popular: true,
+            features: [
+                t("pricing.allMonthlyBenefits"),
+                t("pricing.exclusiveMaterials"),
+                t("pricing.prioritySupport") + " 24/7",
+            ],
+        },
+    ];
+
+    const selectedPlanData = translatedPlans.find(p => p.id === selectedPlan);
 
     return (
         <div className="animate-fadeIn">
@@ -95,19 +127,19 @@ export default function PricingPage() {
             <div className="text-center mb-12">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--primary-light)] text-[var(--primary)] text-sm font-medium mb-4">
                     <Sparkles className="w-4 h-4" />
-                    Премиум доступ
+                    {t("pricing.premiumAccess")}
                 </div>
                 <h1 className="text-4xl font-bold text-[var(--foreground)] mb-4">
-                    Выберите свой тариф
+                    {t("pricing.chooseYourPlan")}
                 </h1>
                 <p className="text-lg text-[var(--foreground-secondary)] max-w-2xl mx-auto">
-                    Получите полный доступ ко всем тестам и возможностям платформы
+                    {t("pricing.getFullAccess")}
                 </p>
             </div>
 
             {/* Pricing Cards */}
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
-                {plans.map((plan) => (
+                {translatedPlans.map((plan) => (
                     <div
                         key={plan.id}
                         className={`relative card ${plan.popular
@@ -119,7 +151,7 @@ export default function PricingPage() {
                             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                                 <span className="inline-flex items-center gap-1 px-4 py-1 rounded-full bg-[var(--primary)] text-white text-sm font-medium">
                                     <Crown className="w-4 h-4" />
-                                    Популярный выбор
+                                    {t("pricing.popular")}
                                 </span>
                             </div>
                         )}
@@ -153,7 +185,7 @@ export default function PricingPage() {
                                     <span className="text-4xl font-bold text-[var(--foreground)]">
                                         {formatPrice(plan.price)}
                                     </span>
-                                    <span className="text-lg text-[var(--foreground-secondary)]">сум</span>
+                                    <span className="text-lg text-[var(--foreground-secondary)]">{t("pricing.sum")}</span>
                                 </div>
                                 <span className="text-[var(--foreground-muted)]">{plan.periodLabel}</span>
                             </div>
@@ -177,7 +209,7 @@ export default function PricingPage() {
                                     }`}
                             >
                                 <CreditCard className="w-5 h-5" />
-                                Оформить подписку
+                                {t("pricing.subscribe")}
                             </button>
                         </div>
                     </div>
@@ -189,7 +221,7 @@ export default function PricingPage() {
                 <div className="card-header">
                     <h2 className="font-semibold flex items-center gap-2">
                         <Zap className="w-5 h-5" />
-                        Как оплатить
+                        {t("pricing.howToPay")}
                     </h2>
                 </div>
                 <div className="card-body">
@@ -199,9 +231,9 @@ export default function PricingPage() {
                                 1
                             </div>
                             <div>
-                                <h4 className="font-medium text-[var(--foreground)]">Выберите тариф</h4>
+                                <h4 className="font-medium text-[var(--foreground)]">{t("pricing.step1Title")}</h4>
                                 <p className="text-sm text-[var(--foreground-secondary)]">
-                                    Нажмите кнопку "Оформить подписку" на понравившемся тарифе
+                                    {t("pricing.step1Desc")}
                                 </p>
                             </div>
                         </div>
@@ -211,9 +243,9 @@ export default function PricingPage() {
                                 2
                             </div>
                             <div>
-                                <h4 className="font-medium text-[var(--foreground)]">Переведите оплату</h4>
+                                <h4 className="font-medium text-[var(--foreground)]">{t("pricing.step2Title")}</h4>
                                 <p className="text-sm text-[var(--foreground-secondary)]">
-                                    Переведите сумму на указанную карту через любое банковское приложение
+                                    {t("pricing.step2Desc")}
                                 </p>
                             </div>
                         </div>
@@ -223,9 +255,9 @@ export default function PricingPage() {
                                 3
                             </div>
                             <div>
-                                <h4 className="font-medium text-[var(--foreground)]">Отправьте скриншот</h4>
+                                <h4 className="font-medium text-[var(--foreground)]">{t("pricing.step3Title")}</h4>
                                 <p className="text-sm text-[var(--foreground-secondary)]">
-                                    Отправьте скриншот чека в Telegram и укажите ваш email
+                                    {t("pricing.step3Desc")}
                                 </p>
                             </div>
                         </div>
@@ -235,9 +267,9 @@ export default function PricingPage() {
                                 ✓
                             </div>
                             <div>
-                                <h4 className="font-medium text-[var(--foreground)]">Получите доступ</h4>
+                                <h4 className="font-medium text-[var(--foreground)]">{t("pricing.step4Title")}</h4>
                                 <p className="text-sm text-[var(--foreground-secondary)]">
-                                    Мы активируем вашу подписку в течение 5-10 минут
+                                    {t("pricing.step4Desc")}
                                 </p>
                             </div>
                         </div>
@@ -248,7 +280,7 @@ export default function PricingPage() {
             {/* Contact Info */}
             <div className="text-center">
                 <p className="text-[var(--foreground-secondary)] mb-4">
-                    Есть вопросы? <Link href={`/${locale}/support`} className="text-[var(--primary)] hover:underline">Свяжитесь с нами</Link>
+                    {t("pricing.haveQuestions")} <Link href={`/${locale}/support`} className="text-[var(--primary)] hover:underline">{t("pricing.contactUs")}</Link>
                 </p>
             </div>
 
@@ -261,7 +293,7 @@ export default function PricingPage() {
                             <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] mb-3 sm:mb-4">
                                 <CreditCard className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                             </div>
-                            <h3 className="text-lg sm:text-xl font-bold text-[var(--foreground)]">Оплата подписки</h3>
+                            <h3 className="text-lg sm:text-xl font-bold text-[var(--foreground)]">{t("pricing.paymentTitle")}</h3>
                             <p className="text-sm sm:text-base text-[var(--foreground-secondary)]">{selectedPlanData.name}</p>
                         </div>
 
@@ -269,15 +301,15 @@ export default function PricingPage() {
                         <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                             {/* Amount */}
                             <div className="text-center p-4 rounded-lg bg-[var(--primary-light)]">
-                                <p className="text-sm text-[var(--foreground-secondary)] mb-1">Сумма к оплате</p>
+                                <p className="text-sm text-[var(--foreground-secondary)] mb-1">{t("pricing.amountToPay")}</p>
                                 <p className="text-3xl font-bold text-[var(--primary)]">
-                                    {formatPrice(selectedPlanData.price)} сум
+                                    {formatPrice(selectedPlanData.price)} {t("pricing.sum")}
                                 </p>
                             </div>
 
                             {/* Card Number */}
                             <div>
-                                <label className="label">Номер карты для перевода</label>
+                                <label className="label">{t("pricing.cardNumber")}</label>
                                 <div className="flex items-center gap-2">
                                     <div className="flex-1 p-4 rounded-lg bg-[var(--background)] border border-[var(--border)] font-mono text-lg text-[var(--foreground)] text-center tracking-wider">
                                         {CARD_NUMBER}
@@ -285,7 +317,7 @@ export default function PricingPage() {
                                     <button
                                         onClick={handleCopyCard}
                                         className="btn btn-secondary"
-                                        title="Скопировать"
+                                        title={copied ? t("pricing.copied") : t("pricing.copy")}
                                     >
                                         {copied ? (
                                             <CheckCircle className="w-5 h-5 text-[var(--success)]" />

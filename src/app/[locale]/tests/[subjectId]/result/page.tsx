@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { use } from "react";
 import {
     Trophy,
@@ -30,6 +30,7 @@ interface ResultPageProps {
 export default function ResultPage({ params }: ResultPageProps) {
     const resolvedParams = use(params);
     const locale = useLocale();
+    const t = useTranslations();
     const [result, setResult] = useState<TestResult | null>(null);
     const [animatedScore, setAnimatedScore] = useState(0);
 
@@ -90,12 +91,12 @@ export default function ResultPage({ params }: ResultPageProps) {
                         )}
                     </div>
                     <h1 className="text-2xl font-bold text-white mb-2">
-                        {passed ? "Поздравляем! Тест пройден" : "К сожалению, тест не пройден"}
+                        {passed ? t("result.passed") : t("result.failed")}
                     </h1>
                     <p className="text-white/80">
                         {passed
-                            ? "Отличная работа! Продолжайте в том же духе."
-                            : "Не расстраивайтесь, попробуйте ещё раз после подготовки."}
+                            ? t("result.passedDesc")
+                            : t("result.failedDesc")}
                     </p>
                 </div>
 
@@ -139,7 +140,7 @@ export default function ResultPage({ params }: ResultPageProps) {
                                 <CheckCircle className="w-8 h-8 mx-auto" />
                             </div>
                             <div className="stats-number">{result.correct}/{result.total}</div>
-                            <div className="stats-label">Правильно</div>
+                            <div className="stats-label">{t("result.correct")}</div>
                         </div>
 
                         <div className="stats-card">
@@ -147,7 +148,7 @@ export default function ResultPage({ params }: ResultPageProps) {
                                 <Clock className="w-8 h-8 mx-auto" />
                             </div>
                             <div className="stats-number">{formatTime(result.timeSpent)}</div>
-                            <div className="stats-label">Затрачено</div>
+                            <div className="stats-label">{t("result.time")}</div>
                         </div>
 
                         <div className="stats-card">
@@ -155,7 +156,7 @@ export default function ResultPage({ params }: ResultPageProps) {
                                 <Award className="w-8 h-8 mx-auto" />
                             </div>
                             <div className="stats-number">{passingScore}%</div>
-                            <div className="stats-label">Проходной</div>
+                            <div className="stats-label">{t("result.passingScore")}</div>
                         </div>
                     </div>
 
@@ -184,19 +185,19 @@ export default function ResultPage({ params }: ResultPageProps) {
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                         <Link href={`/${locale}/tests`} className="btn btn-primary btn-lg">
                             <ArrowRight className="w-5 h-5" />
-                            Другой тест
+                            {t("result.otherTest")}
                         </Link>
 
                         {!passed && (
                             <Link href={`/${locale}/tests/${resolvedParams.subjectId}/question?mode=${result.mode}`} className="btn btn-success btn-lg">
                                 <RotateCcw className="w-5 h-5" />
-                                Попробовать снова
+                                {t("result.tryAgain")}
                             </Link>
                         )}
 
                         <Link href={`/${locale}/dashboard`} className="btn btn-secondary btn-lg">
                             <Home className="w-5 h-5" />
-                            На главную
+                            {t("result.backToHome")}
                         </Link>
                     </div>
                 </div>

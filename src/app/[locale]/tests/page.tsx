@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import supabase from "@/lib/supabase/client";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { Book, Award, ChevronRight, FileQuestion, GraduationCap, AlertCircle, Crown } from "lucide-react";
 
@@ -21,6 +21,7 @@ export default function TestsIndexPage() {
   const [hasSubscription, setHasSubscription] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const locale = useLocale();
+  const t = useTranslations();
 
   // Check authentication first
   useEffect(() => {
@@ -104,17 +105,17 @@ export default function TestsIndexPage() {
           <Crown className="w-10 h-10 text-white" />
         </div>
         <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">
-          Требуется подписка
+          {t("tests.subscriptionRequired")}
         </h2>
         <p className="text-[var(--foreground-secondary)] mb-8">
-          Для доступа к тестам необходимо оформить подписку
+          {t("tests.subscriptionRequiredDesc")}
         </p>
         <Link href={`/${locale}/pricing`} className="btn btn-primary btn-lg">
           <Crown className="w-5 h-5" />
-          Оформить подписку
+          {t("pricing.subscribe")}
         </Link>
         <p className="mt-4 text-sm text-[var(--foreground-muted)]">
-          Начните с 25 000 сум/месяц
+          {t("tests.startFrom")} 25 000 {t("pricing.sum")}
         </p>
       </div>
     );
@@ -126,10 +127,10 @@ export default function TestsIndexPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-[var(--foreground)] mb-2 flex items-center gap-3">
           <FileQuestion className="w-8 h-8 text-[var(--primary)]" />
-          Выбор теста
+          {t("tests.title")}
         </h1>
         <p className="text-[var(--foreground-secondary)]">
-          Выберите предмет и режим тестирования для проверки своих знаний
+          {t("tests.selectSubject")}
         </p>
       </div>
 
@@ -176,7 +177,7 @@ export default function TestsIndexPage() {
               {/* Card Body */}
               <div className="p-6 space-y-4">
                 <p className="text-sm text-[var(--foreground-secondary)]">
-                  Выберите режим тестирования:
+                  {t("tests.aboutModes")}:
                 </p>
 
                 <div className="space-y-3">
@@ -189,8 +190,8 @@ export default function TestsIndexPage() {
                         <Book className="w-5 h-5 text-[var(--primary)]" />
                       </div>
                       <div>
-                        <p className="font-medium text-[var(--foreground)]">Тренировка</p>
-                        <p className="text-xs text-[var(--foreground-muted)]">25 вопросов, 25 минут</p>
+                        <p className="font-medium text-[var(--foreground)]">{t("tests.training")}</p>
+                        <p className="text-xs text-[var(--foreground-muted)]">{t("tests.trainingDesc")}</p>
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-[var(--foreground-muted)] group-hover/link:text-[var(--primary)] transition-colors" />
@@ -205,8 +206,8 @@ export default function TestsIndexPage() {
                         <Award className="w-5 h-5 text-[var(--success)]" />
                       </div>
                       <div>
-                        <p className="font-medium text-[var(--foreground)]">Полный тест</p>
-                        <p className="text-xs text-[var(--foreground-muted)]">Все вопросы, без лимита</p>
+                        <p className="font-medium text-[var(--foreground)]">{t("tests.full")}</p>
+                        <p className="text-xs text-[var(--foreground-muted)]">{t("tests.allQuestions")}</p>
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-[var(--foreground-muted)] group-hover/link:text-[var(--success)] transition-colors" />
@@ -221,27 +222,27 @@ export default function TestsIndexPage() {
       {/* Info section */}
       <div className="mt-12 card">
         <div className="card-header">
-          <h2 className="text-lg font-semibold">О режимах тестирования</h2>
+          <h2 className="text-lg font-semibold">{t("tests.aboutModes")}</h2>
         </div>
         <div className="card-body">
           <div className="grid md:grid-cols-2 gap-6">
             <div className="p-4 rounded-lg bg-[var(--primary-light)]">
               <div className="flex items-center gap-3 mb-3">
                 <Book className="w-6 h-6 text-[var(--primary)]" />
-                <h3 className="font-semibold text-[var(--foreground)]">Тренировочный режим</h3>
+                <h3 className="font-semibold text-[var(--foreground)]">{t("tests.trainingMode")}</h3>
               </div>
               <ul className="space-y-2 text-sm text-[var(--foreground-secondary)]">
                 <li className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)]" />
-                  25 случайных вопросов
+                  {t("tests.trainingModeDesc1")}
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)]" />
-                  Ограничение 25 минут
+                  {t("tests.trainingModeDesc2")}
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)]" />
-                  Результаты сохраняются
+                  {t("tests.trainingModeDesc3")}
                 </li>
               </ul>
             </div>
@@ -249,20 +250,20 @@ export default function TestsIndexPage() {
             <div className="p-4 rounded-lg bg-[var(--success-light)]">
               <div className="flex items-center gap-3 mb-3">
                 <Award className="w-6 h-6 text-[var(--success)]" />
-                <h3 className="font-semibold text-[var(--foreground)]">Полный тест</h3>
+                <h3 className="font-semibold text-[var(--foreground)]">{t("tests.fullTest")}</h3>
               </div>
               <ul className="space-y-2 text-sm text-[var(--foreground-secondary)]">
                 <li className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)]" />
-                  Все вопросы по предмету
+                  {t("tests.fullTestDesc1")}
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)]" />
-                  Без ограничения времени
+                  {t("tests.fullTestDesc2")}
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)]" />
-                  Идеально для подготовки
+                  {t("tests.fullTestDesc3")}
                 </li>
               </ul>
             </div>

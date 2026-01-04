@@ -1,12 +1,24 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { FileQuestion, Mail, Send, Phone, Heart } from "lucide-react";
+import supabase from "@/lib/supabase/client";
 
 export default function Footer() {
     const locale = useLocale();
+    const t = useTranslations();
     const currentYear = new Date().getFullYear();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            setIsLoggedIn(!!session);
+        };
+        checkAuth();
+    }, []);
 
     return (
         <footer className="mt-auto border-t border-[var(--border)] bg-[var(--background-secondary)]">
@@ -14,32 +26,32 @@ export default function Footer() {
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
                     {/* Brand */}
                     <div>
-                        <Link href={`/${locale}`} className="flex items-center gap-2 mb-4">
+                        <Link href={isLoggedIn ? `/${locale}/dashboard` : `/${locale}`} className="flex items-center gap-2 mb-4">
                             <img src="/logo.png" alt="EduPlatform" className="w-8 h-8 rounded-lg object-contain" />
                             <span className="font-bold text-lg text-[var(--foreground)]">EduPlatform</span>
                         </Link>
                         <p className="text-sm text-[var(--foreground-secondary)]">
-                            Современная платформа для тестирования и проверки знаний.
+                            {t("footer.description")}
                         </p>
                     </div>
 
                     {/* Quick Links */}
                     <div>
-                        <h4 className="font-semibold text-[var(--foreground)] mb-4">Быстрые ссылки</h4>
+                        <h4 className="font-semibold text-[var(--foreground)] mb-4">{t("footer.quickLinks")}</h4>
                         <ul className="space-y-2">
                             <li>
                                 <Link href={`/${locale}/tests`} className="text-sm text-[var(--foreground-secondary)] hover:text-[var(--primary)]">
-                                    Тесты
+                                    {t("nav.tests")}
                                 </Link>
                             </li>
                             <li>
                                 <Link href={`/${locale}/dashboard`} className="text-sm text-[var(--foreground-secondary)] hover:text-[var(--primary)]">
-                                    Dashboard
+                                    {t("nav.dashboard")}
                                 </Link>
                             </li>
                             <li>
                                 <Link href={`/${locale}/support`} className="text-sm text-[var(--foreground-secondary)] hover:text-[var(--primary)]">
-                                    Поддержка
+                                    {t("nav.support")}
                                 </Link>
                             </li>
                         </ul>
@@ -47,7 +59,7 @@ export default function Footer() {
 
                     {/* Contact */}
                     <div>
-                        <h4 className="font-semibold text-[var(--foreground)] mb-4">Контакты</h4>
+                        <h4 className="font-semibold text-[var(--foreground)] mb-4">{t("footer.contacts")}</h4>
                         <ul className="space-y-2">
                             <li>
                                 <a href="mailto:akbarkhon545@gmail.com" className="flex items-center gap-2 text-sm text-[var(--foreground-secondary)] hover:text-[var(--primary)]">
@@ -72,16 +84,16 @@ export default function Footer() {
 
                     {/* Legal */}
                     <div>
-                        <h4 className="font-semibold text-[var(--foreground)] mb-4">Информация</h4>
+                        <h4 className="font-semibold text-[var(--foreground)] mb-4">{t("footer.information")}</h4>
                         <ul className="space-y-2">
                             <li>
                                 <Link href={`/${locale}/support`} className="text-sm text-[var(--foreground-secondary)] hover:text-[var(--primary)]">
-                                    Часто задаваемые вопросы
+                                    {t("footer.faq")}
                                 </Link>
                             </li>
                             <li>
                                 <span className="text-sm text-[var(--foreground-muted)]">
-                                    Версия 1.0.0
+                                    {t("footer.version")} 1.0.0
                                 </span>
                             </li>
                         </ul>
@@ -91,10 +103,10 @@ export default function Footer() {
                 {/* Bottom */}
                 <div className="mt-8 pt-6 border-t border-[var(--border)] flex flex-col sm:flex-row justify-between items-center gap-4">
                     <p className="text-sm text-[var(--foreground-muted)]">
-                        © {currentYear} EduPlatform. Все права защищены.
+                        © {currentYear} EduPlatform. {t("footer.allRights")}
                     </p>
                     <p className="flex items-center gap-1 text-sm text-[var(--foreground-muted)]">
-                        Создано с <Heart className="w-4 h-4 text-red-500" /> в Узбекистане
+                        {t("footer.madeWith")} <Heart className="w-4 h-4 text-red-500" /> {t("footer.inUzbekistan")}
                     </p>
                 </div>
             </div>

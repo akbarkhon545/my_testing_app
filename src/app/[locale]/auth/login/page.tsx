@@ -18,7 +18,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function LoginPage() {
-  const t = useTranslations("auth");
+  const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -62,19 +62,19 @@ export default function LoginPage() {
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-2xl font-bold text-white mb-1">EduPlatform</h1>
-              <p className="text-white/80 text-sm">Платформа для тестирования знаний</p>
+              <p className="text-white/80 text-sm">{t("auth.platformDesc")}</p>
             </div>
           </div>
 
           {/* Form */}
           <div className="p-8">
             <h2 className="text-xl font-semibold text-[var(--foreground)] mb-6 text-center">
-              {t("signin")}
+              {t("auth.signin")}
             </h2>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               <div>
-                <label className="label">{t("email")}</label>
+                <label className="label">{t("auth.email")}</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-muted)] pointer-events-none z-10" />
                   <input
@@ -91,7 +91,7 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label className="label">{t("password")}</label>
+                <label className="label">{t("auth.password")}</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-muted)] pointer-events-none z-10" />
                   <input
@@ -126,20 +126,20 @@ export default function LoginPage() {
                 className="btn btn-primary btn-lg w-full"
               >
                 {loading ? (
-                  <span>Загрузка...</span>
+                  <span>{t("common.loading")}</span>
                 ) : (
                   <>
                     <LogIn className="w-5 h-5" />
-                    {t("signin")}
+                    {t("auth.signin")}
                   </>
                 )}
               </button>
             </form>
 
             <p className="mt-6 text-center text-sm text-[var(--foreground-secondary)]">
-              {t("noAccount")}{" "}
+              {t("auth.noAccount")}{" "}
               <Link href={`/${locale}/auth/signup`} className="text-[var(--primary)] hover:underline font-medium">
-                {t("signup")}
+                {t("auth.signup")}
               </Link>
             </p>
           </div>

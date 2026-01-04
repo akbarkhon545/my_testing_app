@@ -2,7 +2,7 @@
 
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import supabase from "@/lib/supabase/client";
 import { Clock, CheckCircle, AlertCircle, ArrowRight, Book, Award, Crown, Lock } from "lucide-react";
 
@@ -15,6 +15,7 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
     const resolvedParams = use(params);
     const resolvedSearchParams = use(searchParams);
     const locale = useLocale();
+    const t = useTranslations();
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [hasSubscription, setHasSubscription] = useState(false);

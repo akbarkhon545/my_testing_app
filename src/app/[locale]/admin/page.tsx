@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import supabase from "@/lib/supabase/client";
@@ -55,6 +55,7 @@ const mockUsers: User[] = [
 export default function AdminPage() {
   const locale = useLocale();
   const router = useRouter();
+  const t = useTranslations();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("faculties");
@@ -238,11 +239,11 @@ export default function AdminPage() {
   }
 
   const tabs: { id: Tab; label: string; icon: any; count: number }[] = [
-    { id: "faculties", label: "Факультеты", icon: GraduationCap, count: faculties.length },
-    { id: "subjects", label: "Предметы", icon: BookOpen, count: subjects.length },
-    { id: "questions", label: "Вопросы", icon: HelpCircle, count: questions.length },
-    { id: "users", label: "Пользователи", icon: Users, count: users.length },
-    { id: "subscriptions", label: "Подписки", icon: Crown, count: users.filter(u => u.subscription).length },
+    { id: "faculties", label: t("admin.faculties"), icon: GraduationCap, count: faculties.length },
+    { id: "subjects", label: t("admin.subjects"), icon: BookOpen, count: subjects.length },
+    { id: "questions", label: t("admin.questions"), icon: HelpCircle, count: questions.length },
+    { id: "users", label: t("admin.users"), icon: Users, count: users.length },
+    { id: "subscriptions", label: t("admin.subscriptions"), icon: Crown, count: users.filter(u => u.subscription).length },
   ];
 
   const handleAdd = () => {
@@ -407,21 +408,21 @@ export default function AdminPage() {
       student: "badge-primary",
     };
     const labels: Record<string, string> = {
-      admin: "Админ",
-      manager: "Менеджер",
-      student: "Студент",
+      admin: t("admin.adminRole"),
+      manager: t("admin.managerRole"),
+      student: t("admin.studentRole"),
     };
     return <span className={`badge ${badges[role] || "badge-primary"}`}>{labels[role] || role}</span>;
   };
 
   const getSubBadge = (sub: any) => {
-    if (!sub) return <span className="badge badge-secondary">Нет подписки</span>;
+    if (!sub) return <span className="badge badge-secondary">{t("admin.noSubscription")}</span>;
     const isExpired = new Date(sub.expiresAt) < new Date();
-    if (isExpired) return <span className="badge badge-danger">Истекла</span>;
+    if (isExpired) return <span className="badge badge-danger">{t("admin.expired")}</span>;
     return (
       <span className="badge badge-success flex items-center gap-1">
         <Crown className="w-3 h-3" />
-        {sub.plan === "monthly" ? "Месячная" : "Годовая"}
+        {sub.plan === "monthly" ? t("admin.monthlyPlan") : t("admin.yearlyPlan")}
       </span>
     );
   };
@@ -431,10 +432,10 @@ export default function AdminPage() {
       <table className="w-full">
         <thead>
           <tr className="border-b border-[var(--border)]">
-            <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">ID</th>
-            <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Название</th>
-            <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">Предметов</th>
-            <th className="text-right py-3 px-4 font-medium text-[var(--foreground)]">Действия</th>
+            <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.id")}</th>
+            <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.name")}</th>
+            <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.subjectsCount")}</th>
+            <th className="text-right py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.actions")}</th>
           </tr>
         </thead>
         <tbody>
@@ -465,10 +466,10 @@ export default function AdminPage() {
       <table className="w-full">
         <thead>
           <tr className="border-b border-[var(--border)]">
-            <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Название</th>
-            <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Факультет</th>
-            <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">Вопросов</th>
-            <th className="text-right py-3 px-4 font-medium text-[var(--foreground)]">Действия</th>
+            <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.name")}</th>
+            <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.faculty")}</th>
+            <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.questionsCount")}</th>
+            <th className="text-right py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.actions")}</th>
           </tr>
         </thead>
         <tbody>
@@ -501,17 +502,17 @@ export default function AdminPage() {
       <div className="flex gap-2 mb-4">
         <Link href={`/${locale}/admin/upload`} className="btn btn-success">
           <FileUp className="w-4 h-4" />
-          Загрузить из Excel
+          {t("admin.uploadExcel")}
         </Link>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-[var(--border)]">
-              <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">ID</th>
-              <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Вопрос</th>
-              <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Предмет</th>
-              <th className="text-right py-3 px-4 font-medium text-[var(--foreground)]">Действия</th>
+              <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.id")}</th>
+              <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.question")}</th>
+              <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.subject")}</th>
+              <th className="text-right py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -545,11 +546,11 @@ export default function AdminPage() {
       <table className="w-full">
         <thead>
           <tr className="border-b border-[var(--border)]">
-            <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Пользователь</th>
-            <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Email</th>
-            <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">Роль</th>
-            <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">Подписка</th>
-            <th className="text-right py-3 px-4 font-medium text-[var(--foreground)]">Действия</th>
+            <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.users")}</th>
+            <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.email")}</th>
+            <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.role")}</th>
+            <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.subscription")}</th>
+            <th className="text-right py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.actions")}</th>
           </tr>
         </thead>
         <tbody>
@@ -570,7 +571,7 @@ export default function AdminPage() {
               <td className="py-3 px-4 text-center">{getRoleBadge(user.role)}</td>
               <td className="py-3 px-4 text-center">{getSubBadge(user.subscription)}</td>
               <td className="py-3 px-4 text-right">
-                <button onClick={() => handleAddSubscription(user)} className="btn btn-sm btn-success mr-2" title="Добавить подписку">
+                <button onClick={() => handleAddSubscription(user)} className="btn btn-sm btn-success mr-2" title={t("admin.addSubscription")}>
                   <Crown className="w-4 h-4" />
                 </button>
                 <button onClick={() => handleEdit(user)} className="btn btn-sm btn-secondary mr-2">
@@ -598,25 +599,25 @@ export default function AdminPage() {
           <div className="p-4 rounded-lg bg-[var(--success-light)] border border-[var(--success)]/20">
             <div className="flex items-center gap-2 mb-2">
               <Crown className="w-5 h-5 text-[var(--success)]" />
-              <span className="font-medium text-[var(--foreground)]">Активных подписок</span>
+              <span className="font-medium text-[var(--foreground)]">{t("admin.activeSubscriptions")}</span>
             </div>
             <p className="text-2xl font-bold text-[var(--success)]">{usersWithSub.length}</p>
           </div>
           <div className="p-4 rounded-lg bg-[var(--warning-light)] border border-[var(--warning)]/20">
             <div className="flex items-center gap-2 mb-2">
               <Clock className="w-5 h-5 text-[var(--warning)]" />
-              <span className="font-medium text-[var(--foreground)]">Без подписки</span>
+              <span className="font-medium text-[var(--foreground)]">{t("admin.withoutSubscription")}</span>
             </div>
             <p className="text-2xl font-bold text-[var(--warning)]">{usersWithoutSub.length}</p>
           </div>
           <div className="p-4 rounded-lg bg-[var(--primary-light)] border border-[var(--primary)]/20">
             <div className="flex items-center gap-2 mb-2">
               <CreditCard className="w-5 h-5 text-[var(--primary)]" />
-              <span className="font-medium text-[var(--foreground)]">Доход (примерно)</span>
+              <span className="font-medium text-[var(--foreground)]">{t("admin.incomeApprox")}</span>
             </div>
             <p className="text-2xl font-bold text-[var(--primary)]">
               {(usersWithSub.filter(u => u.subscription?.plan === "monthly").length * 25000 +
-                usersWithSub.filter(u => u.subscription?.plan === "yearly").length * 50000).toLocaleString()} сум
+                usersWithSub.filter(u => u.subscription?.plan === "yearly").length * 50000).toLocaleString()} {t("pricing.sum")}
             </p>
           </div>
         </div>
@@ -625,20 +626,20 @@ export default function AdminPage() {
         <div>
           <h3 className="font-semibold text-[var(--foreground)] mb-4 flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-[var(--success)]" />
-            Активные подписки
+            {t("admin.activeSubscriptionsTitle")}
           </h3>
           {usersWithSub.length === 0 ? (
-            <p className="text-[var(--foreground-muted)] text-center py-8">Нет активных подписок</p>
+            <p className="text-[var(--foreground-muted)] text-center py-8">{t("admin.noActiveSubscriptions")}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[var(--border)]">
-                    <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Пользователь</th>
-                    <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Email</th>
-                    <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">Тариф</th>
-                    <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">Истекает</th>
-                    <th className="text-right py-3 px-4 font-medium text-[var(--foreground)]">Действия</th>
+                    <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.users")}</th>
+                    <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.email")}</th>
+                    <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.plan")}</th>
+                    <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.expiresAt")}</th>
+                    <th className="text-right py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.actions")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -655,7 +656,7 @@ export default function AdminPage() {
                       <td className="py-3 px-4 text-[var(--foreground-secondary)]">{user.email}</td>
                       <td className="py-3 px-4 text-center">
                         <span className={`badge ${user.subscription?.plan === "yearly" ? "badge-success" : "badge-primary"}`}>
-                          {user.subscription?.plan === "monthly" ? "25 000 / мес" : "50 000 / год"}
+                          {user.subscription?.plan === "monthly" ? `25 000 ${t("admin.perMonth")}` : `50 000 ${t("admin.perYear")}`}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-center">
@@ -665,10 +666,10 @@ export default function AdminPage() {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <button onClick={() => handleAddSubscription(user)} className="btn btn-sm btn-primary mr-2" title="Продлить">
+                        <button onClick={() => handleAddSubscription(user)} className="btn btn-sm btn-primary mr-2" title={t("admin.extend")}>
                           <Clock className="w-4 h-4" />
                         </button>
-                        <button onClick={() => handleRemoveSubscription(user.id)} className="btn btn-sm btn-danger" title="Отменить">
+                        <button onClick={() => handleRemoveSubscription(user.id)} className="btn btn-sm btn-danger" title={t("admin.cancelSub")}>
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </td>
@@ -684,18 +685,18 @@ export default function AdminPage() {
         <div>
           <h3 className="font-semibold text-[var(--foreground)] mb-4 flex items-center gap-2">
             <Clock className="w-5 h-5 text-[var(--warning)]" />
-            Студенты без подписки
+            {t("admin.studentsWithoutSub")}
           </h3>
           {usersWithoutSub.length === 0 ? (
-            <p className="text-[var(--foreground-muted)] text-center py-8">Все студенты имеют подписку</p>
+            <p className="text-[var(--foreground-muted)] text-center py-8">{t("admin.allStudentsHaveSub")}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[var(--border)]">
-                    <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Пользователь</th>
-                    <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">Email</th>
-                    <th className="text-right py-3 px-4 font-medium text-[var(--foreground)]">Действия</th>
+                    <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.users")}</th>
+                    <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.email")}</th>
+                    <th className="text-right py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.actions")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -713,7 +714,7 @@ export default function AdminPage() {
                       <td className="py-3 px-4 text-right">
                         <button onClick={() => handleAddSubscription(user)} className="btn btn-sm btn-success">
                           <Crown className="w-4 h-4" />
-                          Добавить подписку
+                          {t("admin.addSubscription")}
                         </button>
                       </td>
                     </tr>
@@ -736,8 +737,8 @@ export default function AdminPage() {
             <Shield className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[var(--foreground)]">Админ-панель</h1>
-            <p className="text-sm text-[var(--foreground-secondary)]">Управление платформой</p>
+            <h1 className="text-2xl font-bold text-[var(--foreground)]">{t("admin.title")}</h1>
+            <p className="text-sm text-[var(--foreground-secondary)]">{t("admin.subtitle")}</p>
           </div>
         </div>
         <Link href={`/${locale}/dashboard`} className="btn btn-secondary">
@@ -777,7 +778,7 @@ export default function AdminPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-muted)] pointer-events-none z-10" />
             <input
               type="text"
-              placeholder="Поиск..."
+              placeholder={t("admin.search")}
               className="input py-2"
               style={{ paddingLeft: '2.5rem' }}
               value={searchQuery}
@@ -787,7 +788,7 @@ export default function AdminPage() {
           {activeTab !== "subscriptions" && (
             <button onClick={handleAdd} className="btn btn-primary">
               <Plus className="w-4 h-4" />
-              Добавить
+              {t("admin.add")}
             </button>
           )}
         </div>
@@ -806,7 +807,7 @@ export default function AdminPage() {
           <div className="bg-[var(--background-secondary)] rounded-xl shadow-lg w-full max-w-md mx-4 animate-scaleIn">
             <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
               <h3 className="font-semibold text-[var(--foreground)]">
-                {editingItem ? "Редактирование" : "Добавление"}
+                {editingItem ? t("admin.edit") : t("admin.add")}
               </h3>
               <button onClick={() => setShowModal(false)} className="text-[var(--foreground-muted)] hover:text-[var(--foreground)]">
                 <X className="w-5 h-5" />
@@ -816,33 +817,33 @@ export default function AdminPage() {
               {activeTab === "users" ? (
                 <>
                   <div>
-                    <label className="label">Имя</label>
-                    <input type="text" className="input" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Имя пользователя" />
+                    <label className="label">{t("admin.name")}</label>
+                    <input type="text" className="input" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder={t("admin.name")} />
                   </div>
                   <div>
                     <label className="label">Email</label>
                     <input type="email" className="input" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="email@example.com" />
                   </div>
                   <div>
-                    <label className="label">Роль</label>
+                    <label className="label">{t("admin.role")}</label>
                     <select className="input" value={formRole} onChange={(e) => setFormRole(e.target.value)}>
-                      <option value="student">Студент</option>
-                      <option value="manager">Менеджер</option>
-                      <option value="admin">Админ</option>
+                      <option value="student">{t("admin.studentRole")}</option>
+                      <option value="manager">{t("admin.managerRole")}</option>
+                      <option value="admin">{t("admin.adminRole")}</option>
                     </select>
                   </div>
                 </>
               ) : (
                 <div>
-                  <label className="label">Название</label>
-                  <input type="text" className="input" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Введите название" />
+                  <label className="label">{t("admin.name")}</label>
+                  <input type="text" className="input" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder={t("admin.name")} />
                 </div>
               )}
               {activeTab === "subjects" && (
                 <div>
-                  <label className="label">Факультет</label>
+                  <label className="label">{t("admin.faculty")}</label>
                   <select className="input" value={formFacultyId} onChange={(e) => setFormFacultyId(e.target.value)}>
-                    <option value="">Выберите факультет</option>
+                    <option value="">{t("admin.selectFaculty")}</option>
                     {faculties.map(f => (
                       <option key={f.id} value={f.id}>{f.name}</option>
                     ))}
@@ -851,8 +852,8 @@ export default function AdminPage() {
               )}
             </div>
             <div className="flex justify-end gap-2 p-4 border-t border-[var(--border)]">
-              <button onClick={() => setShowModal(false)} className="btn btn-secondary">Отмена</button>
-              <button onClick={handleSave} className="btn btn-primary"><Save className="w-4 h-4" />Сохранить</button>
+              <button onClick={() => setShowModal(false)} className="btn btn-secondary">{t("admin.cancel")}</button>
+              <button onClick={handleSave} className="btn btn-primary"><Save className="w-4 h-4" />{t("admin.save")}</button>
             </div>
           </div>
         </div>
@@ -865,7 +866,7 @@ export default function AdminPage() {
             <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
               <h3 className="font-semibold text-[var(--foreground)] flex items-center gap-2">
                 <Crown className="w-5 h-5 text-yellow-500" />
-                Добавить подписку
+                {t("admin.addSubscription")}
               </h3>
               <button onClick={() => setShowSubModal(false)} className="text-[var(--foreground-muted)] hover:text-[var(--foreground)]">
                 <X className="w-5 h-5" />
@@ -873,13 +874,13 @@ export default function AdminPage() {
             </div>
             <div className="p-4 space-y-4">
               <div className="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)]">
-                <p className="text-sm text-[var(--foreground-muted)]">Пользователь</p>
+                <p className="text-sm text-[var(--foreground-muted)]">{t("admin.users")}</p>
                 <p className="font-medium text-[var(--foreground)]">{selectedUser.name}</p>
                 <p className="text-sm text-[var(--foreground-secondary)]">{selectedUser.email}</p>
               </div>
 
               <div>
-                <label className="label">Тариф</label>
+                <label className="label">{t("admin.plan")}</label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => setSubPlan("monthly")}
@@ -888,8 +889,8 @@ export default function AdminPage() {
                       : "border-[var(--border)]"
                       }`}
                   >
-                    <p className="font-bold text-[var(--foreground)]">25 000 сум</p>
-                    <p className="text-sm text-[var(--foreground-secondary)]">Месяц</p>
+                    <p className="font-bold text-[var(--foreground)]">25 000 {t("pricing.sum")}</p>
+                    <p className="text-sm text-[var(--foreground-secondary)]">{t("admin.monthlyPlan")}</p>
                   </button>
                   <button
                     onClick={() => setSubPlan("yearly")}
@@ -898,14 +899,14 @@ export default function AdminPage() {
                       : "border-[var(--border)]"
                       }`}
                   >
-                    <p className="font-bold text-[var(--foreground)]">50 000 сум</p>
-                    <p className="text-sm text-[var(--foreground-secondary)]">Год</p>
+                    <p className="font-bold text-[var(--foreground)]">50 000 {t("pricing.sum")}</p>
+                    <p className="text-sm text-[var(--foreground-secondary)]">{t("admin.yearlyPlan")}</p>
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="label">Количество {subPlan === "monthly" ? "месяцев" : "лет"}</label>
+                <label className="label">{t("admin.duration")} {subPlan === "monthly" ? t("admin.months") : t("admin.years")}</label>
                 <input
                   type="number"
                   min="1"
@@ -917,20 +918,20 @@ export default function AdminPage() {
               </div>
 
               <div className="p-3 rounded-lg bg-[var(--success-light)] border border-[var(--success)]/20">
-                <p className="text-sm text-[var(--foreground-muted)]">Итого</p>
+                <p className="text-sm text-[var(--foreground-muted)]">{t("common.total")}</p>
                 <p className="font-bold text-lg text-[var(--success)]">
-                  {((subPlan === "monthly" ? 25000 : 50000) * subDuration).toLocaleString()} сум
+                  {((subPlan === "monthly" ? 25000 : 50000) * subDuration).toLocaleString()} {t("pricing.sum")}
                 </p>
                 <p className="text-xs text-[var(--foreground-secondary)]">
-                  Действует до: {new Date(Date.now() + (subPlan === "monthly" ? subDuration * 30 : subDuration * 365) * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                  {t("common.validUntil")}: {new Date(Date.now() + (subPlan === "monthly" ? subDuration * 30 : subDuration * 365) * 24 * 60 * 60 * 1000).toLocaleDateString()}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-2 p-4 border-t border-[var(--border)]">
-              <button onClick={() => setShowSubModal(false)} className="btn btn-secondary">Отмена</button>
+              <button onClick={() => setShowSubModal(false)} className="btn btn-secondary">{t("admin.cancel")}</button>
               <button onClick={handleSaveSubscription} className="btn btn-success">
                 <CheckCircle className="w-4 h-4" />
-                Активировать
+                {t("admin.activateSubscription")}
               </button>
             </div>
           </div>
