@@ -166,8 +166,7 @@ export default function AdminPage() {
   const loadQuestions = async () => {
     const { data, error } = await supabase
       .from("questions")
-      .select("id, question_text, subject_id, correct_answer")
-      .limit(100);
+      .select("id, question_text, subject_id, correct_answer, answer2, answer3, answer4");
 
     if (!error && data) {
       setQuestions(data);
