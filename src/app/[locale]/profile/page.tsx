@@ -145,11 +145,31 @@ export default function ProfilePage() {
     };
 
     const formatDate = (date: Date) => {
-        return new Intl.DateTimeFormat(locale === "uz" ? "uz-UZ" : "ru-RU", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-        }).format(date);
+        if (!date) return "";
+        try {
+            // Options for long date format (e.g., 3 fevral 2026)
+            const options: Intl.DateTimeFormatOptions = {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+            };
+
+            const formatted = new Intl.DateTimeFormat(locale === "uz" ? "uz-UZ" : "ru-RU", options).format(date);
+
+            // Simple check: if formatted date contains "M" followed by digits (like M02), it's a fallback format.
+            // We want to avoid this and use a standard numeric format instead.
+            if (/M\d+/.test(formatted)) {
+                return new Intl.DateTimeFormat(locale === "uz" ? "uz-UZ" : "ru-RU", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric"
+                }).format(date);
+            }
+
+            return formatted;
+        } catch (e) {
+            return date.toLocaleDateString();
+        }
     };
 
     const getDaysRemaining = () => {
