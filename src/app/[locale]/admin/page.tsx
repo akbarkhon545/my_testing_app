@@ -87,7 +87,12 @@ export default function AdminPage() {
   const [showSubModal, setShowSubModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [subPlan, setSubPlan] = useState<"monthly" | "yearly">("monthly");
-  const [subDuration, setSubDuration] = useState(1);
+  const [subExpiryDate, setSubExpiryDate] = useState(() => {
+    // Default to 30 days from now
+    const date = new Date();
+    date.setDate(date.getDate() + 30);
+    return date.toISOString().split('T')[0];
+  });
 
   // State for expanded folders (subjects) in questions view
   const [expandedSubjects, setExpandedSubjects] = useState<Record<number, boolean>>({});
@@ -354,16 +359,17 @@ export default function AdminPage() {
   const handleAddSubscription = (user: any) => {
     setSelectedUser(user);
     setSubPlan("monthly");
-    setSubDuration(1);
+    // Default to 30 days from now
+    const date = new Date();
+    date.setDate(date.getDate() + 30);
+    setSubExpiryDate(date.toISOString().split('T')[0]);
     setShowSubModal(true);
   };
 
   const handleSaveSubscription = () => {
     if (!selectedUser) return;
 
-    const days = subPlan === "monthly" ? subDuration * 30 : subDuration * 365;
-    const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-    const subscriptionData = { plan: subPlan, expiresAt: expiresAt.toISOString().split('T')[0] };
+    const subscriptionData = { plan: subPlan, expiresAt: subExpiryDate };
 
     // Update state
     setUsers(users.map(u =>
@@ -985,24 +991,23 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="label">{t("admin.duration")} {subPlan === "monthly" ? t("admin.months") : t("admin.years")}</label>
+                <label className="label">{t("admin.expiryDate") || "Дата окончания"}</label>
                 <input
-                  type="number"
-                  min="1"
-                  max="12"
+                  type="date"
                   className="input"
-                  value={subDuration}
-                  onChange={(e) => setSubDuration(parseInt(e.target.value) || 1)}
+                  value={subExpiryDate}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={(e) => setSubExpiryDate(e.target.value)}
                 />
               </div>
 
               <div className="p-3 rounded-lg bg-[var(--success-light)] border border-[var(--success)]/20">
-                <p className="text-sm text-[var(--foreground-muted)]">{t("common.total")}</p>
+                <p className="text-sm text-[var(--foreground-muted)]\">Тариф</p>
                 <p className="font-bold text-lg text-[var(--success)]">
-                  {((subPlan === "monthly" ? 25000 : 50000) * subDuration).toLocaleString()} {t("pricing.sum")}
+                  {subPlan === "monthly" ? "25 000" : "50 000"} {t("pricing.sum")}
                 </p>
                 <p className="text-xs text-[var(--foreground-secondary)]">
-                  {t("common.validUntil")}: {new Date(Date.now() + (subPlan === "monthly" ? subDuration * 30 : subDuration * 365) * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                  {t("common.validUntil") || "Действует до"}: {new Date(subExpiryDate).toLocaleDateString()}
                 </p>
               </div>
             </div>
