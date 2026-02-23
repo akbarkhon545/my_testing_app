@@ -45,6 +45,23 @@ model Lesson {
   updatedAt DateTime @updatedAt
 }
 
+model Faculty {
+  id        Int       @id @default(autoincrement())
+  name      String
+  subjects  Subject[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Subject {
+  id         Int      @id @default(autoincrement())
+  name       String
+  faculty_id Int
+  faculty    Faculty  @relation(fields: [faculty_id], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
 enum Role {
   STUDENT
   ADMIN
