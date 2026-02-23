@@ -14,15 +14,23 @@ datasource db {
 }
 
 model User {
-  id            String       @id @default(cuid())
-  email         String       @unique
-  password      String // Added for custom auth
-  name          String?
-  role          Role         @default(STUDENT)
-  enrolled      Course[]     @relation("EnrolledStudents")
-  results       TestResult[]
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id                    String       @id @default(cuid())
+  email                 String       @unique
+  password              String
+  name                  String?
+  role                  Role         @default(STUDENT)
+  subscriptionPlan      SubscriptionPlan @default(FREE)
+  subscriptionExpiresAt DateTime?
+  enrolled              Course[]     @relation("EnrolledStudents")
+  results               TestResult[]
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+}
+
+enum SubscriptionPlan {
+  FREE
+  MONTHLY
+  YEARLY
 }
 
 model Course {

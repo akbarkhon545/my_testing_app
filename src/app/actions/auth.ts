@@ -50,7 +50,8 @@ export async function loginUser(values: any) {
     });
 
     if (!user) {
-        throw new Error("Пользователь не найден");
+        console.error(`Login attempt failed: User with email ${email} not found`);
+        throw new Error(`Пользователь с email ${email} не найден`);
     }
 
     // Check password
@@ -97,7 +98,8 @@ export async function updateUserPassword(values: any) {
     });
 
     if (!user) {
-        throw new Error("Пользователь не найден");
+        console.error(`Update password failed: User with ID ${userId} not found`);
+        throw new Error(`Пользователь с ID ${userId} не найден`);
     }
 
     // Check old password

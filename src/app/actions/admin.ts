@@ -118,7 +118,7 @@ export async function getUsers() {
     });
 }
 
-export async function updateSubscription(userId: number, plan: "MONTHLY" | "YEARLY" | "FREE", expiresAt: string | null) {
+export async function updateSubscription(userId: string, plan: "MONTHLY" | "YEARLY" | "FREE", expiresAt: string | null) {
     await (prisma as any).user.update({
         where: { id: userId },
         data: {
