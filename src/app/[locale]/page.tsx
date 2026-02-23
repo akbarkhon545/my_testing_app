@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
-import supabase from "@/lib/supabase/client";
+import { getUserSession } from "@/app/actions/auth";
 import {
   ArrowRight,
   CheckCircle,
@@ -25,8 +25,8 @@ export default function HomePage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
+      const user = await getUserSession();
+      setIsLoggedIn(!!user);
     };
     checkAuth();
   }, []);

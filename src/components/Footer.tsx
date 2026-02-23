@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { FileQuestion, Mail, Send, Phone, Heart } from "lucide-react";
-import supabase from "@/lib/supabase/client";
+import { getUserSession } from "@/app/actions/auth";
 
 export default function Footer() {
     const locale = useLocale();
@@ -14,8 +14,8 @@ export default function Footer() {
 
     useEffect(() => {
         const checkAuth = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            setIsLoggedIn(!!session);
+            const user = await getUserSession();
+            setIsLoggedIn(!!user);
         };
         checkAuth();
     }, []);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import supabase from "@/lib/supabase/client";
+import { getUserProfile, signOutUser } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 
 interface Subscription {
-    plan: "monthly" | "yearly" | null;
+    plan: "FREE" | "MONTHLY" | "YEARLY";
     status: "active" | "expired" | "none";
     expiresAt: Date | null;
 }
@@ -50,56 +50,36 @@ export default function ProfilePage() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [changingPassword, setChangingPassword] = useState(false);
 
-    // Subscription - loaded from localStorage
+    // Subscription - loaded from Prisma
     const [subscription, setSubscription] = useState<Subscription>({
-        plan: null,
+        plan: "FREE",
         status: "none",
         expiresAt: null,
     });
 
     useEffect(() => {
         async function loadProfile() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                const userEmail = session.user.email || "";
+            const userProfile = await getUserProfile();
+            if (userProfile) {
+                const userEmail = userProfile.email || "";
                 setEmail(userEmail);
-                setName(userEmail.split("@")[0] || "Student");
+                setName(userProfile.name || userEmail.split("@")[0] || "Student");
 
-                // Super admin bypass - always show as Premium
-                if (userEmail === "akbarkhon545@gmail.com") {
-                    setSubscription({
-                        plan: "yearly",
-                        status: "active",
-                        expiresAt: new Date("2099-12-31"), // Permanent access
-                    });
-                } else {
-                    // Load subscription from localStorage
-                    const allSubs = JSON.parse(localStorage.getItem('all_subscriptions') || '{}');
-                    const userSub = allSubs[userEmail];
+                const plan = userProfile.subscriptionPlan as "FREE" | "MONTHLY" | "YEARLY";
+                const expiryDate = userProfile.subscriptionExpiresAt ? new Date(userProfile.subscriptionExpiresAt) : null;
 
-                    if (userSub && userSub.expiresAt) {
-                        const expiryDate = new Date(userSub.expiresAt);
-                        if (expiryDate > new Date()) {
-                            setSubscription({
-                                plan: userSub.plan || "monthly",
-                                status: "active",
-                                expiresAt: expiryDate,
-                            });
-                        } else {
-                            setSubscription({
-                                plan: userSub.plan || "monthly",
-                                status: "expired",
-                                expiresAt: expiryDate,
-                            });
-                        }
-                    } else {
-                        setSubscription({
-                            plan: null,
-                            status: "none",
-                            expiresAt: null,
-                        });
-                    }
+                let status: "active" | "expired" | "none" = "none";
+                if (plan !== "FREE" && expiryDate) {
+                    status = expiryDate > new Date() ? "active" : "expired";
+                } else if (userProfile.role === "ADMIN" || userEmail === "akbarkhon545@gmail.com") {
+                    status = "active";
                 }
+
+                setSubscription({
+                    plan,
+                    status,
+                    expiresAt: expiryDate || (userProfile.role === "ADMIN" ? new Date("2099-12-31") : null),
+                });
             }
             setLoading(false);
         }
@@ -130,9 +110,11 @@ export default function ProfilePage() {
         setMessage(null);
 
         try {
-            const { error } = await supabase.auth.updateUser({ password: newPassword });
-            if (error) throw error;
-
+            const { updateUserPassword } = await import("@/app/actions/auth");
+            await updateUserPassword({
+                currentPassword,
+                newPassword,
+            });
             setMessage({ type: "success", text: t("profile.passwordChanged") });
             setCurrentPassword("");
             setNewPassword("");
@@ -270,7 +252,7 @@ export default function ProfilePage() {
                                             {t("profile.plan")}
                                         </div>
                                         <p className="font-semibold text-[var(--foreground)]">
-                                            {subscription.plan === "monthly" ? t("profile.monthlyPlan") : t("profile.yearlyPlan")}
+                                            {subscription.plan === "MONTHLY" ? t("profile.monthlyPlan") : t("profile.yearlyPlan")}
                                         </p>
                                     </div>
 

@@ -4,7 +4,24 @@ import { useState, useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import supabase from "@/lib/supabase/client";
+import {
+  getFaculties,
+  getSubjects,
+  getQuestions,
+  getUsers,
+  addFaculty,
+  updateFaculty,
+  deleteFaculty,
+  addSubject,
+  updateSubject,
+  deleteSubject,
+  addQuestion,
+  updateQuestion,
+  deleteQuestion,
+  updateSubscription,
+  getAdminStats
+} from "@/app/actions/admin";
+import { getUserSession } from "@/app/actions/auth";
 import {
   GraduationCap,
   BookOpen,
@@ -33,26 +50,6 @@ type Tab = "faculties" | "subjects" | "questions" | "users" | "subscriptions";
 // Admin email - only this user can access admin panel
 const ADMIN_EMAIL = "akbarkhon545@gmail.com";
 
-// Data will be loaded from database
-const mockFaculties: { id: number; name: string; subjects_count: number }[] = [];
-
-const mockSubjects: { id: number; name: string; faculty_id: number; faculty_name: string; questions_count: number }[] = [];
-
-const mockQuestions: { id: number; question_text: string; subject_name: string }[] = [];
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  active: boolean;
-  subscription: { plan: "monthly" | "yearly"; expiresAt: string } | null;
-}
-
-const mockUsers: User[] = [
-  { id: 1, name: "Akbarkhon", email: "akbarkhon545@gmail.com", role: "admin", active: true, subscription: null },
-];
-
 export default function AdminPage() {
   const locale = useLocale();
   const router = useRouter();
@@ -65,16 +62,25 @@ export default function AdminPage() {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [saving, setSaving] = useState(false);
 
-  // Data states - loaded from Supabase
+  // Stats
+  const [stats, setStats] = useState<any>({
+    userCount: 0,
+    facultyCount: 0,
+    subjectCount: 0,
+    questionCount: 0,
+    estimatedIncome: 0
+  });
+
+  // Data states
   const [faculties, setFaculties] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [questions, setQuestions] = useState<any[]>([]);
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<any[]>([]);
 
   // Form states
   const [formName, setFormName] = useState("");
   const [formEmail, setFormEmail] = useState("");
-  const [formRole, setFormRole] = useState("student");
+  const [formRole, setFormRole] = useState("STUDENT");
   const [formFacultyId, setFormFacultyId] = useState("");
   const [formQuestionText, setFormQuestionText] = useState("");
   const [formCorrectAnswer, setFormCorrectAnswer] = useState("");
@@ -86,9 +92,8 @@ export default function AdminPage() {
   // Subscription form
   const [showSubModal, setShowSubModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [subPlan, setSubPlan] = useState<"monthly" | "yearly">("monthly");
+  const [subPlan, setSubPlan] = useState<"MONTHLY" | "YEARLY" | "FREE">("MONTHLY");
   const [subExpiryDate, setSubExpiryDate] = useState(() => {
-    // Default to 30 days from now
     const date = new Date();
     date.setDate(date.getDate() + 30);
     return date.toISOString().split('T')[0];
@@ -100,165 +105,111 @@ export default function AdminPage() {
   // Check if user is admin
   useEffect(() => {
     const checkAdmin = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const user = await getUserSession();
 
-      if (!session) {
+      if (!user) {
         router.push(`/${locale}/auth/login`);
         return;
       }
 
-      if (session.user.email === ADMIN_EMAIL) {
+      if (user.email === ADMIN_EMAIL || user.role === "ADMIN") {
         setIsAdmin(true);
-        // Load all data from Supabase
         loadAllData();
       } else {
         setIsAdmin(false);
+        setLoading(false);
       }
-      setLoading(false);
     };
     checkAdmin();
   }, [locale, router]);
 
-  // Load all data from Supabase
+  // Load all data
   const loadAllData = async () => {
-    await Promise.all([
-      loadFaculties(),
-      loadSubjects(),
-      loadQuestions(),
-      loadUsersFromSupabase()
-    ]);
-  };
-
-  // Load faculties
-  const loadFaculties = async () => {
-    console.log("Loading faculties...");
-    const { data, error } = await supabase
-      .from("faculties")
-      .select("id, name")
-      .order("name");
-
-    console.log("Faculties response:", { data, error });
-
-    if (error) {
-      console.error("Error loading faculties:", error);
-      // Fallback for testing
-      setFaculties([
-        { id: 99, name: "Тестовый факультет (загрузка не удалась)" }
-      ]);
-    } else if (data && data.length > 0) {
-      setFaculties(data);
-    } else {
-      // No faculties in database
-      setFaculties([
-        { id: 0, name: "Нет факультетов (добавьте сначала)" }
-      ]);
-    }
-  };
-
-  // Load subjects with faculty info
-  const loadSubjects = async () => {
-    const { data, error } = await supabase
-      .from("subjects")
-      .select("id, name, faculty_id")
-      .order("name");
-
-    if (!error && data) {
-      setSubjects(data);
-    }
-  };
-
-  // Load questions
-  const loadQuestions = async () => {
-    const { data, error } = await supabase
-      .from("questions")
-      .select("id, question_text, subject_id, correct_answer, answer2, answer3, answer4");
-
-    if (!error && data) {
-      setQuestions(data);
-    }
-  };
-
-  // Load users from Supabase profiles
-  const loadUsersFromSupabase = async () => {
-    console.log("Loading users from Supabase...");
+    setLoading(true);
     try {
-      // Get users from profiles table (columns: id, email, role)
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, email, role");
-
-      console.log("Supabase response:", { data, error });
-
-      if (error) {
-        console.error("Error loading profiles:", error);
-        // Fallback to admin only
-        setUsers(mockUsers);
-      } else if (data && data.length > 0) {
-        console.log("Found profiles:", data.length);
-        // Convert profiles to users with subscription info from localStorage
-        const allSubs = JSON.parse(localStorage.getItem('all_subscriptions') || '{}');
-        const usersFromProfiles: User[] = data.map((profile: any, idx: number) => ({
-          id: idx + 1,
-          name: profile.email?.split('@')[0] || "User",
-          email: profile.email || "",
-          role: profile.email === ADMIN_EMAIL ? "admin" : (profile.role === "user" ? "student" : profile.role || "student"),
-          active: true,
-          subscription: allSubs[profile.email] || null
-        }));
-        console.log("Setting users:", usersFromProfiles);
-        setUsers(usersFromProfiles);
-      } else {
-        console.log("No profiles found, using mock");
-        setUsers(mockUsers);
-      }
-    } catch (e) {
-      console.error("Connection error:", e);
-      setUsers(mockUsers);
+      const [facs, subs, ques, usrs, statData] = await Promise.all([
+        getFaculties(),
+        getSubjects(),
+        getQuestions(),
+        getUsers(),
+        getAdminStats()
+      ]);
+      setFaculties(facs);
+      setSubjects(subs);
+      setQuestions(ques);
+      setUsers(usrs);
+      setStats(statData);
+    } catch (error) {
+      console.error("Load error:", error);
     }
+    setLoading(false);
   };
 
-  // Show loading
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="w-12 h-12 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      if (activeTab === "faculties") {
+        if (editingItem) {
+          await updateFaculty(editingItem.id, formName);
+        } else {
+          await addFaculty(formName);
+        }
+      } else if (activeTab === "subjects") {
+        if (editingItem) {
+          await updateSubject(editingItem.id, formName, parseInt(formFacultyId));
+        } else {
+          await addSubject(formName, parseInt(formFacultyId));
+        }
+      } else if (activeTab === "questions") {
+        const questionData = {
+          questionText: formQuestionText,
+          correctAnswer: formCorrectAnswer,
+          answer2: formAnswer2,
+          answer3: formAnswer3,
+          answer4: formAnswer4,
+          subjectId: parseInt(formSubjectId)
+        };
+        if (editingItem) {
+          await updateQuestion(editingItem.id, questionData);
+        } else {
+          await addQuestion(questionData);
+        }
+      }
+      await loadAllData();
+      setShowModal(false);
+      alert("Сохранено!");
+    } catch (e) {
+      console.error("Save error:", e);
+      alert("Ошибка сохранения");
+    }
+    setSaving(false);
+  };
 
-  // Show access denied for non-admins
-  if (!isAdmin) {
-    return (
-      <div className="max-w-xl mx-auto text-center py-12 animate-fadeIn">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[var(--danger-light)] mb-6">
-          <Lock className="w-10 h-10 text-[var(--danger)]" />
-        </div>
-        <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">
-          Доступ запрещён
-        </h2>
-        <p className="text-[var(--foreground-secondary)] mb-8">
-          У вас нет прав доступа к админ-панели
-        </p>
-        <Link href={`/${locale}/dashboard`} className="btn btn-primary">
-          Вернуться на главную
-        </Link>
-      </div>
-    );
-  }
+  const handleDelete = async (id: number) => {
+    if (!confirm("Удалить?")) return;
+    try {
+      if (activeTab === "faculties") await deleteFaculty(id);
+      else if (activeTab === "subjects") await deleteSubject(id);
+      else if (activeTab === "questions") await deleteQuestion(id);
+      await loadAllData();
+    } catch (e) {
+      console.error("Delete error:", e);
+    }
+  };
 
   const tabs: { id: Tab; label: string; icon: any; count: number }[] = [
     { id: "faculties", label: t("admin.faculties"), icon: GraduationCap, count: faculties.length },
     { id: "subjects", label: t("admin.subjects"), icon: BookOpen, count: subjects.length },
     { id: "questions", label: t("admin.questions"), icon: HelpCircle, count: questions.length },
     { id: "users", label: t("admin.users"), icon: Users, count: users.length },
-    { id: "subscriptions", label: t("admin.subscriptions"), icon: Crown, count: users.filter(u => u.subscription).length },
+    { id: "subscriptions", label: t("admin.subscriptions"), icon: Crown, count: users.filter(u => u.subscriptionPlan && u.subscriptionPlan !== "FREE").length },
   ];
 
   const handleAdd = () => {
     setEditingItem(null);
     setFormName("");
     setFormEmail("");
-    setFormRole("student");
+    setFormRole("STUDENT");
     setFormFacultyId("");
     setFormQuestionText("");
     setFormCorrectAnswer("");
@@ -273,7 +224,7 @@ export default function AdminPage() {
     setEditingItem(item);
     setFormName(item.name || "");
     setFormEmail(item.email || "");
-    setFormRole(item.role || "student");
+    setFormRole(item.role || "STUDENT");
     setFormFacultyId(String(item.faculty_id || ""));
     setFormQuestionText(item.question_text || "");
     setFormCorrectAnswer(item.correct_answer || "");
@@ -284,81 +235,10 @@ export default function AdminPage() {
     setShowModal(true);
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      if (activeTab === "faculties") {
-        if (editingItem) {
-          // Update faculty
-          await supabase.from("faculties").update({ name: formName }).eq("id", editingItem.id);
-        } else {
-          // Create faculty
-          await supabase.from("faculties").insert({ name: formName });
-        }
-        await loadFaculties();
-      } else if (activeTab === "subjects") {
-        if (editingItem) {
-          // Update subject
-          await supabase.from("subjects").update({
-            name: formName,
-            faculty_id: parseInt(formFacultyId)
-          }).eq("id", editingItem.id);
-        } else {
-          // Create subject
-          await supabase.from("subjects").insert({
-            name: formName,
-            faculty_id: parseInt(formFacultyId)
-          });
-        }
-        await loadSubjects();
-      } else if (activeTab === "questions") {
-        const questionData = {
-          question_text: formQuestionText,
-          correct_answer: formCorrectAnswer,
-          answer2: formAnswer2,
-          answer3: formAnswer3,
-          answer4: formAnswer4,
-          subject_id: parseInt(formSubjectId)
-        };
-        if (editingItem) {
-          await supabase.from("questions").update(questionData).eq("id", editingItem.id);
-        } else {
-          await supabase.from("questions").insert(questionData);
-        }
-        await loadQuestions();
-      }
-      setShowModal(false);
-      alert("Сохранено!");
-    } catch (e) {
-      console.error("Save error:", e);
-      alert("Ошибка сохранения");
-    }
-    setSaving(false);
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!confirm("Удалить?")) return;
-
-    try {
-      if (activeTab === "faculties") {
-        await supabase.from("faculties").delete().eq("id", id);
-        await loadFaculties();
-      } else if (activeTab === "subjects") {
-        await supabase.from("subjects").delete().eq("id", id);
-        await loadSubjects();
-      } else if (activeTab === "questions") {
-        await supabase.from("questions").delete().eq("id", id);
-        await loadQuestions();
-      }
-    } catch (e) {
-      console.error("Delete error:", e);
-    }
-  };
-
   // Subscription management
   const handleAddSubscription = (user: any) => {
     setSelectedUser(user);
-    setSubPlan("monthly");
+    setSubPlan("MONTHLY");
     // Default to 30 days from now
     const date = new Date();
     date.setDate(date.getDate() + 30);
@@ -366,72 +246,49 @@ export default function AdminPage() {
     setShowSubModal(true);
   };
 
-  const handleSaveSubscription = () => {
+  const handleSaveSubscription = async () => {
     if (!selectedUser) return;
-
-    const subscriptionData = { plan: subPlan, expiresAt: subExpiryDate };
-
-    // Update state
-    setUsers(users.map(u =>
-      u.id === selectedUser.id
-        ? { ...u, subscription: subscriptionData }
-        : u
-    ));
-
-    // Save to localStorage by email (for test page to find)
-    localStorage.setItem(`subscription_${selectedUser.email}`, JSON.stringify(subscriptionData));
-
-    // Also save by a generic key for current user lookup
-    // The test pages will need to check this
-    const allSubs = JSON.parse(localStorage.getItem('all_subscriptions') || '{}');
-    allSubs[selectedUser.email] = subscriptionData;
-    localStorage.setItem('all_subscriptions', JSON.stringify(allSubs));
-
-    setShowSubModal(false);
-    setSelectedUser(null);
-
-    alert(`Подписка активирована для ${selectedUser.email}!`);
+    setSaving(true);
+    try {
+      await updateSubscription(selectedUser.id, subPlan, subExpiryDate);
+      await loadAllData();
+      setShowSubModal(false);
+      setSelectedUser(null);
+      alert(`Подписка обновлена для ${selectedUser.email}!`);
+    } catch (error) {
+      console.error("Sub error:", error);
+      alert("Ошибка обновления подписки");
+    }
+    setSaving(false);
   };
 
-  const handleRemoveSubscription = (userId: number) => {
-    const user = users.find(u => u.id === userId);
-    if (!user) return;
-
+  const handleRemoveSubscription = async (userId: number) => {
     if (confirm("Удалить подписку пользователя?")) {
-      setUsers(users.map(u =>
-        u.id === userId ? { ...u, subscription: null } : u
-      ));
-
-      // Remove from localStorage
-      localStorage.removeItem(`subscription_${user.email}`);
-      const allSubs = JSON.parse(localStorage.getItem('all_subscriptions') || '{}');
-      delete allSubs[user.email];
-      localStorage.setItem('all_subscriptions', JSON.stringify(allSubs));
+      await updateSubscription(userId, "FREE", null);
+      await loadAllData();
     }
   };
 
   const getRoleBadge = (role: string) => {
     const badges: Record<string, string> = {
-      admin: "badge-danger",
-      manager: "badge-warning",
-      student: "badge-primary",
+      ADMIN: "badge-danger",
+      STUDENT: "badge-primary",
     };
     const labels: Record<string, string> = {
-      admin: t("admin.adminRole"),
-      manager: t("admin.managerRole"),
-      student: t("admin.studentRole"),
+      ADMIN: t("admin.adminRole"),
+      STUDENT: t("admin.studentRole"),
     };
     return <span className={`badge ${badges[role] || "badge-primary"}`}>{labels[role] || role}</span>;
   };
 
-  const getSubBadge = (sub: any) => {
-    if (!sub) return <span className="badge badge-secondary">{t("admin.noSubscription")}</span>;
-    const isExpired = new Date(sub.expiresAt) < new Date();
+  const getSubBadge = (user: any) => {
+    if (!user.subscriptionPlan || user.subscriptionPlan === "FREE") return <span className="badge badge-secondary">{t("admin.noSubscription")}</span>;
+    const isExpired = user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) < new Date();
     if (isExpired) return <span className="badge badge-danger">{t("admin.expired")}</span>;
     return (
       <span className="badge badge-success flex items-center gap-1">
         <Crown className="w-3 h-3" />
-        {sub.plan === "monthly" ? t("admin.monthlyPlan") : t("admin.yearlyPlan")}
+        {user.subscriptionPlan === "MONTHLY" ? t("admin.monthlyPlan") : t("admin.yearlyPlan")}
       </span>
     );
   };
@@ -654,7 +511,7 @@ export default function AdminPage() {
               </td>
               <td className="py-3 px-4 text-[var(--foreground-secondary)]">{user.email}</td>
               <td className="py-3 px-4 text-center">{getRoleBadge(user.role)}</td>
-              <td className="py-3 px-4 text-center">{getSubBadge(user.subscription)}</td>
+              <td className="py-3 px-4 text-center">{getSubBadge(user)}</td>
               <td className="py-3 px-4 text-right">
                 <button onClick={() => handleAddSubscription(user)} className="btn btn-sm btn-success mr-2" title={t("admin.addSubscription")}>
                   <Crown className="w-4 h-4" />
@@ -674,8 +531,8 @@ export default function AdminPage() {
   );
 
   const renderSubscriptions = () => {
-    const usersWithSub = users.filter(u => u.subscription);
-    const usersWithoutSub = users.filter(u => !u.subscription && u.role === "student");
+    const usersWithSub = users.filter(u => u.subscriptionPlan && u.subscriptionPlan !== "FREE");
+    const usersWithoutSub = users.filter(u => (!u.subscriptionPlan || u.subscriptionPlan === "FREE") && u.role === "STUDENT");
 
     return (
       <div className="space-y-6">
@@ -700,9 +557,8 @@ export default function AdminPage() {
               <CreditCard className="w-5 h-5 text-[var(--primary)]" />
               <span className="font-medium text-[var(--foreground)]">{t("admin.incomeApprox")}</span>
             </div>
-            <p className="text-2xl font-bold text-[var(--primary)]">
-              {(usersWithSub.filter(u => u.subscription?.plan === "monthly").length * 25000 +
-                usersWithSub.filter(u => u.subscription?.plan === "yearly").length * 50000).toLocaleString()} {t("pricing.sum")}
+            <p className="text-2xl font-bold text-[var(--primary)] text-sm">
+              {stats.estimatedIncome.toLocaleString()} {t("pricing.sum")}
             </p>
           </div>
         </div>
@@ -740,14 +596,14 @@ export default function AdminPage() {
                       </td>
                       <td className="py-3 px-4 text-[var(--foreground-secondary)]">{user.email}</td>
                       <td className="py-3 px-4 text-center">
-                        <span className={`badge ${user.subscription?.plan === "yearly" ? "badge-success" : "badge-primary"}`}>
-                          {user.subscription?.plan === "monthly" ? `25 000 ${t("admin.perMonth")}` : `50 000 ${t("admin.perYear")}`}
+                        <span className={`badge ${user.subscriptionPlan === "YEARLY" ? "badge-success" : "badge-primary"}`}>
+                          {user.subscriptionPlan === "MONTHLY" ? `25 000 ${t("admin.perMonth")}` : `50 000 ${t("admin.perYear")}`}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-center">
                         <span className="flex items-center justify-center gap-1 text-[var(--foreground-secondary)]">
                           <Calendar className="w-4 h-4" />
-                          {user.subscription?.expiresAt}
+                          {user.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt).toLocaleDateString() : "-"}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right">
@@ -968,24 +824,24 @@ export default function AdminPage() {
                 <label className="label">{t("admin.plan")}</label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    onClick={() => setSubPlan("monthly")}
-                    className={`p-4 rounded-lg border-2 text-center transition-all ${subPlan === "monthly"
+                    onClick={() => setSubPlan("MONTHLY")}
+                    className={`p-4 rounded-lg border-2 text-center transition-all ${subPlan === "MONTHLY"
                       ? "border-[var(--primary)] bg-[var(--primary-light)]"
                       : "border-[var(--border)]"
                       }`}
                   >
                     <p className="font-bold text-[var(--foreground)]">25 000 {t("pricing.sum")}</p>
-                    <p className="text-sm text-[var(--foreground-secondary)]">{t("admin.monthlyPlan")}</p>
+                    <p className="text-xs text-[var(--foreground-muted)]">{t("admin.perMonth")}</p>
                   </button>
                   <button
-                    onClick={() => setSubPlan("yearly")}
-                    className={`p-4 rounded-lg border-2 text-center transition-all ${subPlan === "yearly"
+                    onClick={() => setSubPlan("YEARLY")}
+                    className={`p-4 rounded-lg border-2 text-center transition-all ${subPlan === "YEARLY"
                       ? "border-[var(--primary)] bg-[var(--primary-light)]"
                       : "border-[var(--border)]"
                       }`}
                   >
                     <p className="font-bold text-[var(--foreground)]">50 000 {t("pricing.sum")}</p>
-                    <p className="text-sm text-[var(--foreground-secondary)]">{t("admin.yearlyPlan")}</p>
+                    <p className="text-xs text-[var(--foreground-muted)]">{t("admin.perYear")}</p>
                   </button>
                 </div>
               </div>
@@ -1002,9 +858,9 @@ export default function AdminPage() {
               </div>
 
               <div className="p-3 rounded-lg bg-[var(--success-light)] border border-[var(--success)]/20">
-                <p className="text-sm text-[var(--foreground-muted)]\">Тариф</p>
+                <p className="text-sm text-[var(--foreground-muted)]">Тариф</p>
                 <p className="font-bold text-lg text-[var(--success)]">
-                  {subPlan === "monthly" ? "25 000" : "50 000"} {t("pricing.sum")}
+                  {subPlan === "MONTHLY" ? "25 000" : "50 000"} {t("pricing.sum")}
                 </p>
                 <p className="text-xs text-[var(--foreground-secondary)]">
                   {t("common.validUntil") || "Действует до"}: {new Date(subExpiryDate).toLocaleDateString()}
@@ -1013,7 +869,7 @@ export default function AdminPage() {
             </div>
             <div className="flex justify-end gap-2 p-4 border-t border-[var(--border)]">
               <button onClick={() => setShowSubModal(false)} className="btn btn-secondary">{t("admin.cancel")}</button>
-              <button onClick={handleSaveSubscription} className="btn btn-success">
+              <button onClick={handleSaveSubscription} className="btn btn-success" disabled={saving}>
                 <CheckCircle className="w-4 h-4" />
                 {t("admin.activateSubscription")}
               </button>

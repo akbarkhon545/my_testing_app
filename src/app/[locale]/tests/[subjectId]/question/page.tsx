@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import Link from "next/link";
-import supabase from "@/lib/supabase/client";
 import {
     Clock,
     ChevronLeft,
@@ -14,6 +13,8 @@ import {
     AlertCircle
 } from "lucide-react";
 import { use } from "react";
+import { getUserSession, getUserProfile } from "@/app/actions/auth";
+import { getQuestionsBySubject, saveTestResult } from "@/app/actions/admin";
 
 interface Question {
     id: number;
@@ -50,7 +51,7 @@ export default function QuestionPage({ params }: QuestionPageProps) {
     const searchParams = useSearchParams();
     const mode = searchParams.get("mode") || "training";
 
-    const [questions, setQuestions] = useState<Question[]>([]);
+    const [questions, setQuestions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [hasSubscription, setHasSubscription] = useState(false);
     const [authChecked, setAuthChecked] = useState(false);
@@ -64,27 +65,25 @@ export default function QuestionPage({ params }: QuestionPageProps) {
     // Check auth and subscription first
     useEffect(() => {
         const checkAuth = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
+            const userProfile = await getUserProfile();
 
-            if (!session) {
+            if (!userProfile) {
                 router.push(`/${locale}/auth/login`);
                 return;
             }
 
-            // Check subscription by email
-            const userEmail = session.user.email;
-
             // Admin bypass - full access
-            if (userEmail === "akbarkhon545@gmail.com") {
+            if (userProfile.role === "ADMIN" || userProfile.email === "akbarkhon545@gmail.com") {
                 setHasSubscription(true);
                 setAuthChecked(true);
                 return;
             }
 
-            const allSubs = JSON.parse(localStorage.getItem('all_subscriptions') || '{}');
-            const userSub = allSubs[userEmail || ''];
+            const hasActiveSub = userProfile.subscriptionPlan !== "FREE" &&
+                userProfile.subscriptionExpiresAt &&
+                new Date(userProfile.subscriptionExpiresAt) > new Date();
 
-            if (!userSub || !userSub.expiresAt || new Date(userSub.expiresAt) <= new Date()) {
+            if (!hasActiveSub) {
                 router.push(`/${locale}/pricing`);
                 return;
             }
@@ -95,27 +94,17 @@ export default function QuestionPage({ params }: QuestionPageProps) {
         checkAuth();
     }, [locale, router]);
 
-    // Load questions from Supabase (only if subscription check passed)
+    // Load questions (only if subscription check passed)
     useEffect(() => {
         if (!authChecked || !hasSubscription) return;
 
         (async () => {
             setLoading(true);
             try {
-                const { data, error } = await supabase
-                    .from("questions")
-                    .select("id, question_text, correct_answer, answer2, answer3, answer4")
-                    .eq("subject_id", resolvedParams.subjectId)
-                    .limit(mode === "training" ? 25 : 100);
-
-                if (error) {
-                    console.error("Error loading questions:", error);
-                    setQuestions([]);
-                } else {
-                    // Shuffle for training mode
-                    const shuffled = mode === "training" ? shuffleArray(data || []) : (data || []);
-                    setQuestions(shuffled);
-                }
+                const data = await getQuestionsBySubject(Number(resolvedParams.subjectId));
+                // Shuffle for training mode
+                const shuffled = mode === "training" ? shuffleArray(data || []) : (data || []);
+                setQuestions(shuffled.slice(0, mode === "training" ? 25 : 100));
             } catch (e) {
                 console.error("Connection error:", e);
                 setQuestions([]);
@@ -192,30 +181,24 @@ export default function QuestionPage({ params }: QuestionPageProps) {
         console.log("=== FINISHING TRAINING TEST ===");
         console.log("Correct:", correct, "Total:", questions.length, "Score:", score);
 
-        // Save to Supabase (only for training mode)
+        // Save to Database (only for training mode)
         if (mode === "training") {
-            const { data: { session } } = await supabase.auth.getSession();
+            const user = await getUserSession();
 
-            if (session) {
-                console.log("Saving result to Supabase for user:", session.user.id);
-
-                const { data, error } = await supabase
-                    .from("test_results")
-                    .insert({
-                        user_id: session.user.id,
-                        subject_id: parseInt(resolvedParams.subjectId),
-                        mode: mode,
-                        score: correct,
-                        total_questions: questions.length,
-                        correct_count: correct,
-                        total_time: timeSpent,
-                    })
-                    .select();
-
-                if (error) {
-                    console.error("Error saving to Supabase:", error);
-                } else {
-                    console.log("✅ Result saved to Supabase!", data);
+            if (user) {
+                try {
+                    await saveTestResult({
+                        userId: user.id,
+                        subjectId: parseInt(resolvedParams.subjectId),
+                        score: score,
+                        totalQuestions: questions.length,
+                        correctCount: correct,
+                        totalTime: timeSpent,
+                        mode: "TRAINING",
+                    });
+                    console.log("✅ Result saved to database!");
+                } catch (error) {
+                    console.error("Error saving to database:", error);
                 }
             } else {
                 console.error("No session - cannot save result");

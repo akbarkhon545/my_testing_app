@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import supabase from "@/lib/supabase/client";
 import { useLocale } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
+import { getUserSession } from "@/app/actions/auth";
+import { getSubjectById, getQuestionsBySubject, saveTestResult } from "@/app/actions/admin";
 
 type Subject = {
   id: number;
@@ -68,58 +69,49 @@ export default function SubjectTestPage() {
       }
 
       // Require auth
-      const { data: sessionData } = await supabase.auth.getSession();
-      const session = sessionData.session;
-      if (!session) {
+      const user = await getUserSession();
+      if (!user) {
         router.replace(`/${locale}/auth/login`);
         return;
       }
 
       setError(null);
       setLoading(true);
-      const [subjRes, qRes] = await Promise.all([
-        supabase.from("subjects").select("id, name").eq("id", subjectId).single(),
-        supabase
-          .from("questions")
-          .select(
-            "id, subject_id, question_text, correct_answer, answer2, answer3, answer4, explanation, created_at"
-          )
-          .eq("subject_id", subjectId),
-      ]);
+      try {
+        const [subjData, questionsData] = await Promise.all([
+          getSubjectById(subjectId),
+          getQuestionsBySubject(subjectId)
+        ]);
 
-      if (subjRes.error) {
-        setError(subjRes.error.message);
-        setLoading(false);
-        return;
+        if (!subjData) {
+          setError("Предмет не найден");
+          setLoading(false);
+          return;
+        }
+        setSubject(subjData);
+
+        const prepared: PreparedQuestion[] = questionsData.map((row: any) => {
+          const options = [
+            { text: row.correct_answer, correct: true },
+            { text: row.answer2, correct: false },
+            { text: row.answer3, correct: false },
+            { text: row.answer4, correct: false },
+          ];
+          const shuffled = shuffle(options);
+          const correctIndex = shuffled.findIndex((o) => o.correct);
+          return {
+            id: row.id,
+            text: row.question_text,
+            answers: shuffled.map((o) => o.text),
+            correctIndex,
+            explanation: row.explanation,
+          };
+        });
+
+        setQuestions(shuffle(prepared));
+      } catch (err: any) {
+        setError(err.message || "Ошибка загрузки");
       }
-      setSubject(subjRes.data);
-
-      if (qRes.error) {
-        setError(qRes.error.message);
-        setLoading(false);
-        return;
-      }
-
-      const prepared: PreparedQuestion[] = (qRes.data as QuestionRow[]).map((row) => {
-        const options = [
-          { text: row.correct_answer, correct: true },
-          { text: row.answer2, correct: false },
-          { text: row.answer3, correct: false },
-          { text: row.answer4, correct: false },
-        ];
-        const shuffled = shuffle(options);
-        const correctIndex = shuffled.findIndex((o) => o.correct);
-        return {
-          id: row.id,
-          text: row.question_text,
-          answers: shuffled.map((o) => o.text),
-          correctIndex,
-          explanation: row.explanation,
-        };
-      });
-
-      // Optionally limit number of questions for exam mode later
-      setQuestions(shuffle(prepared));
       setLoading(false);
     })();
   }, [subjectId, router, locale]);
@@ -169,51 +161,29 @@ export default function SubjectTestPage() {
     console.log("Mode:", mode);
     console.log("Time:", seconds);
 
-    const { data: sessionData } = await supabase.auth.getSession();
-    const session = sessionData.session;
+    const user = await getUserSession();
 
-    console.log("Session:", session ? "exists" : "null");
-
-    if (!session) {
-      console.error("No session! Cannot save result.");
+    if (!user) {
+      console.error("No user! Cannot save result.");
       return;
     }
 
-    console.log("User ID:", session.user.id);
-
-    const insertData = {
-      user_id: session.user.id,
-      subject_id: subjectId,
-      mode,
+    const resultData = {
+      userId: user.id,
+      subjectId: subjectId,
       score: correctCount,
-      total_questions: total,
-      correct_count: correctCount,
-      total_time: seconds,
+      totalQuestions: total,
+      correctCount: correctCount,
+      totalTime: seconds,
+      mode: mode.toUpperCase() as "TRAINING" | "EXAM",
     };
 
-    console.log("Inserting data:", insertData);
-
-    // Save result
-    const { data, error: insertErr } = await supabase
-      .from("test_results")
-      .insert(insertData)
-      .select();
-
-    console.log("Insert response:", { data, error: insertErr });
-
-    if (insertErr) {
-      console.error("Error saving test result:", insertErr);
-      setError(insertErr.message);
-    } else {
-      console.log("✅ Test result saved successfully!", data);
-    }
-
-    // Save history (best-effort)
     try {
-      const qIds = questions.map((q) => ({ user_id: session.user.id, question_id: q.id }));
-      await supabase.from("user_question_history").insert(qIds);
-    } catch (_) {
-      // ignore
+      await saveTestResult(resultData);
+      console.log("✅ Test result saved successfully!");
+    } catch (err: any) {
+      console.error("Error saving test result:", err);
+      setError(err.message);
     }
   };
 

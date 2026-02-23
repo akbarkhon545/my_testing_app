@@ -2,20 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import supabase from "@/lib/supabase/client";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { Book, Award, ChevronRight, FileQuestion, GraduationCap, AlertCircle, Crown } from "lucide-react";
-
-type Subject = {
-  id: number;
-  name: string;
-  faculty_id: number;
-};
+import { getUserSession, getUserProfile } from "@/app/actions/auth";
+import { getSubjects } from "@/app/actions/admin";
 
 export default function TestsIndexPage() {
   const router = useRouter();
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
   const [hasSubscription, setHasSubscription] = useState(false);
@@ -26,34 +21,25 @@ export default function TestsIndexPage() {
   // Check authentication first
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const userProfile = await getUserProfile();
 
-      if (!session) {
+      if (!userProfile) {
         router.push(`/${locale}/auth/login`);
         return;
       }
 
-      // Check subscription by email
-      const userEmail = session.user.email;
-
-      // Admin bypass - full access without subscription
-      if (userEmail === "akbarkhon545@gmail.com") {
+      // Admin bypass - full access
+      if (userProfile.role === "ADMIN" || userProfile.email === "akbarkhon545@gmail.com") {
         setHasSubscription(true);
         setAuthChecked(true);
         return;
       }
 
-      const allSubs = JSON.parse(localStorage.getItem('all_subscriptions') || '{}');
-      const userSub = allSubs[userEmail || ''];
+      const hasActiveSub = userProfile.subscriptionPlan !== "FREE" &&
+        userProfile.subscriptionExpiresAt &&
+        new Date(userProfile.subscriptionExpiresAt) > new Date();
 
-      // Check if subscription exists and is not expired
-      if (userSub && userSub.expiresAt) {
-        const expiryDate = new Date(userSub.expiresAt);
-        setHasSubscription(expiryDate > new Date());
-      } else {
-        setHasSubscription(false);
-      }
-
+      setHasSubscription(!!hasActiveSub);
       setAuthChecked(true);
     };
     checkAuth();
@@ -67,21 +53,10 @@ export default function TestsIndexPage() {
       setError(null);
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from("subjects")
-          .select("id, name, faculty_id")
-          .order("name");
-
-        if (error) {
-          console.warn("Supabase error:", error.message);
-          setError("Не удалось загрузить предметы");
-          setSubjects([]);
-        } else {
-          setSubjects(data || []);
-        }
-      } catch (e) {
-        console.warn("Connection error");
-        setError("Ошибка подключения к базе данных");
+        const data = await getSubjects();
+        setSubjects(data);
+      } catch (e: any) {
+        setError("Не удалось загрузить предметы");
         setSubjects([]);
       }
       setLoading(false);

@@ -3,8 +3,8 @@
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import supabase from "@/lib/supabase/client";
 import { Clock, CheckCircle, AlertCircle, ArrowRight, Book, Award, Crown, Lock } from "lucide-react";
+import { getUserSession, getUserProfile } from "@/app/actions/auth";
 
 interface InstructionsPageProps {
     params: Promise<{ locale: string; subjectId: string }>;
@@ -27,29 +27,22 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
 
     useEffect(() => {
         const checkAuth = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            setIsLoggedIn(!!session);
+            const userProfile = await getUserProfile();
+            setIsLoggedIn(!!userProfile);
 
-            if (session) {
-                // Check subscription by email
-                const userEmail = session.user.email;
-
+            if (userProfile) {
                 // Admin bypass - full access
-                if (userEmail === "akbarkhon545@gmail.com") {
+                if (userProfile.role === "ADMIN" || userProfile.email === "akbarkhon545@gmail.com") {
                     setHasSubscription(true);
                     setLoading(false);
                     return;
                 }
 
-                const allSubs = JSON.parse(localStorage.getItem('all_subscriptions') || '{}');
-                const userSub = allSubs[userEmail || ''];
+                const hasActiveSub = userProfile.subscriptionPlan !== "FREE" &&
+                    userProfile.subscriptionExpiresAt &&
+                    new Date(userProfile.subscriptionExpiresAt) > new Date();
 
-                if (userSub && userSub.expiresAt) {
-                    const expiryDate = new Date(userSub.expiresAt);
-                    setHasSubscription(expiryDate > new Date());
-                } else {
-                    setHasSubscription(false);
-                }
+                setHasSubscription(!!hasActiveSub);
             }
             setLoading(false);
         };

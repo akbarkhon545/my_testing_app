@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import supabase from "@/lib/supabase/client";
+import { registerUser } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
@@ -47,16 +47,18 @@ export default function SignupPage() {
   const onSubmit = async (values: FormValues) => {
     setError(null);
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email: values.email,
-      password: values.password,
-    });
-    setLoading(false);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      await registerUser({
+        email: values.email,
+        password: values.password,
+        name: values.email.split("@")[0],
+      });
+      router.push(`/${locale}/dashboard`);
+    } catch (err: any) {
+      setError(err.message || "Ошибка при регистрации");
+    } finally {
+      setLoading(false);
     }
-    router.push(`/${locale}/dashboard`);
   };
 
   return (

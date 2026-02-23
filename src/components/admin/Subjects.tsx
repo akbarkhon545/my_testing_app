@@ -1,23 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import supabase from "@/lib/supabase/client";
-
-type Faculty = {
-  id: number;
-  name: string;
-};
-
-type Subject = {
-  id: number;
-  name: string;
-  faculty_id: number;
-  created_at: string;
-};
+import { getSubjects, getFaculties, addSubject, updateSubject, deleteSubject } from "@/app/actions/admin";
 
 export default function SubjectsAdmin() {
-  const [faculties, setFaculties] = useState<Faculty[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [faculties, setFaculties] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
@@ -30,52 +18,51 @@ export default function SubjectsAdmin() {
   const load = async () => {
     setError(null);
     setLoading(true);
-    const [facRes, subjRes] = await Promise.all([
-      supabase.from("faculties").select("id, name").order("name"),
-      supabase
-        .from("subjects")
-        .select("id, name, faculty_id, created_at")
-        .order("created_at", { ascending: false }),
-    ]);
-    if (facRes.error) setError(facRes.error.message);
-    if (subjRes.error) setError(subjRes.error.message);
-    setFaculties(facRes.data ?? []);
-    setSubjects(subjRes.data ?? []);
-    setLoading(false);
+    try {
+      const [facData, subjData] = await Promise.all([
+        getFaculties(),
+        getSubjects(),
+      ]);
+      setFaculties(facData);
+      setSubjects(subjData);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     load();
   }, []);
 
-  const addSubject = async () => {
+  const onAddSubject = async () => {
     if (!newName.trim() || !newFacultyId) return;
     setSaving(true);
     setError(null);
-    const { error } = await supabase
-      .from("subjects")
-      .insert({ name: newName.trim(), faculty_id: Number(newFacultyId) });
-    setSaving(false);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      await addSubject(newName.trim(), Number(newFacultyId));
+      setNewName("");
+      setNewFacultyId("");
+      await load();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
     }
-    setNewName("");
-    setNewFacultyId("");
-    await load();
   };
 
-  const removeSubject = async (id: number) => {
+  const onRemoveSubject = async (id: number) => {
     setError(null);
-    const { error } = await supabase.from("subjects").delete().eq("id", id);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      await deleteSubject(id);
+      setSubjects((prev) => prev.filter((s) => s.id !== id));
+    } catch (err: any) {
+      setError(err.message);
     }
-    setSubjects((prev) => prev.filter((s) => s.id !== id));
   };
 
-  const startEdit = (s: Subject) => {
+  const startEdit = (s: any) => {
     setEditingId(s.id);
     setEditName(s.name);
     setEditFacultyId(s.faculty_id);
@@ -87,27 +74,25 @@ export default function SubjectsAdmin() {
     setEditFacultyId("");
   };
 
-  const saveEdit = async () => {
+  const onSaveEdit = async () => {
     if (!editingId || !editName.trim() || !editFacultyId) return;
     setError(null);
     setSaving(true);
-    const { error } = await supabase
-      .from("subjects")
-      .update({ name: editName.trim(), faculty_id: Number(editFacultyId) })
-      .eq("id", editingId);
-    setSaving(false);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      await updateSubject(editingId, editName.trim(), Number(editFacultyId));
+      setSubjects((prev) =>
+        prev.map((s) =>
+          s.id === editingId
+            ? { ...s, name: editName.trim(), faculty_id: Number(editFacultyId) }
+            : s
+        )
+      );
+      cancelEdit();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
     }
-    setSubjects((prev) =>
-      prev.map((s) =>
-        s.id === editingId
-          ? { ...s, name: editName.trim(), faculty_id: Number(editFacultyId) }
-          : s
-      )
-    );
-    cancelEdit();
   };
 
   const facName = (id: number) => faculties.find((f) => f.id === id)?.name || "-";
@@ -139,7 +124,7 @@ export default function SubjectsAdmin() {
           ))}
         </select>
         <button
-          onClick={addSubject}
+          onClick={onAddSubject}
           disabled={saving}
           className="inline-flex h-10 items-center justify-center rounded-md bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
         >
@@ -191,7 +176,7 @@ export default function SubjectsAdmin() {
                 {editingId === s.id ? (
                   <>
                     <button
-                      onClick={saveEdit}
+                      onClick={onSaveEdit}
                       disabled={saving}
                       className="inline-flex h-8 items-center justify-center rounded-md bg-indigo-600 px-3 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
                     >
@@ -213,7 +198,7 @@ export default function SubjectsAdmin() {
                       Редактировать
                     </button>
                     <button
-                      onClick={() => removeSubject(s.id)}
+                      onClick={() => onRemoveSubject(s.id)}
                       className="inline-flex h-8 items-center justify-center rounded-md border px-3 text-xs font-medium hover:bg-gray-50"
                     >
                       Удалить

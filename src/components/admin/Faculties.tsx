@@ -1,16 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import supabase from "@/lib/supabase/client";
-
-type Faculty = {
-  id: number;
-  name: string;
-  created_at: string;
-};
+import { getFaculties, addFaculty, updateFaculty, deleteFaculty } from "@/app/actions/admin";
 
 export default function FacultiesAdmin() {
-  const [faculties, setFaculties] = useState<Faculty[]>([]);
+  const [faculties, setFaculties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
@@ -21,46 +15,46 @@ export default function FacultiesAdmin() {
   const load = async () => {
     setError(null);
     setLoading(true);
-    const { data, error } = await supabase
-      .from("faculties")
-      .select("id, name, created_at")
-      .order("created_at", { ascending: false });
-    if (error) setError(error.message);
-    setFaculties(data ?? []);
-    setLoading(false);
+    try {
+      const data = await getFaculties();
+      setFaculties(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     load();
   }, []);
 
-  const addFaculty = async () => {
+  const onAddFaculty = async () => {
     if (!newName.trim()) return;
     setSaving(true);
     setError(null);
-    const { error } = await supabase
-      .from("faculties")
-      .insert({ name: newName.trim() });
-    setSaving(false);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      await addFaculty(newName.trim());
+      setNewName("");
+      await load();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
     }
-    setNewName("");
-    await load();
   };
 
-  const removeFaculty = async (id: number) => {
+  const onRemoveFaculty = async (id: number) => {
     setError(null);
-    const { error } = await supabase.from("faculties").delete().eq("id", id);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      await deleteFaculty(id);
+      setFaculties((prev) => prev.filter((f) => f.id !== id));
+    } catch (err: any) {
+      setError(err.message);
     }
-    setFaculties((prev) => prev.filter((f) => f.id !== id));
   };
 
-  const startEdit = (f: Faculty) => {
+  const startEdit = (f: any) => {
     setEditingId(f.id);
     setEditName(f.name);
   };
@@ -70,23 +64,21 @@ export default function FacultiesAdmin() {
     setEditName("");
   };
 
-  const saveEdit = async () => {
+  const onSaveEdit = async () => {
     if (!editingId || !editName.trim()) return;
     setError(null);
     setSaving(true);
-    const { error } = await supabase
-      .from("faculties")
-      .update({ name: editName.trim() })
-      .eq("id", editingId);
-    setSaving(false);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      await updateFaculty(editingId, editName.trim());
+      setFaculties((prev) =>
+        prev.map((f) => (f.id === editingId ? { ...f, name: editName.trim() } : f))
+      );
+      cancelEdit();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
     }
-    setFaculties((prev) =>
-      prev.map((f) => (f.id === editingId ? { ...f, name: editName.trim() } : f))
-    );
-    cancelEdit();
   };
 
   return (
@@ -104,7 +96,7 @@ export default function FacultiesAdmin() {
           className="w-full max-w-sm rounded-md border px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
         />
         <button
-          onClick={addFaculty}
+          onClick={onAddFaculty}
           disabled={saving}
           className="inline-flex h-10 items-center justify-center rounded-md bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
         >
@@ -141,7 +133,7 @@ export default function FacultiesAdmin() {
                 {editingId === f.id ? (
                   <>
                     <button
-                      onClick={saveEdit}
+                      onClick={onSaveEdit}
                       disabled={saving}
                       className="inline-flex h-8 items-center justify-center rounded-md bg-indigo-600 px-3 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
                     >
@@ -163,7 +155,7 @@ export default function FacultiesAdmin() {
                       Редактировать
                     </button>
                     <button
-                      onClick={() => removeFaculty(f.id)}
+                      onClick={() => onRemoveFaculty(f.id)}
                       className="inline-flex h-8 items-center justify-center rounded-md border px-3 text-xs font-medium hover:bg-gray-50"
                     >
                       Удалить

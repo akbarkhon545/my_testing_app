@@ -5,7 +5,8 @@ import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import * as XLSX from "xlsx";
-import supabase from "@/lib/supabase/client";
+import { getSubjects } from "@/app/actions/admin";
+import { getUserSession } from "@/app/actions/auth";
 import {
     FileUp,
     ArrowLeft,
@@ -52,45 +53,31 @@ export default function UploadPage() {
     // Check if user is admin
     useEffect(() => {
         const checkAdmin = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
+            const user = await getUserSession();
 
-            if (!session) {
+            if (!user) {
                 router.push(`/${locale}/auth/login`);
                 return;
             }
 
-            setIsAdmin(session.user.email === ADMIN_EMAIL);
+            setIsAdmin(user.email === ADMIN_EMAIL || user.role === "ADMIN");
             setAuthLoading(false);
         };
         checkAdmin();
     }, [locale, router]);
 
-    // Load subjects from Supabase
+    // Load subjects from database
     useEffect(() => {
-        const loadSubjects = async () => {
+        const loadSubjectsData = async () => {
             try {
-                const { data, error } = await supabase
-                    .from("subjects")
-                    .select("id, name")
-                    .order("name");
-
-                if (error) {
-                    console.error("Error loading subjects:", error);
-                    // Mock subjects for demo
-                    setSubjects([
-                        { id: 1, name: "Python программирование" },
-                        { id: 2, name: "Базы данных" },
-                        { id: 3, name: "Алгебра" },
-                    ]);
-                } else {
-                    setSubjects(data || []);
-                }
+                const data = await getSubjects();
+                setSubjects(data || []);
             } catch (e) {
                 console.error("Connection error:", e);
             }
             setLoadingSubjects(false);
         };
-        loadSubjects();
+        loadSubjectsData();
     }, []);
 
     // Show loading while checking auth
@@ -215,30 +202,19 @@ export default function UploadPage() {
                 };
             });
 
-            // Insert into Supabase
-            const { data, error } = await supabase
-                .from("questions")
-                .insert(questionsToInsert);
+            // Insert into Neon via Prisma
+            const { addQuestions } = await import("@/app/actions/admin");
+            await addQuestions(questionsToInsert);
 
-            if (error) {
-                console.error("Supabase error:", error);
-                // For demo, show success anyway
-                setResult({
-                    type: "success",
-                    message: `Загружено ${parsedQuestions.length} вопросов! (База данных: ${error.message})`
-                });
-            } else {
-                setResult({
-                    type: "success",
-                    message: `Успешно загружено ${parsedQuestions.length} вопросов в базу данных!`
-                });
-            }
-
+            setResult({
+                type: "success",
+                message: `Успешно загружено ${parsedQuestions.length} вопросов в базу данных!`
+            });
             setSelectedFile(null);
             setParsedQuestions([]);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Upload error:", error);
-            setResult({ type: "error", message: "Ошибка загрузки. Попробуйте снова." });
+            setResult({ type: "error", message: `Ошибка загрузки: ${error.message}` });
         }
 
         setUploading(false);

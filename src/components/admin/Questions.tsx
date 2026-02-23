@@ -1,28 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import supabase from "@/lib/supabase/client";
-
-type Subject = {
-  id: number;
-  name: string;
-};
-
-type Question = {
-  id: number;
-  subject_id: number;
-  question_text: string;
-  correct_answer: string;
-  answer2: string;
-  answer3: string;
-  answer4: string;
-  explanation: string | null;
-  created_at: string;
-};
+import { getQuestions, getSubjects, addQuestion, updateQuestion, deleteQuestion } from "@/app/actions/admin";
 
 export default function QuestionsAdmin() {
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,27 +30,25 @@ export default function QuestionsAdmin() {
   const load = async () => {
     setError(null);
     setLoading(true);
-    const [subjRes, qRes] = await Promise.all([
-      supabase.from("subjects").select("id, name").order("name"),
-      supabase
-        .from("questions")
-        .select(
-          "id, subject_id, question_text, correct_answer, answer2, answer3, answer4, explanation, created_at"
-        )
-        .order("created_at", { ascending: false }),
-    ]);
-    if (subjRes.error) setError(subjRes.error.message);
-    if (qRes.error) setError(qRes.error.message);
-    setSubjects(subjRes.data ?? []);
-    setQuestions(qRes.data ?? []);
-    setLoading(false);
+    try {
+      const [subjData, qData] = await Promise.all([
+        getSubjects(),
+        getQuestions(),
+      ]);
+      setSubjects(subjData);
+      setQuestions(qData);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     load();
   }, []);
 
-  const addQuestion = async () => {
+  const onAddQuestion = async () => {
     if (
       !subjectId ||
       !questionText.trim() ||
@@ -80,43 +61,43 @@ export default function QuestionsAdmin() {
 
     setSaving(true);
     setError(null);
-    const { error } = await supabase.from("questions").insert({
-      subject_id: Number(subjectId),
-      question_text: questionText.trim(),
-      correct_answer: correctAnswer.trim(),
-      answer2: answer2.trim(),
-      answer3: answer3.trim(),
-      answer4: answer4.trim(),
-      explanation: explanation.trim() || null,
-    });
-    setSaving(false);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      await addQuestion({
+        subject_id: Number(subjectId),
+        question_text: questionText.trim(),
+        correct_answer: correctAnswer.trim(),
+        answer2: answer2.trim(),
+        answer3: answer3.trim(),
+        answer4: answer4.trim(),
+        explanation: explanation.trim() || null,
+      });
+      // reset
+      setSubjectId("");
+      setQuestionText("");
+      setCorrectAnswer("");
+      setAnswer2("");
+      setAnswer3("");
+      setAnswer4("");
+      setExplanation("");
+      await load();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
     }
-
-    // reset
-    setSubjectId("");
-    setQuestionText("");
-    setCorrectAnswer("");
-    setAnswer2("");
-    setAnswer3("");
-    setAnswer4("");
-    setExplanation("");
-    await load();
   };
 
-  const removeQuestion = async (id: number) => {
+  const onRemoveQuestion = async (id: number) => {
     setError(null);
-    const { error } = await supabase.from("questions").delete().eq("id", id);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      await deleteQuestion(id);
+      setQuestions((prev) => prev.filter((q) => q.id !== id));
+    } catch (err: any) {
+      setError(err.message);
     }
-    setQuestions((prev) => prev.filter((q) => q.id !== id));
   };
 
-  const startEdit = (q: Question) => {
+  const startEdit = (q: any) => {
     setEditingId(q.id);
     setEditSubjectId(q.subject_id);
     setEditQuestionText(q.question_text);
@@ -138,7 +119,7 @@ export default function QuestionsAdmin() {
     setEditExplanation("");
   };
 
-  const saveEdit = async () => {
+  const onSaveEdit = async () => {
     if (
       !editingId ||
       !editSubjectId ||
@@ -152,9 +133,8 @@ export default function QuestionsAdmin() {
 
     setError(null);
     setSavingEdit(true);
-    const { error } = await supabase
-      .from("questions")
-      .update({
+    try {
+      await updateQuestion(editingId, {
         subject_id: Number(editSubjectId),
         question_text: editQuestionText.trim(),
         correct_answer: editCorrectAnswer.trim(),
@@ -162,17 +142,11 @@ export default function QuestionsAdmin() {
         answer3: editAnswer3.trim(),
         answer4: editAnswer4.trim(),
         explanation: editExplanation.trim() || null,
-      })
-      .eq("id", editingId);
-    setSavingEdit(false);
-    if (error) {
-      setError(error.message);
-      return;
-    }
-    setQuestions((prev) =>
-      prev.map((q) =>
-        q.id === editingId
-          ? {
+      });
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q.id === editingId
+            ? {
               ...q,
               subject_id: Number(editSubjectId),
               question_text: editQuestionText.trim(),
@@ -182,10 +156,15 @@ export default function QuestionsAdmin() {
               answer4: editAnswer4.trim(),
               explanation: editExplanation.trim() || null,
             }
-          : q
-      )
-    );
-    cancelEdit();
+            : q
+        )
+      );
+      cancelEdit();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSavingEdit(false);
+    }
   };
 
   const subjectName = (id: number) => subjects.find((s) => s.id === id)?.name || "-";
@@ -252,7 +231,7 @@ export default function QuestionsAdmin() {
           />
 
           <button
-            onClick={addQuestion}
+            onClick={onAddQuestion}
             disabled={saving}
             className="inline-flex h-10 items-center justify-center rounded-md bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
           >
@@ -326,7 +305,7 @@ export default function QuestionsAdmin() {
                       </div>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={saveEdit}
+                          onClick={onSaveEdit}
                           disabled={savingEdit}
                           className="inline-flex h-8 items-center justify-center rounded-md bg-indigo-600 px-3 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
                         >
@@ -354,7 +333,7 @@ export default function QuestionsAdmin() {
                             Редактировать
                           </button>
                           <button
-                            onClick={() => removeQuestion(q.id)}
+                            onClick={() => onRemoveQuestion(q.id)}
                             className="inline-flex h-8 items-center justify-center rounded-md border px-3 text-xs font-medium hover:bg-gray-50"
                           >
                             Удалить

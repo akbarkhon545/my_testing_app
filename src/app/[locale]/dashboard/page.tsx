@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import supabase from "@/lib/supabase/client";
+import { getUserSession, signOutUser } from "@/app/actions/auth";
+import { getDashboardStats } from "@/app/actions/stats";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
@@ -40,95 +41,29 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function loadDashboard() {
-      const { data } = await supabase.auth.getSession();
-      const session = data.session;
-      if (!session) {
-        router.push(`/${locale}/auth/login`);
-        return;
-      }
-      setEmail(session.user.email ?? null);
-      setName(session.user.email?.split("@")[0] ?? "Студент");
-
-      // Fetch real test results - simple query without join
-      console.log("Fetching results for user:", session.user.id);
-
-      const { data: results, error } = await supabase
-        .from("test_results")
-        .select("id, score, total_questions, subject_id")
-        .eq("user_id", session.user.id);
-
-      console.log("Query results:", results);
-      console.log("Query error:", error);
-
-      if (error) {
-        console.error("Error fetching results:", error);
-        setLoading(false);
-        return;
-      }
-
-      if (results && results.length > 0) {
-        console.log("Found", results.length, "results");
-
-        // Get unique subject IDs
-        const subjectIds = [...new Set(results.map((r: any) => r.subject_id))];
-
-        // Fetch subjects separately
-        const { data: subjects } = await supabase
-          .from("subjects")
-          .select("id, name")
-          .in("id", subjectIds);
-
-        console.log("Subjects:", subjects);
-
-        // Create subjects map
-        const subjectsMap = new Map<number, Subject>();
-        if (subjects) {
-          subjects.forEach((s: any) => subjectsMap.set(s.id, s));
+      try {
+        const user = await getUserSession();
+        if (!user) {
+          router.push(`/${locale}/auth/login`);
+          return;
         }
 
-        // Aggregate results by subject
-        const statsMap = new Map<number, { subject: Subject; scores: number[]; attempts: number }>();
+        setEmail(user.email);
+        setName(user.name || user.email.split("@")[0] || "Студент");
 
-        results.forEach((result: any) => {
-          const subjectId = result.subject_id;
-          const subject = subjectsMap.get(subjectId);
-          const percentage = result.total_questions > 0
-            ? Math.round((result.score / result.total_questions) * 100)
-            : 0;
-
-          if (statsMap.has(subjectId)) {
-            const existing = statsMap.get(subjectId)!;
-            existing.scores.push(percentage);
-            existing.attempts += 1;
-          } else if (subject) {
-            statsMap.set(subjectId, {
-              subject,
-              scores: [percentage],
-              attempts: 1
-            });
-          }
-        });
-
-        // Convert to Stats array
-        const aggregatedStats: Stats[] = Array.from(statsMap.values()).map(item => ({
-          subject: item.subject,
-          attempts: item.attempts,
-          avgScore: Math.round(item.scores.reduce((a, b) => a + b, 0) / item.scores.length)
-        }));
-
-        console.log("Aggregated stats:", aggregatedStats);
-        setStats(aggregatedStats);
-      } else {
-        console.log("No results found");
+        const dashboardStats = await getDashboardStats();
+        setStats(dashboardStats);
+      } catch (error) {
+        console.error("Dashboard load error:", error);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     }
     loadDashboard();
   }, [router, locale]);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await signOutUser();
     router.replace(`/${locale}/auth/login`);
   };
 

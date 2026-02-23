@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
-import supabase from "@/lib/supabase/client";
+import { getUserSession, signOutUser } from "@/app/actions/auth";
 
 export default function NavBar() {
   const t = useTranslations();
@@ -34,31 +34,22 @@ export default function NavBar() {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
+      const user = await getUserSession();
+      if (user) {
         setIsLoggedIn(true);
-        setUserName(session.user.email?.split("@")[0] || "User");
-      }
-    };
-    checkSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
-        setIsLoggedIn(true);
-        setUserName(session.user.email?.split("@")[0] || "User");
+        setUserName(user.name || user.email?.split("@")[0] || "User");
       } else {
         setIsLoggedIn(false);
         setUserName("");
       }
-    });
-
-    return () => {
-      listener.subscription.unsubscribe();
     };
-  }, []);
+    checkSession();
+  }, [pathname]); // Check on every navigation
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOutUser();
+    setIsLoggedIn(false);
+    setUserName("");
     setUserMenuOpen(false);
     window.location.href = `/${locale}/auth/login`;
   };

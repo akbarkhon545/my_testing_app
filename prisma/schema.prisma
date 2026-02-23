@@ -14,13 +14,15 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
+  id            String       @id @default(cuid())
+  email         String       @unique
+  password      String // Added for custom auth
   name          String?
-  role          Role      @default(STUDENT)
-  enrolled      Course[]  @relation("EnrolledStudents")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  role          Role         @default(STUDENT)
+  enrolled      Course[]     @relation("EnrolledStudents")
+  results       TestResult[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 model Course {
@@ -54,12 +56,48 @@ model Faculty {
 }
 
 model Subject {
-  id         Int      @id @default(autoincrement())
+  id         Int          @id @default(autoincrement())
   name       String
   faculty_id Int
-  faculty    Faculty  @relation(fields: [faculty_id], references: [id])
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  faculty    Faculty      @relation(fields: [faculty_id], references: [id])
+  questions  Question[]
+  results    TestResult[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+model Question {
+  id             Int      @id @default(autoincrement())
+  subject_id     Int
+  subject        Subject  @relation(fields: [subject_id], references: [id])
+  question_text  String
+  correct_answer String
+  answer2        String
+  answer3        String
+  answer4        String
+  explanation    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model TestResult {
+  id              String   @id @default(cuid())
+  score           Int
+  total_questions Int
+  correct_count   Int
+  total_time      Int      @default(0)
+  mode            TestMode @default(TRAINING)
+  user_id         String
+  user            User     @relation(fields: [user_id], references: [id])
+  subject_id      Int
+  subject         Subject  @relation(fields: [subject_id], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum TestMode {
+  TRAINING
+  EXAM
 }
 
 enum Role {

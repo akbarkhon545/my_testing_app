@@ -1,60 +1,47 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import supabase from "@/lib/supabase/client";
 import { useLocale } from "next-intl";
 import Link from "next/link";
+import { getUserSession } from "@/app/actions/auth";
+import { getUserResults } from "@/app/actions/admin";
 
 type Result = {
-  id: number;
+  id: string;
   subject_id: number;
-  mode: "training" | "exam" | string;
-  timestamp: string;
+  mode: "TRAINING" | "EXAM";
   score: number;
   correct_count: number;
   total_time: number;
+  createdAt: Date;
+  subject?: { name: string };
 };
-
-type Subject = { id: number; name: string };
 
 export default function ResultsPage() {
   const [results, setResults] = useState<Result[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const locale = useLocale();
 
   useEffect(() => {
     (async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const session = sessionData.session;
-      if (!session) {
-        // Let the page render a CTA instead of redirecting hard
+      const user = await getUserSession();
+      if (!user) {
         setLoading(false);
         return;
       }
 
       setError(null);
       setLoading(true);
-      const [resRes, subjRes] = await Promise.all([
-        supabase
-          .from("test_results")
-          .select("id, subject_id, mode, timestamp, score, correct_count, total_time")
-          .order("timestamp", { ascending: false })
-          .limit(50),
-        supabase.from("subjects").select("id, name"),
-      ]);
-
-      if (resRes.error) setError(resRes.error.message);
-      if (subjRes.error) setError(subjRes.error.message);
-
-      setResults(resRes.data ?? []);
-      setSubjects(subjRes.data ?? []);
+      try {
+        const data = await getUserResults(user.id);
+        setResults(data as any[]);
+      } catch (err: any) {
+        setError(err.message || "Ошибка загрузки результатов");
+      }
       setLoading(false);
     })();
   }, []);
-
-  const subjectName = (id: number) => subjects.find((s) => s.id === id)?.name || "-";
 
   return (
     <div className="space-y-6">
@@ -78,14 +65,14 @@ export default function ResultsPage() {
       ) : (
         <ul className="divide-y rounded-md border">
           {results.map((r) => (
-            <li key={r.id} className="px-4 py-3 grid gap-1 sm:grid-cols-5 text-sm">
+            <li key={r.id} className="px-4 py-3 grid gap-1 sm:grid-cols-6 text-sm">
               <div>
                 <div className="text-gray-500">Предмет</div>
-                <div className="font-medium">{subjectName(r.subject_id)}</div>
+                <div className="font-medium">{r.subject?.name || "-"}</div>
               </div>
               <div>
                 <div className="text-gray-500">Режим</div>
-                <div className="font-medium">{r.mode === "exam" ? "Экзамен" : "Тренировка"}</div>
+                <div className="font-medium">{r.mode === "EXAM" ? "Экзамен" : "Тренировка"}</div>
               </div>
               <div>
                 <div className="text-gray-500">Оценка</div>
@@ -98,6 +85,10 @@ export default function ResultsPage() {
               <div>
                 <div className="text-gray-500">Время</div>
                 <div className="font-medium">{r.total_time}s</div>
+              </div>
+              <div>
+                <div className="text-gray-500">Дата</div>
+                <div className="font-medium text-xs">{new Date(r.createdAt).toLocaleDateString()}</div>
               </div>
             </li>
           ))}

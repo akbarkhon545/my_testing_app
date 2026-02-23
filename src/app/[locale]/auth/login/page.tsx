@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import supabase from "@/lib/supabase/client";
+import { loginUser } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
@@ -34,16 +34,17 @@ export default function LoginPage() {
   const onSubmit = async (values: FormValues) => {
     setError(null);
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: values.email,
-      password: values.password,
-    });
-    setLoading(false);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      await loginUser({
+        email: values.email,
+        password: values.password,
+      });
+      router.push(`/${locale}/dashboard`);
+    } catch (err: any) {
+      setError(err.message || "Ошибка при входе");
+    } finally {
+      setLoading(false);
     }
-    router.push(`/${locale}/dashboard`);
   };
 
   return (
