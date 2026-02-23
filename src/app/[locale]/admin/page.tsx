@@ -262,7 +262,7 @@ export default function AdminPage() {
     setSaving(false);
   };
 
-  const handleRemoveSubscription = async (userId: number) => {
+  const handleRemoveSubscription = async (userId: string) => {
     if (confirm("Удалить подписку пользователя?")) {
       await updateSubscription(userId, "FREE", null);
       await loadAllData();
