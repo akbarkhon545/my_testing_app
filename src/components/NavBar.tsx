@@ -158,7 +158,7 @@ export default function NavBar() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="hidden md:flex items-center gap-2">
                 <Link
                   href={`/${locale}/auth/login`}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-[var(--foreground-secondary)] hover:bg-[var(--border)] transition-all whitespace-nowrap"

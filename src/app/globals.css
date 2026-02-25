@@ -112,6 +112,11 @@
   box-sizing: border-box;
 }
 
+/* Prevent SVG icons from shrinking on mobile */
+svg {
+  flex-shrink: 0;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -145,7 +150,6 @@ p {
 }
 
 a {
-  color: var(--primary);
   text-decoration: none;
   transition: color var(--transition-fast);
 }

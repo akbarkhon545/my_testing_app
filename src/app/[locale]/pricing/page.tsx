@@ -143,7 +143,7 @@ export default function PricingPage() {
                     <div
                         key={plan.id}
                         className={`relative card ${plan.popular
-                            ? "border-2 border-[var(--primary)] shadow-lg scale-105"
+                            ? "border-2 border-[var(--primary)] shadow-lg md:scale-105"
                             : ""
                             }`}
                     >
