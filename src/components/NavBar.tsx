@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -75,7 +76,7 @@ export default function NavBar() {
               href={isLoggedIn ? `/${locale}/dashboard` : `/${locale}`}
               className="flex items-center gap-2 font-bold text-xl text-[var(--foreground)] hover:opacity-80 transition-opacity"
             >
-              <img src="/logo.png" alt="EduPlatform" className="w-8 h-8 rounded-lg object-contain" />
+              <Image src="/logo.png" alt="EduPlatform" width={32} height={32} className="w-8 h-8 rounded-lg object-contain" />
               <span className="hidden sm:inline">{t("brand")}</span>
             </Link>
 

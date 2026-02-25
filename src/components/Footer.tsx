@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { FileQuestion, Mail, Send, Phone, Heart } from "lucide-react";
 import { getUserSession } from "@/app/actions/auth";
@@ -27,7 +28,7 @@ export default function Footer() {
                     {/* Brand */}
                     <div>
                         <Link href={isLoggedIn ? `/${locale}/dashboard` : `/${locale}`} className="flex items-center gap-2 mb-4">
-                            <img src="/logo.png" alt="EduPlatform" className="w-8 h-8 rounded-lg object-contain" />
+                            <Image src="/logo.png" alt="EduPlatform" width={32} height={32} className="w-8 h-8 rounded-lg object-contain" />
                             <span className="font-bold text-lg text-[var(--foreground)]">EduPlatform</span>
                         </Link>
                         <p className="text-sm text-[var(--foreground-secondary)]">
