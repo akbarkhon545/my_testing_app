@@ -166,7 +166,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="mb-4">
-              <span className="text-3xl font-bold text-[var(--foreground)]">24 990</span>
+              <span className="text-3xl font-bold text-[var(--foreground)]">29 990</span>
               <span className="text-[var(--foreground-secondary)]"> {t("pricing.sum")}/{locale === 'ru' ? 'месяц' : 'oy'}</span>
             </div>
             <ul className="space-y-2 mb-6">
@@ -198,7 +198,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="mb-4">
-              <span className="text-3xl font-bold text-[var(--foreground)]">44 990</span>
+              <span className="text-3xl font-bold text-[var(--foreground)]">49 990</span>
               <span className="text-[var(--foreground-secondary)]"> {t("pricing.sum")}/{locale === 'ru' ? 'год' : 'yil'}</span>
             </div>
             <ul className="space-y-2 mb-6">
