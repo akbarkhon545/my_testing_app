@@ -34,7 +34,7 @@ const plans: PricingPlan[] = [
     {
         id: "monthly",
         name: "Месячная подписка",
-        price: 24990,
+        price: 29990,
         period: "month",
         periodLabel: "/месяц",
         features: [
@@ -48,7 +48,7 @@ const plans: PricingPlan[] = [
     {
         id: "yearly",
         name: "Годовая подписка",
-        price: 44990,
+        price: 49990,
         period: "year",
         periodLabel: "/год",
         popular: true,
@@ -93,7 +93,7 @@ export default function PricingPage() {
         {
             id: "monthly",
             name: t("pricing.monthly"),
-            price: 24990,
+            price: 29990,
             period: "month",
             periodLabel: "/" + (locale === 'ru' ? 'месяц' : 'oy'),
             features: [
@@ -107,7 +107,7 @@ export default function PricingPage() {
         {
             id: "yearly",
             name: t("pricing.yearly"),
-            price: 44990,
+            price: 49990,
             period: "year",
             periodLabel: "/" + (locale === 'ru' ? 'год' : 'yil'),
             popular: true,
