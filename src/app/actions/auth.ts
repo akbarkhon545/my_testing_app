@@ -50,15 +50,14 @@ export async function loginUser(values: any) {
     });
 
     if (!user) {
-        console.error(`Login attempt failed: User with email ${email} not found`);
-        throw new Error(`Пользователь с email ${email} не найден`);
+        return { success: false, error: "Неверный логин или пароль" };
     }
 
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-        throw new Error("Неверный пароль");
+        return { success: false, error: "Неверный логин или пароль" };
     }
 
     // Log in the user

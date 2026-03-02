@@ -35,13 +35,17 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      await loginUser({
+      const result = await loginUser({
         email: values.email,
         password: values.password,
       });
-      router.push(`/${locale}/dashboard`);
+      if (!result.success) {
+        setError(result.error || "Ошибка при входе");
+      } else {
+        router.push(`/${locale}/dashboard`);
+      }
     } catch (err: any) {
-      setError(err.message || "Ошибка при входе");
+      setError("Ошибка при входе. Попробуйте позже.");
     } finally {
       setLoading(false);
     }

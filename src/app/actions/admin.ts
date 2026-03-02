@@ -2,6 +2,23 @@
 
 import prisma from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { getSession } from "@/lib/auth";
+
+const ADMIN_EMAIL = "akbarkhon545@gmail.com";
+
+// --- Security: Server-side admin check ---
+
+async function requireAdmin() {
+    const session = await getSession();
+    if (!session?.user) {
+        throw new Error("Не авторизован");
+    }
+    const { role, email } = session.user;
+    if (role !== "ADMIN" && email !== ADMIN_EMAIL) {
+        throw new Error("Доступ запрещён. Требуется роль администратора.");
+    }
+    return session.user;
+}
 
 // --- Faculties ---
 
@@ -12,6 +29,7 @@ export async function getFaculties() {
 }
 
 export async function addFaculty(name: string) {
+    await requireAdmin();
     const res = await (prisma as any).faculty.create({
         data: { name },
     });
@@ -20,6 +38,7 @@ export async function addFaculty(name: string) {
 }
 
 export async function updateFaculty(id: number, name: string) {
+    await requireAdmin();
     const res = await (prisma as any).faculty.update({
         where: { id },
         data: { name },
@@ -29,6 +48,7 @@ export async function updateFaculty(id: number, name: string) {
 }
 
 export async function deleteFaculty(id: number) {
+    await requireAdmin();
     await (prisma as any).faculty.delete({
         where: { id },
     });
@@ -45,6 +65,7 @@ export async function getSubjects() {
 }
 
 export async function addSubject(name: string, facultyId: number) {
+    await requireAdmin();
     const res = await (prisma as any).subject.create({
         data: {
             name,
@@ -56,6 +77,7 @@ export async function addSubject(name: string, facultyId: number) {
 }
 
 export async function updateSubject(id: number, name: string, facultyId: number) {
+    await requireAdmin();
     const res = await (prisma as any).subject.update({
         where: { id },
         data: {
@@ -68,6 +90,7 @@ export async function updateSubject(id: number, name: string, facultyId: number)
 }
 
 export async function deleteSubject(id: number) {
+    await requireAdmin();
     await (prisma as any).subject.delete({
         where: { id },
     });
@@ -113,12 +136,14 @@ export async function saveTestResult(data: {
 // --- Users ---
 
 export async function getUsers() {
+    await requireAdmin();
     return await (prisma as any).user.findMany({
         orderBy: { createdAt: "desc" },
     });
 }
 
 export async function updateSubscription(userId: string, plan: "MONTHLY" | "YEARLY" | "FREE", expiresAt: string | null) {
+    await requireAdmin();
     await (prisma as any).user.update({
         where: { id: userId },
         data: {
@@ -130,6 +155,7 @@ export async function updateSubscription(userId: string, plan: "MONTHLY" | "YEAR
 }
 
 export async function addUser(data: any) {
+    await requireAdmin();
     const { name, email, password, role } = data;
 
     // Check if user exists
@@ -157,6 +183,7 @@ export async function addUser(data: any) {
 }
 
 export async function updateUser(id: string, data: any) {
+    await requireAdmin();
     const { name, email, password, role } = data;
     const updateData: any = {
         name,
@@ -178,14 +205,65 @@ export async function updateUser(id: string, data: any) {
 }
 
 export async function deleteUser(id: string) {
+    await requireAdmin();
+
+    // Prevent deleting the main admin
+    const user = await (prisma as any).user.findUnique({ where: { id } });
+    if (user?.email === ADMIN_EMAIL) {
+        throw new Error("Невозможно удалить главного администратора");
+    }
+
     await (prisma as any).user.delete({
         where: { id },
     });
     revalidatePath("/admin");
 }
 
+// Deactivate user - scramble password so they can't log in
+export async function deactivateUser(id: string) {
+    await requireAdmin();
+
+    const user = await (prisma as any).user.findUnique({ where: { id } });
+    if (user?.email === ADMIN_EMAIL) {
+        throw new Error("Невозможно деактивировать главного администратора");
+    }
+
+    const bcrypt = require("bcryptjs");
+    // Set password to a random hash that can't be matched
+    const blockedHash = await bcrypt.hash("DEACTIVATED_" + Date.now() + Math.random(), 10);
+
+    await (prisma as any).user.update({
+        where: { id },
+        data: {
+            password: blockedHash,
+            name: user.name ? `[ДЕАКТИВИРОВАН] ${user.name.replace("[ДЕАКТИВИРОВАН] ", "")}` : "[ДЕАКТИВИРОВАН]",
+        },
+    });
+    revalidatePath("/admin");
+}
+
+// Activate user - set a new temporary password
+export async function activateUser(id: string, newPassword: string) {
+    await requireAdmin();
+
+    const bcrypt = require("bcryptjs");
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    const user = await (prisma as any).user.findUnique({ where: { id } });
+
+    await (prisma as any).user.update({
+        where: { id },
+        data: {
+            password: hashedPassword,
+            name: user?.name?.replace("[ДЕАКТИВИРОВАН] ", "") || user?.name,
+        },
+    });
+    revalidatePath("/admin");
+}
+
 
 export async function getAdminStats() {
+    await requireAdmin();
     const [userCount, facultyCount, subjectCount, questionCount] = await Promise.all([
         (prisma as any).user.count(),
         (prisma as any).faculty.count(),
@@ -215,6 +293,7 @@ export async function getQuestions() {
 }
 
 export async function addQuestions(questions: any[]) {
+    await requireAdmin();
     await (prisma as any).question.createMany({
         data: questions.map(q => ({
             subject_id: q.subject_id,
@@ -229,6 +308,7 @@ export async function addQuestions(questions: any[]) {
 }
 
 export async function addQuestion(data: any) {
+    await requireAdmin();
     const res = await (prisma as any).question.create({
         data: {
             subject_id: data.subjectId,
@@ -245,6 +325,7 @@ export async function addQuestion(data: any) {
 }
 
 export async function updateQuestion(id: number, data: any) {
+    await requireAdmin();
     const res = await (prisma as any).question.update({
         where: { id },
         data: {
@@ -262,6 +343,7 @@ export async function updateQuestion(id: number, data: any) {
 }
 
 export async function deleteQuestion(id: number) {
+    await requireAdmin();
     await (prisma as any).question.delete({
         where: { id },
     });

@@ -21,6 +21,8 @@ import {
   addUser,
   updateUser,
   deleteUser,
+  deactivateUser,
+  activateUser,
   updateSubscription,
   getAdminStats
 } from "@/app/actions/admin";
@@ -45,7 +47,9 @@ import {
   Calendar,
   CreditCard,
   Lock,
-  ChevronDown
+  ChevronDown,
+  UserX,
+  UserCheck
 } from "lucide-react";
 
 type Tab = "faculties" | "subjects" | "questions" | "users" | "subscriptions";
@@ -543,7 +547,50 @@ export default function AdminPage() {
                 <button onClick={() => handleEdit(user)} className="btn btn-sm btn-secondary mr-2">
                   <Edit className="w-4 h-4" />
                 </button>
-                <button onClick={() => handleDelete(user.id)} className="btn btn-sm btn-danger">
+                {user.name?.includes("[ДЕАКТИВИРОВАН]") ? (
+                  <button
+                    onClick={async () => {
+                      const newPass = prompt("Введите новый пароль для активации пользователя:");
+                      if (!newPass) return;
+                      try {
+                        await activateUser(user.id, newPass);
+                        await loadAllData();
+                        alert("Пользователь активирован!");
+                      } catch (e: any) {
+                        alert(e.message || "Ошибка активации");
+                      }
+                    }}
+                    className="btn btn-sm btn-success mr-2"
+                    title="Активировать пользователя"
+                  >
+                    <UserCheck className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      if (!confirm(`Деактивировать пользователя ${user.name}? Он не сможет войти в систему.`)) return;
+                      try {
+                        await deactivateUser(user.id);
+                        await loadAllData();
+                        alert("Пользователь деактивирован!");
+                      } catch (e: any) {
+                        alert(e.message || "Ошибка деактивации");
+                      }
+                    }}
+                    className="btn btn-sm btn-warning mr-2"
+                    title="Деактивировать пользователя"
+                  >
+                    <UserX className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    if (!confirm(`Вы уверены, что хотите УДАЛИТЬ пользователя ${user.name} (${user.email})? Это действие необратимо!`)) return;
+                    handleDelete(user.id);
+                  }}
+                  className="btn btn-sm btn-danger"
+                  title="Удалить пользователя"
+                >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </td>
