@@ -340,39 +340,43 @@ export default function QuestionPage({ params }: QuestionPageProps) {
             </div>
 
             {/* Navigation buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-between">
+            <div className="flex flex-row gap-2 justify-between">
                 <button
                     onClick={handlePrev}
                     disabled={currentIndex === 0}
-                    className="btn btn-secondary"
+                    className="btn btn-secondary text-xs sm:text-sm px-2 sm:px-4 py-2"
                 >
-                    <ChevronLeft className="w-5 h-5" />
-                    Предыдущий
+                    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden sm:inline">Предыдущий</span>
+                    <span className="sm:hidden">Назад</span>
                 </button>
 
                 <button
                     onClick={handleFinish}
-                    className="btn btn-danger"
+                    className="btn btn-danger text-xs sm:text-sm px-2 sm:px-4 py-2"
                 >
-                    <StopCircle className="w-5 h-5" />
-                    Завершить тест
+                    <StopCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden sm:inline">Завершить тест</span>
+                    <span className="sm:hidden">Стоп</span>
                 </button>
 
                 {currentIndex < questions.length - 1 ? (
                     <button
                         onClick={handleNext}
-                        className="btn btn-primary"
+                        className="btn btn-primary text-xs sm:text-sm px-2 sm:px-4 py-2"
                     >
-                        Следующий
-                        <ChevronRight className="w-5 h-5" />
+                        <span className="hidden sm:inline">Следующий</span>
+                        <span className="sm:hidden">Далее</span>
+                        <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                 ) : (
                     <button
                         onClick={handleFinish}
-                        className="btn btn-success"
+                        className="btn btn-success text-xs sm:text-sm px-2 sm:px-4 py-2"
                     >
-                        <CheckCircle className="w-5 h-5" />
-                        Завершить
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span className="hidden sm:inline">Завершить</span>
+                        <span className="sm:hidden">Готово</span>
                     </button>
                 )}
             </div>
