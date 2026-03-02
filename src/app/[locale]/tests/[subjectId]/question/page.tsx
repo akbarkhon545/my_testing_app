@@ -89,9 +89,8 @@ export default function QuestionPage({ params }: QuestionPageProps) {
         checkAuth();
     }, [locale, router]);
 
-    // Load questions (only if subscription check passed)
     useEffect(() => {
-        if (!authChecked || !hasSubscription) return;
+        if (!authChecked) return;
 
         (async () => {
             setLoading(true);

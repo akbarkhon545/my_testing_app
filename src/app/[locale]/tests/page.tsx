@@ -72,29 +72,7 @@ export default function TestsIndexPage() {
     );
   }
 
-  // Show subscription required message
-  if (!hasSubscription) {
-    return (
-      <div className="max-w-xl mx-auto text-center py-12 animate-fadeIn">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 mb-6">
-          <Crown className="w-10 h-10 text-white" />
-        </div>
-        <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">
-          {t("tests.subscriptionRequired")}
-        </h2>
-        <p className="text-[var(--foreground-secondary)] mb-8">
-          {t("tests.subscriptionRequiredDesc")}
-        </p>
-        <Link href={`/${locale}/pricing`} className="btn btn-primary btn-lg">
-          <Crown className="w-5 h-5" />
-          {t("pricing.subscribe")}
-        </Link>
-        <p className="mt-4 text-sm text-[var(--foreground-muted)]">
-          {t("tests.startFrom")} 25 000 {t("pricing.sum")}
-        </p>
-      </div>
-    );
-  }
+
 
   return (
     <div className="animate-fadeIn">

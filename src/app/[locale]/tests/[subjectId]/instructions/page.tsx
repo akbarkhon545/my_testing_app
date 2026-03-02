@@ -29,21 +29,7 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
         const checkAuth = async () => {
             const userProfile = await getUserProfile();
             setIsLoggedIn(!!userProfile);
-
-            if (userProfile) {
-                // Admin bypass - full access
-                if (userProfile.role === "ADMIN" || userProfile.email === "akbarkhon545@gmail.com") {
-                    setHasSubscription(true);
-                    setLoading(false);
-                    return;
-                }
-
-                const hasActiveSub = userProfile.subscriptionPlan !== "FREE" &&
-                    userProfile.subscriptionExpiresAt &&
-                    new Date(userProfile.subscriptionExpiresAt) > new Date();
-
-                setHasSubscription(!!hasActiveSub);
-            }
+            setHasSubscription(true);
             setLoading(false);
         };
         checkAuth();
@@ -74,29 +60,7 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
         );
     }
 
-    // Show subscription prompt if no active subscription
-    if (!loading && !hasSubscription) {
-        return (
-            <div className="max-w-xl mx-auto text-center py-12 animate-fadeIn">
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 mb-6">
-                    <Crown className="w-10 h-10 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">
-                    Требуется подписка
-                </h2>
-                <p className="text-[var(--foreground-secondary)] mb-8">
-                    Для прохождения тестов необходимо оформить подписку
-                </p>
-                <Link href={`/${locale}/pricing`} className="btn btn-primary btn-lg">
-                    <Crown className="w-5 h-5" />
-                    Оформить подписку
-                </Link>
-                <p className="mt-4 text-sm text-[var(--foreground-muted)]">
-                    Начните с 25 000 сум/месяц
-                </p>
-            </div>
-        );
-    }
+
 
     if (loading) {
         return (
@@ -108,23 +72,7 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
 
     return (
         <div className="max-w-3xl mx-auto animate-fadeIn">
-            {/* Subscription banner for free users */}
-            {!hasSubscription && (
-                <div className="mb-6 p-4 rounded-lg bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20">
-                    <div className="flex items-center justify-between flex-wrap gap-4">
-                        <div className="flex items-center gap-3">
-                            <Crown className="w-6 h-6 text-yellow-500" />
-                            <div>
-                                <p className="font-medium text-[var(--foreground)]">Получите премиум доступ</p>
-                                <p className="text-sm text-[var(--foreground-secondary)]">Неограниченные тесты и статистика</p>
-                            </div>
-                        </div>
-                        <Link href={`/${locale}/pricing`} className="btn btn-sm" style={{ background: "linear-gradient(135deg, #f59e0b, #ea580c)", color: "white" }}>
-                            Подписка от 25 000 сум
-                        </Link>
-                    </div>
-                </div>
-            )}
+
 
             {/* Header */}
             <div className="text-center mb-8">
