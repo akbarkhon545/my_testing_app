@@ -297,12 +297,18 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                             const isRevealed = !!answers[currentQuestion.id];
 
                             let statusClass = "";
-                            if (isRevealed) {
-                                if (isCorrect) statusClass = "border-[var(--success)] bg-[var(--success-light)]";
-                                else if (isSelected) statusClass = "border-[var(--danger)] bg-[var(--danger-light)]";
-                                else statusClass = "opacity-50";
-                            } else if (isSelected) {
-                                statusClass = "selected";
+                            if (isTraining) {
+                                // Training mode: just show selected state, no correct/incorrect feedback
+                                if (isSelected) statusClass = "selected";
+                            } else {
+                                // Full/Exam mode: show correct/incorrect feedback
+                                if (isRevealed) {
+                                    if (isCorrect) statusClass = "border-[var(--success)] bg-[var(--success-light)]";
+                                    else if (isSelected) statusClass = "border-[var(--danger)] bg-[var(--danger-light)]";
+                                    else statusClass = "opacity-50";
+                                } else if (isSelected) {
+                                    statusClass = "selected";
+                                }
                             }
 
                             return (
@@ -320,10 +326,10 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                                         className="accent-[var(--primary)]"
                                     />
                                     <span className="text-[var(--foreground)]">{option}</span>
-                                    {isRevealed && isCorrect && (
+                                    {!isTraining && isRevealed && isCorrect && (
                                         <CheckCircle className="w-5 h-5 text-[var(--success)] ml-auto" />
                                     )}
-                                    {isRevealed && isSelected && !isCorrect && (
+                                    {!isTraining && isRevealed && isSelected && !isCorrect && (
                                         <StopCircle className="w-5 h-5 text-[var(--danger)] ml-auto" />
                                     )}
                                 </label>
