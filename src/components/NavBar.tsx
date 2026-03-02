@@ -32,6 +32,8 @@ export default function NavBar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
+  const [userRole, setUserRole] = useState("");
+  const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
     const checkSession = async () => {
@@ -39,9 +41,13 @@ export default function NavBar() {
       if (user) {
         setIsLoggedIn(true);
         setUserName(user.name || user.email?.split("@")[0] || "User");
+        setUserRole(user.role || "");
+        setUserEmail(user.email || "");
       } else {
         setIsLoggedIn(false);
         setUserName("");
+        setUserRole("");
+        setUserEmail("");
       }
     };
     checkSession();
@@ -55,13 +61,15 @@ export default function NavBar() {
     window.location.href = `/${locale}/auth/login`;
   };
 
+  const isAdmin = userRole === "ADMIN" || userEmail === "akbarkhon545@gmail.com";
+
   const navLinks = [
     // Home only for non-authenticated users
     ...(!isLoggedIn ? [{ href: `/${locale}`, label: t("nav.home"), icon: Home }] : []),
     { href: `/${locale}/dashboard`, label: t("nav.dashboard"), icon: LayoutDashboard },
     { href: `/${locale}/tests`, label: t("nav.tests"), icon: FileQuestion },
     { href: `/${locale}/pricing`, label: t("nav.pricing"), icon: Crown },
-    { href: `/${locale}/admin`, label: t("nav.admin"), icon: Shield },
+    ...(isAdmin ? [{ href: `/${locale}/admin`, label: t("nav.admin"), icon: Shield }] : []),
   ];
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
