@@ -18,6 +18,9 @@ import {
   addQuestion,
   updateQuestion,
   deleteQuestion,
+  addUser,
+  updateUser,
+  deleteUser,
   updateSubscription,
   getAdminStats
 } from "@/app/actions/admin";
@@ -88,6 +91,7 @@ export default function AdminPage() {
   const [formAnswer3, setFormAnswer3] = useState("");
   const [formAnswer4, setFormAnswer4] = useState("");
   const [formSubjectId, setFormSubjectId] = useState("");
+  const [formPassword, setFormPassword] = useState("");
 
   // Subscription form
   const [showSubModal, setShowSubModal] = useState(false);
@@ -174,6 +178,23 @@ export default function AdminPage() {
         } else {
           await addQuestion(questionData);
         }
+      } else if (activeTab === "users") {
+        const userData = {
+          name: formName,
+          email: formEmail,
+          password: formPassword,
+          role: formRole
+        };
+        if (editingItem) {
+          await updateUser(editingItem.id, userData);
+        } else {
+          if (!formPassword) {
+            alert("Пароль обязателен для нового пользователя");
+            setSaving(false);
+            return;
+          }
+          await addUser(userData);
+        }
       }
       await loadAllData();
       setShowModal(false);
@@ -185,12 +206,13 @@ export default function AdminPage() {
     setSaving(false);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: any) => {
     if (!confirm("Удалить?")) return;
     try {
-      if (activeTab === "faculties") await deleteFaculty(id);
-      else if (activeTab === "subjects") await deleteSubject(id);
-      else if (activeTab === "questions") await deleteQuestion(id);
+      if (activeTab === "faculties") await deleteFaculty(Number(id));
+      else if (activeTab === "subjects") await deleteSubject(Number(id));
+      else if (activeTab === "questions") await deleteQuestion(Number(id));
+      else if (activeTab === "users") await deleteUser(String(id));
       await loadAllData();
     } catch (e) {
       console.error("Delete error:", e);
@@ -217,6 +239,7 @@ export default function AdminPage() {
     setFormAnswer3("");
     setFormAnswer4("");
     setFormSubjectId("");
+    setFormPassword("");
     setShowModal(true);
   };
 
@@ -232,6 +255,7 @@ export default function AdminPage() {
     setFormAnswer3(item.answer3 || "");
     setFormAnswer4(item.answer4 || "");
     setFormSubjectId(String(item.subject_id || ""));
+    setFormPassword(""); // Don't show existing password
     setShowModal(true);
   };
 
@@ -519,7 +543,7 @@ export default function AdminPage() {
                 <button onClick={() => handleEdit(user)} className="btn btn-sm btn-secondary mr-2">
                   <Edit className="w-4 h-4" />
                 </button>
-                <button className="btn btn-sm btn-danger">
+                <button onClick={() => handleDelete(user.id)} className="btn btn-sm btn-danger">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </td>
@@ -768,10 +792,13 @@ export default function AdminPage() {
                   <div>
                     <label className="label">{t("admin.role")}</label>
                     <select className="input" value={formRole} onChange={(e) => setFormRole(e.target.value)}>
-                      <option value="student">{t("admin.studentRole")}</option>
-                      <option value="manager">{t("admin.managerRole")}</option>
-                      <option value="admin">{t("admin.adminRole")}</option>
+                      <option value="STUDENT">{t("admin.studentRole")}</option>
+                      <option value="ADMIN">{t("admin.adminRole")}</option>
                     </select>
+                  </div>
+                  <div>
+                    <label className="label">{editingItem ? "Новый пароль (оставьте пустым, чтобы не менять)" : "Пароль"}</label>
+                    <input type="password" className="input" value={formPassword} onChange={(e) => setFormPassword(e.target.value)} placeholder="******" />
                   </div>
                 </>
               ) : (

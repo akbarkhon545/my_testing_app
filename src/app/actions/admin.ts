@@ -129,6 +129,62 @@ export async function updateSubscription(userId: string, plan: "MONTHLY" | "YEAR
     revalidatePath("/admin");
 }
 
+export async function addUser(data: any) {
+    const { name, email, password, role } = data;
+
+    // Check if user exists
+    const existingUser = await (prisma as any).user.findUnique({
+        where: { email },
+    });
+
+    if (existingUser) {
+        throw new Error("Пользователь с таким email уже существует");
+    }
+
+    const bcrypt = require("bcryptjs");
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const res = await (prisma as any).user.create({
+        data: {
+            name,
+            email,
+            password: hashedPassword,
+            role: role.toUpperCase(),
+        },
+    });
+    revalidatePath("/admin");
+    return res;
+}
+
+export async function updateUser(id: string, data: any) {
+    const { name, email, password, role } = data;
+    const updateData: any = {
+        name,
+        email,
+        role: role.toUpperCase(),
+    };
+
+    if (password) {
+        const bcrypt = require("bcryptjs");
+        updateData.password = await bcrypt.hash(password, 10);
+    }
+
+    const res = await (prisma as any).user.update({
+        where: { id },
+        data: updateData,
+    });
+    revalidatePath("/admin");
+    return res;
+}
+
+export async function deleteUser(id: string) {
+    await (prisma as any).user.delete({
+        where: { id },
+    });
+    revalidatePath("/admin");
+}
+
+
 export async function getAdminStats() {
     const [userCount, facultyCount, subjectCount, questionCount] = await Promise.all([
         (prisma as any).user.count(),

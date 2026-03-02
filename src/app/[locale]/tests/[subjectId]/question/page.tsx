@@ -371,23 +371,7 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                 )}
             </div>
 
-            {/* Question navigation dots */}
-            <div className="mt-8 flex flex-wrap justify-center gap-2">
-                {questions.map((q, idx) => (
-                    <button
-                        key={q.id}
-                        onClick={() => setCurrentIndex(idx)}
-                        className={`w-8 h-8 rounded-full text-sm font-medium transition-all ${idx === currentIndex
-                            ? "bg-[var(--primary)] text-white"
-                            : answers[q.id]
-                                ? "bg-[var(--success)] text-white"
-                                : "bg-[var(--border)] text-[var(--foreground-secondary)] hover:bg-[var(--border-hover)]"
-                            }`}
-                    >
-                        {idx + 1}
-                    </button>
-                ))}
-            </div>
+
         </div>
     );
 }
