@@ -1,0 +1,168 @@
+
+> edu-platform@0.1.0 lint
+> eslint
+
+
+C:\Users\akbar\Desktop\test web\edu-platform\next-intl.config.ts
+  1:1  warning  Assign object to a variable before exporting as module default  import/no-anonymous-default-export
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\[locale]\admin\page.tsx
+   58:50  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   62:46  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   63:44  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   64:46  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   65:38  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   67:10  warning  'loading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   71:38  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   93:52  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  197:47  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  220:29  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  236:40  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  281:30  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  372:46  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\[locale]\admin\upload\page.tsx
+  133:84  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  215:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\[locale]\auth\login\page.tsx
+  11:52  warning  'MessageCircle' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\[locale]\dashboard\page.tsx
+  10:3  warning  'LogOut' is defined but never used            @typescript-eslint/no-unused-vars
+  11:3  warning  'User' is defined but never used              @typescript-eslint/no-unused-vars
+  65:9  warning  'signOut' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\[locale]\layout.tsx
+  18:17  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:12  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\[locale]\page.tsx
+  9:3  warning  'CheckCircle' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\[locale]\pricing\page.tsx
+  11:5  warning  'Shield' is defined but never used          @typescript-eslint/no-unused-vars
+  12:5  warning  'Clock' is defined but never used           @typescript-eslint/no-unused-vars
+  33:7  warning  'plans' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\[locale]\profile\page.tsx
+    4:26  warning  'signOutUser' is defined but never used                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+   19:5   warning  'GraduationCap' is defined but never used                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   45:23  warning  'setAvatarUrl' is assigned a value but never used                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  122:25  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  152:18  warning  'e' is defined but never used                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+  207:41  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\[locale]\results\page.tsx
+  26:9   warning  't' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  40:28  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  41:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\[locale]\support\page.tsx
+  15:5  warning  'CheckCircle' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\[locale]\tests\[subjectId]\instructions\page.tsx
+   6:10  warning  'Clock' is defined but never used           @typescript-eslint/no-unused-vars
+   7:10  warning  'getUserSession' is defined but never used  @typescript-eslint/no-unused-vars
+  18:11  warning  't' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\[locale]\tests\[subjectId]\page.tsx
+   14:6   warning  'QuestionRow' is defined but never used   @typescript-eslint/no-unused-vars
+   93:70  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  112:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  184:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\[locale]\tests\[subjectId]\question\page.tsx
+   19:11  warning  'Question' is defined but never used                                                                                                   @typescript-eslint/no-unused-vars
+   54:48  error    Unexpected any. Specify a different type                                                                                               @typescript-eslint/no-explicit-any
+  148:8   warning  React Hook useEffect has missing dependencies: 'handleFinish' and 'timeRemaining'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\[locale]\tests\[subjectId]\result\page.tsx
+  44:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\[locale]\tests\[subjectId]\result\page.tsx:44:13
+  42 |         if (storedResult) {
+  43 |             const parsed = JSON.parse(storedResult);
+> 44 |             setResult(parsed);
+     |             ^^^^^^^^^ Avoid calling setState() directly within an effect
+  45 |
+  46 |             // Animate score counter
+  47 |             let current = 0;  react-hooks/set-state-in-effect
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\[locale]\tests\page.tsx
+   7:66  warning  'AlertCircle' is defined but never used     @typescript-eslint/no-unused-vars
+   8:10  warning  'getUserSession' is defined but never used  @typescript-eslint/no-unused-vars
+  13:44  error    Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  58:16  warning  'e' is defined but never used               @typescript-eslint/no-unused-vars
+  58:19  error    Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\actions\admin.ts
+  214:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\actions\auth.ts
+  8:30  warning  'SubscriptionPlan' is defined but never used  @typescript-eslint/no-unused-vars
+  8:48  warning  'TestMode' is defined but never used          @typescript-eslint/no-unused-vars
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\app\actions\stats.ts
+  13:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\components\Footer.tsx
+  7:10  warning  'FileQuestion' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\components\ThemeToggle.tsx
+  11:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\components\ThemeToggle.tsx:11:5
+   9 |
+  10 |   useEffect(() => {
+> 11 |     setMounted(true);
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  12 |     // Check localStorage or system preference
+  13 |     const stored = localStorage.getItem("theme");
+  14 |     if (stored === "dark" || stored === "light") {  react-hooks/set-state-in-effect
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\components\admin\Faculties.tsx
+   7:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  52:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  57:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  77:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\components\admin\Questions.tsx
+    7:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+    8:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   40:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   83:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   95:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  100:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  163:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  182:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  256:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\akbar\Desktop\test web\edu-platform\src\components\admin\Subjects.tsx
+    7:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+    8:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   28:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   48:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   60:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   65:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   91:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  115:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  154:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+??? 83 problems (53 errors, 30 warnings)
+

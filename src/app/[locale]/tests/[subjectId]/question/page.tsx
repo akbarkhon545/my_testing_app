@@ -83,11 +83,6 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                 userProfile.subscriptionExpiresAt &&
                 new Date(userProfile.subscriptionExpiresAt) > new Date();
 
-            if (!hasActiveSub) {
-                router.push(`/${locale}/pricing`);
-                return;
-            }
-
             setHasSubscription(true);
             setAuthChecked(true);
         };
@@ -104,7 +99,7 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                 const data = await getQuestionsBySubject(Number(resolvedParams.subjectId));
                 // Shuffle for training mode
                 const shuffled = mode === "training" ? shuffleArray(data || []) : (data || []);
-                setQuestions(shuffled.slice(0, mode === "training" ? 25 : 100));
+                setQuestions(mode === "training" ? shuffled.slice(0, 25) : shuffled);
             } catch (e) {
                 console.error("Connection error:", e);
                 setQuestions([]);
@@ -148,6 +143,7 @@ export default function QuestionPage({ params }: QuestionPageProps) {
     }, [isTraining]);
 
     const handleAnswer = (answer: string) => {
+        if (answers[currentQuestion.id]) return; // Prevent changing answer
         setAnswers((prev) => ({ ...prev, [currentQuestion.id]: answer }));
     };
 
@@ -296,23 +292,44 @@ export default function QuestionPage({ params }: QuestionPageProps) {
 
                     {/* Answer options */}
                     <div className="space-y-3">
-                        {shuffledOptions.map((option, idx) => (
-                            <label
-                                key={idx}
-                                className={`answer-option ${answers[currentQuestion.id] === option ? "selected" : ""
-                                    }`}
-                            >
-                                <input
-                                    type="radio"
-                                    name="answer"
-                                    value={option}
-                                    checked={answers[currentQuestion.id] === option}
-                                    onChange={() => handleAnswer(option)}
-                                    className="accent-[var(--primary)]"
-                                />
-                                <span className="text-[var(--foreground)]">{option}</span>
-                            </label>
-                        ))}
+                        {shuffledOptions.map((option, idx) => {
+                            const isSelected = answers[currentQuestion.id] === option;
+                            const isCorrect = option === currentQuestion.correct_answer;
+                            const isRevealed = !!answers[currentQuestion.id];
+
+                            let statusClass = "";
+                            if (isRevealed) {
+                                if (isCorrect) statusClass = "border-[var(--success)] bg-[var(--success-light)]";
+                                else if (isSelected) statusClass = "border-[var(--danger)] bg-[var(--danger-light)]";
+                                else statusClass = "opacity-50";
+                            } else if (isSelected) {
+                                statusClass = "selected";
+                            }
+
+                            return (
+                                <label
+                                    key={idx}
+                                    className={`answer-option transition-all ${statusClass}`}
+                                >
+                                    <input
+                                        type="radio"
+                                        name="answer"
+                                        value={option}
+                                        checked={isSelected}
+                                        disabled={isRevealed}
+                                        onChange={() => handleAnswer(option)}
+                                        className="accent-[var(--primary)]"
+                                    />
+                                    <span className="text-[var(--foreground)]">{option}</span>
+                                    {isRevealed && isCorrect && (
+                                        <CheckCircle className="w-5 h-5 text-[var(--success)] ml-auto" />
+                                    )}
+                                    {isRevealed && isSelected && !isCorrect && (
+                                        <StopCircle className="w-5 h-5 text-[var(--danger)] ml-auto" />
+                                    )}
+                                </label>
+                            );
+                        })}
                     </div>
                 </div>
             </div>

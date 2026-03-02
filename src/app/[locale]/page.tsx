@@ -139,83 +139,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Pricing Section */}
+      {/* Pricing Section - Hidden for maintenance */}
+      {/* 
       <section className="mb-12">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 text-sm font-medium mb-4">
-            <Crown className="w-4 h-4 text-yellow-500" />
-            <span className="text-[var(--foreground)]">{t("pricing.title")}</span>
-          </div>
-          <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">
-            {t("pricing.subtitle")}
-          </h2>
-          <p className="text-[var(--foreground-secondary)]">
-            {t("pricing.fullAccess")}
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-          {/* Monthly Plan */}
-          <div className="card p-6 hover:scale-[1.02] transition-transform">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-lg bg-[var(--primary-light)] flex items-center justify-center">
-                <Star className="w-6 h-6 text-[var(--primary)]" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-[var(--foreground)]">{t("pricing.monthly")}</h3>
-              </div>
-            </div>
-            <div className="mb-4">
-              <span className="text-3xl font-bold text-[var(--foreground)]">29 990</span>
-              <span className="text-[var(--foreground-secondary)]"> {t("pricing.sum")}/{locale === 'ru' ? 'месяц' : 'oy'}</span>
-            </div>
-            <ul className="space-y-2 mb-6">
-              {monthlyFeatures.map((item, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm text-[var(--foreground-secondary)]">
-                  <Check className="w-4 h-4 text-[var(--success)]" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <Link href={`/${locale}/pricing`} className="btn btn-outline w-full">
-              {t("pricing.subscribe")}
-            </Link>
-          </div>
-
-          {/* Yearly Plan */}
-          <div className="card p-6 border-2 border-[var(--primary)] hover:scale-[1.02] transition-transform relative">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <span className="px-3 py-1 rounded-full bg-[var(--primary)] text-white text-xs font-medium">
-                {t("pricing.popular")}
-              </span>
-            </div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                <Crown className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-[var(--foreground)]">{t("pricing.yearly")}</h3>
-              </div>
-            </div>
-            <div className="mb-4">
-              <span className="text-3xl font-bold text-[var(--foreground)]">49 990</span>
-              <span className="text-[var(--foreground-secondary)]"> {t("pricing.sum")}/{locale === 'ru' ? 'год' : 'yil'}</span>
-            </div>
-            <ul className="space-y-2 mb-6">
-              {yearlyFeatures.map((item, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm text-[var(--foreground-secondary)]">
-                  <Check className="w-4 h-4 text-[var(--success)]" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <Link href={`/${locale}/pricing`} className="btn btn-primary w-full">
-              <Crown className="w-4 h-4" />
-              {t("pricing.subscribe")}
-            </Link>
-          </div>
-        </div>
+        ...
       </section>
+      */}
 
       {/* How it works */}
       <section className="mb-12">
