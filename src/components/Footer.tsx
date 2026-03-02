@@ -4,12 +4,17 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 import { FileQuestion, Mail, Send, Phone, Heart } from "lucide-react";
 import { getUserSession } from "@/app/actions/auth";
 
 export default function Footer() {
     const locale = useLocale();
+    const pathname = usePathname();
     const t = useTranslations();
+
+    const isAuthPage = pathname.includes("/auth/login") || pathname.includes("/auth/signup");
+
     const currentYear = new Date().getFullYear();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -20,6 +25,8 @@ export default function Footer() {
         };
         checkAuth();
     }, []);
+
+    if (!isAuthPage) return null;
 
     return (
         <footer className="mt-auto border-t border-[var(--border)] bg-[var(--background-secondary)]">

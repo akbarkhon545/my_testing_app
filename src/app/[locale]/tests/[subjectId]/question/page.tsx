@@ -142,7 +142,7 @@ export default function QuestionPage({ params }: QuestionPageProps) {
     }, [isTraining]);
 
     const handleAnswer = (answer: string) => {
-        if (answers[currentQuestion.id]) return; // Prevent changing answer
+        if (!isTraining && answers[currentQuestion.id]) return; // Prevent changing answer only in non-training mode
         setAnswers((prev) => ({ ...prev, [currentQuestion.id]: answer }));
     };
 
@@ -315,7 +315,7 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                                         name="answer"
                                         value={option}
                                         checked={isSelected}
-                                        disabled={isRevealed}
+                                        disabled={!isTraining && isRevealed}
                                         onChange={() => handleAnswer(option)}
                                         className="accent-[var(--primary)]"
                                     />
