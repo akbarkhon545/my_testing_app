@@ -907,7 +907,12 @@ export default function AdminPage() {
                 <label className="label">{t("admin.plan")}</label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    onClick={() => setSubPlan("MONTHLY")}
+                    onClick={() => {
+                      setSubPlan("MONTHLY");
+                      const date = new Date();
+                      date.setDate(date.getDate() + 30);
+                      setSubExpiryDate(date.toISOString().split('T')[0]);
+                    }}
                     className={`p-4 rounded-lg border-2 text-center transition-all ${subPlan === "MONTHLY"
                       ? "border-[var(--primary)] bg-[var(--primary-light)]"
                       : "border-[var(--border)]"
@@ -917,7 +922,12 @@ export default function AdminPage() {
                     <p className="text-xs text-[var(--foreground-muted)]">{t("admin.perMonth")}</p>
                   </button>
                   <button
-                    onClick={() => setSubPlan("YEARLY")}
+                    onClick={() => {
+                      setSubPlan("YEARLY");
+                      const date = new Date();
+                      date.setFullYear(date.getFullYear() + 1);
+                      setSubExpiryDate(date.toISOString().split('T')[0]);
+                    }}
                     className={`p-4 rounded-lg border-2 text-center transition-all ${subPlan === "YEARLY"
                       ? "border-[var(--primary)] bg-[var(--primary-light)]"
                       : "border-[var(--border)]"

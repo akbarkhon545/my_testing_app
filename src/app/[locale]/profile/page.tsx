@@ -326,6 +326,7 @@ export default function ProfilePage() {
                                     <input
                                         type="text"
                                         className="input pl-10"
+                                        style={{ paddingLeft: "2.5rem" }}
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         placeholder={t("profile.namePlaceholder")}
@@ -340,6 +341,7 @@ export default function ProfilePage() {
                                     <input
                                         type="email"
                                         className="input pl-10"
+                                        style={{ paddingLeft: "2.5rem" }}
                                         value={email}
                                         disabled
                                         placeholder="email@example.com"
@@ -355,6 +357,7 @@ export default function ProfilePage() {
                                     <input
                                         type="tel"
                                         className="input pl-10"
+                                        style={{ paddingLeft: "2.5rem" }}
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
                                         placeholder="+998 90 123 45 67"
@@ -369,6 +372,7 @@ export default function ProfilePage() {
                                     <input
                                         type="date"
                                         className="input pl-10"
+                                        style={{ paddingLeft: "2.5rem" }}
                                         value={birthDate}
                                         onChange={(e) => setBirthDate(e.target.value)}
                                     />
