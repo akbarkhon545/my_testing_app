@@ -130,9 +130,38 @@ export async function getUserProfile() {
             id: true,
             email: true,
             name: true,
+            avatarUrl: true,
             role: true,
             subscriptionPlan: true,
             subscriptionExpiresAt: true,
         },
     });
+}
+
+export async function updateUserProfile(values: any) {
+    const session = await getSession();
+    if (!session?.user?.id) throw new Error("Не авторизован");
+
+    const { name } = values;
+    
+    await (prisma as any).user.update({
+        where: { id: session.user.id },
+        data: { name },
+    });
+    
+    revalidatePath("/profile");
+    return { success: true };
+}
+
+export async function updateAvatar(avatarUrl: string) {
+    const session = await getSession();
+    if (!session?.user?.id) throw new Error("Не авторизован");
+
+    await (prisma as any).user.update({
+        where: { id: session.user.id },
+        data: { avatarUrl },
+    });
+    
+    revalidatePath("/profile");
+    return { success: true };
 }

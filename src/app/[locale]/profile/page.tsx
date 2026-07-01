@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getUserProfile, signOutUser } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -64,6 +64,9 @@ export default function ProfilePage() {
                 const userEmail = userProfile.email || "";
                 setEmail(userEmail);
                 setName(userProfile.name || userEmail.split("@")[0] || "Student");
+                if (userProfile.avatarUrl) {
+                    setAvatarUrl(userProfile.avatarUrl);
+                }
 
                 const plan = userProfile.subscriptionPlan as "FREE" | "MONTHLY" | "YEARLY";
                 const expiryDate = userProfile.subscriptionExpiresAt ? new Date(userProfile.subscriptionExpiresAt) : null;
@@ -86,13 +89,44 @@ export default function ProfilePage() {
         loadProfile();
     }, []);
 
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > 1024 * 1024 * 2) {
+            setMessage({ type: "error", text: "Размер файла не должен превышать 2МБ" });
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const base64Str = event.target?.result as string;
+            setAvatarUrl(base64Str);
+            try {
+                const { updateAvatar } = await import("@/app/actions/auth");
+                await updateAvatar(base64Str);
+                setMessage({ type: "success", text: "Аватар успешно обновлен" });
+            } catch (err: any) {
+                setMessage({ type: "error", text: err.message || "Ошибка при обновлении аватара" });
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
     const handleSaveProfile = async () => {
         setSaving(true);
         setMessage(null);
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        setMessage({ type: "success", text: t("profile.profileSaved") });
+        try {
+            const { updateUserProfile } = await import("@/app/actions/auth");
+            await updateUserProfile({ name });
+            setMessage({ type: "success", text: t("profile.profileSaved") });
+        } catch (error: any) {
+            setMessage({ type: "error", text: error.message || "Ошибка сохранения" });
+        }
+        
         setSaving(false);
     };
 
@@ -202,14 +236,24 @@ export default function ProfilePage() {
                     <div className="card-body">
                         <div className="flex items-center gap-6">
                             <div className="relative">
-                                <div className="avatar avatar-lg w-24 h-24 text-3xl">
+                                <div className="avatar avatar-lg w-24 h-24 text-3xl overflow-hidden rounded-full flex items-center justify-center bg-[var(--primary-light)] text-[var(--primary)]">
                                     {avatarUrl ? (
-                                        <img src={avatarUrl} alt="Avatar" />
+                                        <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                                     ) : (
-                                        name[0].toUpperCase()
+                                        name[0]?.toUpperCase()
                                     )}
                                 </div>
-                                <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[var(--primary)] text-white flex items-center justify-center hover:bg-[var(--primary-hover)] transition-colors">
+                                <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    className="hidden" 
+                                    ref={fileInputRef} 
+                                    onChange={handleAvatarChange} 
+                                />
+                                <button 
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[var(--primary)] text-white flex items-center justify-center hover:bg-[var(--primary-hover)] transition-colors z-10"
+                                >
                                     <Camera className="w-4 h-4" />
                                 </button>
                             </div>
