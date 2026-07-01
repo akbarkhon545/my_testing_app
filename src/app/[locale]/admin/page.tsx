@@ -276,9 +276,18 @@ export default function AdminPage() {
 
   const handleSaveSubscription = async () => {
     if (!selectedUser) return;
+    if (!subExpiryDate && subPlan !== "FREE") {
+      alert("Пожалуйста, укажите дату окончания подписки");
+      return;
+    }
     setSaving(true);
     try {
-      await updateSubscription(selectedUser.id, subPlan, subExpiryDate);
+      const res = await updateSubscription(selectedUser.id, subPlan, subExpiryDate);
+      if (res && !res.success) {
+        alert("Ошибка: " + res.error);
+        setSaving(false);
+        return;
+      }
       await loadAllData();
       setShowSubModal(false);
       setSelectedUser(null);

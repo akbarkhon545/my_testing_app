@@ -210,13 +210,23 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
                 >
                     Вернуться к выбору
                 </Link>
-                <Link
-                    href={`/${locale}/tests/${subjectId}/question?mode=${mode}`}
-                    className="btn btn-primary btn-lg"
-                >
-                    Начать тест
-                    <ArrowRight className="w-5 h-5" />
-                </Link>
+                {hasSubscription ? (
+                    <Link
+                        href={`/${locale}/tests/${subjectId}/question?mode=${mode}`}
+                        className="btn btn-primary btn-lg"
+                    >
+                        Начать тест
+                        <ArrowRight className="w-5 h-5" />
+                    </Link>
+                ) : (
+                    <Link
+                        href={`/${locale}/pricing`}
+                        className="btn btn-warning btn-lg shadow-lg hover:shadow-xl transition-all"
+                    >
+                        <Crown className="w-5 h-5 mr-2" />
+                        Купить подписку для доступа
+                    </Link>
+                )}
             </div>
         </div>
     );

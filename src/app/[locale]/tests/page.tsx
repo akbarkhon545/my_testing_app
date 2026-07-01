@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
-import { Book, Award, ChevronRight, FileQuestion, GraduationCap, AlertCircle, Crown } from "lucide-react";
+import { Book, Award, ChevronRight, FileQuestion, GraduationCap, AlertCircle, Crown, Lock } from "lucide-react";
 import { getUserSession, getUserProfile } from "@/app/actions/auth";
 import { getSubjects } from "@/app/actions/admin";
 
@@ -134,37 +134,73 @@ export default function TestsIndexPage() {
                 </p>
 
                 <div className="space-y-3">
-                  <Link
-                    href={`/${locale}/tests/${subject.id}/instructions?mode=training`}
-                    className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary-light)] transition-all group/link"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-[var(--primary-light)] flex items-center justify-center">
-                        <Book className="w-5 h-5 text-[var(--primary)]" />
+                  {hasSubscription ? (
+                    <Link
+                      href={`/${locale}/tests/${subject.id}/instructions?mode=training`}
+                      className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] hover:border-[var(--primary)] hover:bg-[var(--primary-light)] transition-all group/link"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-[var(--primary-light)] flex items-center justify-center">
+                          <Book className="w-5 h-5 text-[var(--primary)]" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-[var(--foreground)]">{t("tests.training")}</p>
+                          <p className="text-xs text-[var(--foreground-muted)]">{t("tests.trainingDesc")}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-[var(--foreground)]">{t("tests.training")}</p>
-                        <p className="text-xs text-[var(--foreground-muted)]">{t("tests.trainingDesc")}</p>
+                      <ChevronRight className="w-5 h-5 text-[var(--foreground-muted)] group-hover/link:text-[var(--primary)] transition-colors" />
+                    </Link>
+                  ) : (
+                    <div
+                      onClick={() => router.push(`/${locale}/pricing`)}
+                      className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] opacity-70 cursor-pointer group/link hover:border-yellow-500 transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-[var(--background)] flex items-center justify-center">
+                          <Lock className="w-5 h-5 text-[var(--foreground-muted)]" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-[var(--foreground-muted)]">{t("tests.training")} (Заблокировано)</p>
+                          <p className="text-xs text-[var(--foreground-muted)]">Требуется подписка</p>
+                        </div>
                       </div>
+                      <Crown className="w-5 h-5 text-yellow-500" />
                     </div>
-                    <ChevronRight className="w-5 h-5 text-[var(--foreground-muted)] group-hover/link:text-[var(--primary)] transition-colors" />
-                  </Link>
+                  )}
 
-                  <Link
-                    href={`/${locale}/tests/${subject.id}/instructions?mode=all`}
-                    className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] hover:border-[var(--success)] hover:bg-[var(--success-light)] transition-all group/link"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-[var(--success-light)] flex items-center justify-center">
-                        <Award className="w-5 h-5 text-[var(--success)]" />
+                  {hasSubscription ? (
+                    <Link
+                      href={`/${locale}/tests/${subject.id}/instructions?mode=all`}
+                      className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] hover:border-[var(--success)] hover:bg-[var(--success-light)] transition-all group/link"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-[var(--success-light)] flex items-center justify-center">
+                          <Award className="w-5 h-5 text-[var(--success)]" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-[var(--foreground)]">{t("tests.full")}</p>
+                          <p className="text-xs text-[var(--foreground-muted)]">{t("tests.allQuestions")}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-[var(--foreground)]">{t("tests.full")}</p>
-                        <p className="text-xs text-[var(--foreground-muted)]">{t("tests.allQuestions")}</p>
+                      <ChevronRight className="w-5 h-5 text-[var(--foreground-muted)] group-hover/link:text-[var(--success)] transition-colors" />
+                    </Link>
+                  ) : (
+                    <div
+                      onClick={() => router.push(`/${locale}/pricing`)}
+                      className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] opacity-70 cursor-pointer group/link hover:border-yellow-500 transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-[var(--background)] flex items-center justify-center">
+                          <Lock className="w-5 h-5 text-[var(--foreground-muted)]" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-[var(--foreground-muted)]">{t("tests.full")} (Заблокировано)</p>
+                          <p className="text-xs text-[var(--foreground-muted)]">Требуется подписка</p>
+                        </div>
                       </div>
+                      <Crown className="w-5 h-5 text-yellow-500" />
                     </div>
-                    <ChevronRight className="w-5 h-5 text-[var(--foreground-muted)] group-hover/link:text-[var(--success)] transition-colors" />
-                  </Link>
+                  )}
                 </div>
               </div>
             </div>

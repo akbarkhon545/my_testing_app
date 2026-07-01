@@ -143,15 +143,21 @@ export async function getUsers() {
 }
 
 export async function updateSubscription(userId: string, plan: "MONTHLY" | "YEARLY" | "FREE", expiresAt: string | null) {
-    await requireAdmin();
-    await (prisma as any).user.update({
-        where: { id: userId },
-        data: {
-            subscriptionPlan: plan,
-            subscriptionExpiresAt: expiresAt ? new Date(expiresAt) : null,
-        },
-    });
-    revalidatePath("/admin");
+    try {
+        await requireAdmin();
+        await (prisma as any).user.update({
+            where: { id: userId },
+            data: {
+                subscriptionPlan: plan,
+                subscriptionExpiresAt: expiresAt ? new Date(expiresAt) : null,
+            },
+        });
+        revalidatePath("/admin");
+        return { success: true };
+    } catch (e: any) {
+        console.error("Update sub error:", e);
+        return { success: false, error: e.message || "Failed to update" };
+    }
 }
 
 export async function addUser(data: any) {
