@@ -83,6 +83,11 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                 userProfile.subscriptionExpiresAt &&
                 new Date(userProfile.subscriptionExpiresAt) > new Date();
 
+            if (!hasActiveSub) {
+                router.push(`/${locale}/pricing`);
+                return;
+            }
+
             setHasSubscription(true);
             setAuthChecked(true);
         };

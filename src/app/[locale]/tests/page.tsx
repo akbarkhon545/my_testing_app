@@ -39,7 +39,7 @@ export default function TestsIndexPage() {
         userProfile.subscriptionExpiresAt &&
         new Date(userProfile.subscriptionExpiresAt) > new Date();
 
-      setHasSubscription(true);
+      setHasSubscription(!!hasActiveSub);
       setAuthChecked(true);
     };
     checkAuth();

@@ -29,7 +29,14 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
         const checkAuth = async () => {
             const userProfile = await getUserProfile();
             setIsLoggedIn(!!userProfile);
-            setHasSubscription(true);
+            if (userProfile && (userProfile.role === "ADMIN" || userProfile.email === "akbarkhon545@gmail.com")) {
+                setHasSubscription(true);
+            } else if (userProfile) {
+                const hasActiveSub = userProfile.subscriptionPlan !== "FREE" &&
+                    userProfile.subscriptionExpiresAt &&
+                    new Date(userProfile.subscriptionExpiresAt) > new Date();
+                setHasSubscription(!!hasActiveSub);
+            }
             setLoading(false);
         };
         checkAuth();
