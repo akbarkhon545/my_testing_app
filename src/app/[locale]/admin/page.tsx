@@ -132,7 +132,7 @@ export default function AdminPage() {
   }, [locale, router]);
 
   // Load all data
-  const loadAllData = async () => {
+  async function loadAllData() {
     setLoading(true);
     try {
       const [facs, subs, ques, usrs, statData] = await Promise.all([

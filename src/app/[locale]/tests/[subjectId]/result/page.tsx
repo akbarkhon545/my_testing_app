@@ -41,6 +41,7 @@ export default function ResultPage({ params }: ResultPageProps) {
         const storedResult = sessionStorage.getItem("testResult");
         if (storedResult) {
             const parsed = JSON.parse(storedResult);
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setResult(parsed);
 
             // Animate score counter

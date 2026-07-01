@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
-import { FileQuestion, Mail, Send, Phone, Heart } from "lucide-react";
+import { Mail, Send, Phone, Heart } from "lucide-react";
 import { getUserSession } from "@/app/actions/auth";
 
 export default function Footer() {
