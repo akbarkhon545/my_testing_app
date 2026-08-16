@@ -27,6 +27,7 @@ import {
   getAdminStats
 } from "@/app/actions/admin";
 import { getUserSession } from "@/app/actions/auth";
+import { useUI } from "@/components/ui/UIProvider";
 import FacultiesTable from "@/components/admin/FacultiesTable";
 import SubjectsTable from "@/components/admin/SubjectsTable";
 import QuestionsFolders from "@/components/admin/QuestionsFolders";
@@ -70,6 +71,7 @@ export default function AdminPage() {
   const locale = useLocale();
   const router = useRouter();
   const t = useTranslations();
+  const { toast, confirm, prompt } = useUI();
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -212,7 +214,7 @@ export default function AdminPage() {
           await updateUser(String(editingId), userData);
         } else {
           if (!form.password) {
-            alert("Пароль обязателен для нового пользователя");
+            toast("Пароль обязателен для нового пользователя", "error");
             setSaving(false);
             return;
           }
@@ -222,61 +224,93 @@ export default function AdminPage() {
 
       await loadAllData();
       setShowModal(false);
-      alert("Сохранено!");
+      toast("Сохранено");
     } catch (e) {
       console.error("Save error:", e);
-      alert(e instanceof Error ? e.message : "Ошибка сохранения");
+      toast(e instanceof Error ? e.message : "Ошибка сохранения", "error");
     }
     setSaving(false);
   };
 
   const handleDelete = async (id: number | string) => {
-    if (!confirm("Удалить?")) return;
+    const confirmed = await confirm({
+      title: "Удалить запись?",
+      message: "Действие нельзя отменить.",
+      confirmLabel: "Удалить",
+      destructive: true,
+    });
+    if (!confirmed) return;
+
     try {
       if (activeTab === "faculties") await deleteFaculty(Number(id));
       else if (activeTab === "subjects") await deleteSubject(Number(id));
       else if (activeTab === "questions") await deleteQuestion(Number(id));
       await loadAllData();
+      toast("Удалено");
     } catch (e) {
       console.error("Delete error:", e);
-      alert(e instanceof Error ? e.message : "Ошибка удаления");
+      toast(e instanceof Error ? e.message : "Ошибка удаления", "error");
     }
   };
 
   const handleDeleteUser = async (id: string) => {
     const user = users.find((u) => u.id === id);
     if (!user) return;
-    if (!confirm(`Вы уверены, что хотите УДАЛИТЬ пользователя ${displayName(user)} (${user.email})? Это действие необратимо!`)) return;
+
+    const confirmed = await confirm({
+      title: "Удалить пользователя?",
+      message: `${displayName(user)} (${user.email}) и все его результаты будут удалены безвозвратно.`,
+      confirmLabel: "Удалить",
+      destructive: true,
+    });
+    if (!confirmed) return;
 
     try {
       await deleteUser(id);
       await loadAllData();
+      toast("Пользователь удалён");
     } catch (e) {
       console.error("Delete user error:", e);
-      alert(e instanceof Error ? e.message : "Ошибка удаления");
+      toast(e instanceof Error ? e.message : "Ошибка удаления", "error");
     }
   };
 
   const handleDeactivateUser = async (user: AdminUser) => {
-    if (!confirm(`Деактивировать пользователя ${displayName(user)}? Он не сможет войти в систему.`)) return;
+    const confirmed = await confirm({
+      title: "Деактивировать пользователя?",
+      message: `${displayName(user)} не сможет войти в систему, пока вы не активируете аккаунт снова.`,
+      confirmLabel: "Деактивировать",
+      destructive: true,
+    });
+    if (!confirmed) return;
+
     try {
       await deactivateUser(user.id);
       await loadAllData();
-      alert("Пользователь деактивирован!");
+      toast("Пользователь деактивирован");
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Ошибка деактивации");
+      toast(e instanceof Error ? e.message : "Ошибка деактивации", "error");
     }
   };
 
   const handleActivateUser = async (user: AdminUser) => {
-    const newPass = prompt("Введите новый пароль для активации пользователя (минимум 8 символов):");
+    const newPass = await prompt({
+      title: "Активировать пользователя",
+      message: `Задайте новый пароль для ${displayName(user)}.`,
+      label: "Новый пароль",
+      type: "password",
+      confirmLabel: "Активировать",
+      placeholder: "Минимум 8 символов",
+      validate: (value) => (value.trim().length < 8 ? "Пароль должен содержать минимум 8 символов" : null),
+    });
     if (!newPass) return;
+
     try {
       await activateUser(user.id, newPass);
       await loadAllData();
-      alert("Пользователь активирован!");
+      toast("Пользователь активирован");
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Ошибка активации");
+      toast(e instanceof Error ? e.message : "Ошибка активации", "error");
     }
   };
 
@@ -291,32 +325,41 @@ export default function AdminPage() {
   const handleSaveSubscription = async () => {
     if (!selectedUser) return;
     if (!subExpiryDate) {
-      alert("Пожалуйста, укажите дату окончания подписки");
+      toast("Пожалуйста, укажите дату окончания подписки", "error");
       return;
     }
     setSaving(true);
     try {
       const res = await updateSubscription(selectedUser.id, subPlan, subExpiryDate);
       if (res && !res.success) {
-        alert("Ошибка: " + res.error);
+        toast(res.error || "Не удалось обновить подписку", "error");
         setSaving(false);
         return;
       }
       await loadAllData();
       setShowSubModal(false);
       setSelectedUser(null);
-      alert(`Подписка обновлена для ${selectedUser.email}!`);
+      toast(`Подписка обновлена для ${selectedUser.email}`);
     } catch (error) {
       console.error("Sub error:", error);
-      alert("Ошибка обновления подписки");
+      toast("Ошибка обновления подписки", "error");
     }
     setSaving(false);
   };
 
   const handleRemoveSubscription = async (userId: string) => {
-    if (!confirm("Удалить подписку пользователя?")) return;
-    await updateSubscription(userId, "FREE", null);
+    const confirmed = await confirm({
+      title: "Отменить подписку?",
+      message: "Пользователь потеряет доступ к тестам.",
+      confirmLabel: "Отменить подписку",
+      destructive: true,
+    });
+    if (!confirmed) return;
+
+    const res = await updateSubscription(userId, "FREE", null);
     await loadAllData();
+    if (res?.success) toast("Подписка отменена");
+    else toast(res?.error || "Не удалось отменить подписку", "error");
   };
 
   const tabs: { id: Tab; label: string; icon: typeof GraduationCap; count: number }[] = [

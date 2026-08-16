@@ -50,6 +50,20 @@ export default function NavBar() {
     checkSession();
   }, [pathname]); // Check on every navigation
 
+  // Escape closes the open menus, like any other popup
+  useEffect(() => {
+    if (!isOpen && !userMenuOpen) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, userMenuOpen]);
+
   const handleSignOut = async () => {
     await signOutUser();
     setIsLoggedIn(false);
@@ -114,13 +128,15 @@ export default function NavBar() {
               <div className="relative hidden md:block">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  aria-expanded={userMenuOpen}
+                  aria-haspopup="menu"
                   className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] hover:bg-[var(--border)] transition-all"
                 >
                   <div className="avatar w-6 h-6 text-xs">
                     {userName[0]?.toUpperCase() || "U"}
                   </div>
                   <span className="text-sm font-medium text-[var(--foreground)]">{userName}</span>
-                  <ChevronDown className={`w-4 h-4 text-[var(--foreground-muted)] transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`w-4 h-4 text-[var(--foreground-muted)] transition-transform ${userMenuOpen ? "rotate-180" : ""}`} aria-hidden="true" />
                 </button>
 
                 {/* Dropdown */}
