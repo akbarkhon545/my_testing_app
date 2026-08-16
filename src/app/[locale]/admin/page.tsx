@@ -344,7 +344,7 @@ export default function AdminPage() {
     return (
       <div className="max-w-xl mx-auto text-center py-12 animate-fadeIn">
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[var(--danger-light)] mb-6">
-          <Lock className="w-10 h-10 text-[var(--danger)]" />
+          <Lock className="w-10 h-10 text-[var(--danger-strong)]" />
         </div>
         <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">Доступ запрещён</h2>
         <p className="text-[var(--foreground-secondary)] mb-8">

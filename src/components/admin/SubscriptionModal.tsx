@@ -49,7 +49,7 @@ export default function SubscriptionModal({
             <div className="bg-[var(--background-secondary)] rounded-xl shadow-lg w-full max-w-md mx-4 animate-scaleIn">
                 <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
                     <h3 className="font-semibold text-[var(--foreground)] flex items-center gap-2">
-                        <Crown className="w-5 h-5 text-yellow-500" />
+                        <Crown className="w-5 h-5 text-[var(--premium-strong)]" />
                         {t("admin.addSubscription")}
                     </h3>
                     <button onClick={onClose} className="text-[var(--foreground-muted)] hover:text-[var(--foreground)]">
@@ -105,7 +105,7 @@ export default function SubscriptionModal({
 
                     <div className="p-3 rounded-lg bg-[var(--success-light)] border border-[var(--success)]/20">
                         <p className="text-sm text-[var(--foreground-muted)]">Тариф</p>
-                        <p className="font-bold text-lg text-[var(--success)]">
+                        <p className="font-bold text-lg text-[var(--success-strong)]">
                             {plan === "MONTHLY" ? "25 000" : "50 000"} {t("pricing.sum")}
                         </p>
                         <p className="text-xs text-[var(--foreground-secondary)]">

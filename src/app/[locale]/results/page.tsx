@@ -108,7 +108,7 @@ export default function ResultsPage() {
                     <div className="text-center">
                       <div className="text-xs text-[var(--foreground-muted)]">Верно</div>
                       <div className="flex items-center gap-1 text-sm font-medium text-[var(--foreground)]">
-                        <CheckCircle className="w-3.5 h-3.5 text-[var(--success)]" />
+                        <CheckCircle className="w-3.5 h-3.5 text-[var(--success-strong)]" />
                         {r.correct_count}
                       </div>
                     </div>

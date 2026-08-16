@@ -186,7 +186,7 @@ export default function QuestionPage({ params }: QuestionPageProps) {
         return (
             <div className="max-w-xl mx-auto text-center py-12">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--warning-light)] mb-4">
-                    <AlertCircle className="w-8 h-8 text-[var(--warning)]" />
+                    <AlertCircle className="w-8 h-8 text-[var(--warning-strong)]" />
                 </div>
                 <h2 className="text-xl font-bold text-[var(--foreground)] mb-2">Нет вопросов</h2>
                 <p className="text-[var(--foreground-secondary)] mb-6">
@@ -285,10 +285,10 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                                     />
                                     <span className="text-[var(--foreground)]">{option}</span>
                                     {!isTraining && isRevealed && isCorrect && (
-                                        <CheckCircle className="w-5 h-5 text-[var(--success)] ml-auto" />
+                                        <CheckCircle className="w-5 h-5 text-[var(--success-strong)] ml-auto" />
                                     )}
                                     {!isTraining && isRevealed && isSelected && !isCorrect && (
-                                        <StopCircle className="w-5 h-5 text-[var(--danger)] ml-auto" />
+                                        <StopCircle className="w-5 h-5 text-[var(--danger-strong)] ml-auto" />
                                     )}
                                 </label>
                             );

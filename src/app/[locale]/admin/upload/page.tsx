@@ -92,7 +92,7 @@ export default function UploadPage() {
         return (
             <div className="max-w-xl mx-auto text-center py-12 animate-fadeIn">
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[var(--danger-light)] mb-6">
-                    <Lock className="w-10 h-10 text-[var(--danger)]" />
+                    <Lock className="w-10 h-10 text-[var(--danger-strong)]" />
                 </div>
                 <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">
                     Доступ запрещён
@@ -261,7 +261,7 @@ export default function UploadPage() {
                                 Загрузка предметов...
                             </div>
                         ) : subjects.length === 0 ? (
-                            <div className="text-[var(--warning)]">
+                            <div className="text-[var(--warning-strong)]">
                                 Нет доступных предметов. Сначала создайте предмет в админ-панели.
                             </div>
                         ) : (
@@ -299,7 +299,7 @@ export default function UploadPage() {
                         {selectedFile ? (
                             <div className="space-y-4">
                                 <div className="inline-flex items-center gap-3 px-4 py-3 bg-[var(--background)] rounded-lg border border-[var(--border)]">
-                                    <FileSpreadsheet className="w-8 h-8 text-green-600" />
+                                    <FileSpreadsheet className="w-8 h-8 text-[var(--success-strong)]" />
                                     <div className="text-left">
                                         <p className="font-medium text-[var(--foreground)]">{selectedFile.name}</p>
                                         <p className="text-sm text-[var(--foreground-muted)]">
@@ -309,7 +309,7 @@ export default function UploadPage() {
                                     </div>
                                     <button
                                         onClick={() => { setSelectedFile(null); setParsedQuestions([]); }}
-                                        className="ml-2 text-[var(--foreground-muted)] hover:text-[var(--danger)]"
+                                        className="ml-2 text-[var(--foreground-muted)] hover:text-[var(--danger-strong)]"
                                     >
                                         <X className="w-5 h-5" />
                                     </button>

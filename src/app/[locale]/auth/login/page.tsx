@@ -91,7 +91,7 @@ export default function LoginPage() {
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-sm text-[var(--danger)] mt-1">{errors.email.message}</p>
+                  <p className="text-sm text-[var(--danger-strong)] mt-1">{errors.email.message}</p>
                 )}
               </div>
 
@@ -115,7 +115,7 @@ export default function LoginPage() {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-sm text-[var(--danger)] mt-1">{errors.password.message}</p>
+                  <p className="text-sm text-[var(--danger-strong)] mt-1">{errors.password.message}</p>
                 )}
               </div>
 
@@ -179,7 +179,7 @@ export default function LoginPage() {
               href="tel:+998931674959"
               className="flex flex-col items-center p-3 rounded-lg hover:bg-[var(--border)] transition-colors"
             >
-              <Phone className="w-5 h-5 text-[var(--success)] mb-2" />
+              <Phone className="w-5 h-5 text-[var(--success-strong)] mb-2" />
               <span className="text-xs text-[var(--foreground-secondary)]">Телефон</span>
             </a>
           </div>

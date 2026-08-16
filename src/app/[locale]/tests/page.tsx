@@ -143,7 +143,7 @@ export default function TestsIndexPage() {
                   ) : (
                     <div
                       onClick={() => router.push(`/${locale}/pricing`)}
-                      className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] opacity-70 cursor-pointer group/link hover:border-yellow-500 transition-all"
+                      className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] opacity-70 cursor-pointer group/link hover:border-[var(--premium)] transition-all"
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-[var(--background)] flex items-center justify-center">
@@ -154,7 +154,7 @@ export default function TestsIndexPage() {
                           <p className="text-xs text-[var(--foreground-muted)]">Требуется подписка</p>
                         </div>
                       </div>
-                      <Crown className="w-5 h-5 text-yellow-500" />
+                      <Crown className="w-5 h-5 text-[var(--premium-strong)]" />
                     </div>
                   )}
 
@@ -165,19 +165,19 @@ export default function TestsIndexPage() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-[var(--success-light)] flex items-center justify-center">
-                          <Award className="w-5 h-5 text-[var(--success)]" />
+                          <Award className="w-5 h-5 text-[var(--success-strong)]" />
                         </div>
                         <div>
                           <p className="font-medium text-[var(--foreground)]">{t("tests.full")}</p>
                           <p className="text-xs text-[var(--foreground-muted)]">{t("tests.allQuestions")}</p>
                         </div>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-[var(--foreground-muted)] group-hover/link:text-[var(--success)] transition-colors" />
+                      <ChevronRight className="w-5 h-5 text-[var(--foreground-muted)] group-hover/link:text-[var(--success-strong)] transition-colors" />
                     </Link>
                   ) : (
                     <div
                       onClick={() => router.push(`/${locale}/pricing`)}
-                      className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] opacity-70 cursor-pointer group/link hover:border-yellow-500 transition-all"
+                      className="flex items-center justify-between p-3 rounded-lg border border-[var(--border)] bg-[var(--background-secondary)] opacity-70 cursor-pointer group/link hover:border-[var(--premium)] transition-all"
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-[var(--background)] flex items-center justify-center">
@@ -188,7 +188,7 @@ export default function TestsIndexPage() {
                           <p className="text-xs text-[var(--foreground-muted)]">Требуется подписка</p>
                         </div>
                       </div>
-                      <Crown className="w-5 h-5 text-yellow-500" />
+                      <Crown className="w-5 h-5 text-[var(--premium-strong)]" />
                     </div>
                   )}
                 </div>
@@ -228,7 +228,7 @@ export default function TestsIndexPage() {
 
             <div className="p-4 rounded-lg bg-[var(--success-light)]">
               <div className="flex items-center gap-3 mb-3">
-                <Award className="w-6 h-6 text-[var(--success)]" />
+                <Award className="w-6 h-6 text-[var(--success-strong)]" />
                 <h3 className="font-semibold text-[var(--foreground)]">{t("tests.fullTest")}</h3>
               </div>
               <ul className="space-y-2 text-sm text-[var(--foreground-secondary)]">

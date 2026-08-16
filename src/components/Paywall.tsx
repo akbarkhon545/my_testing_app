@@ -17,8 +17,8 @@ export default function Paywall({
 
     return (
         <div className="text-center py-12 animate-fadeIn">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 mb-6">
-                <Lock className="w-10 h-10 text-white" />
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-[var(--premium)] to-[var(--warning)] mb-6">
+                <Lock className="w-10 h-10 text-[var(--on-premium)]" />
             </div>
 
             <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">
@@ -38,7 +38,7 @@ export default function Paywall({
 
             <div className="mt-8 p-4 rounded-lg bg-[var(--background-secondary)] border border-[var(--border)] max-w-sm mx-auto">
                 <p className="text-sm text-[var(--foreground-secondary)]">
-                    <Crown className="w-4 h-4 inline text-yellow-500 mr-1" />
+                    <Crown className="w-4 h-4 inline text-[var(--premium-strong)] mr-1" />
                     Начните с <span className="font-semibold">25 000 сум/месяц</span>
                 </p>
             </div>

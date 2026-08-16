@@ -19,7 +19,7 @@ export default function Error({
         <div className="min-h-[60vh] flex items-center justify-center">
             <div className="text-center animate-fadeIn">
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[var(--danger-light)] mb-6">
-                    <AlertOctagon className="w-10 h-10 text-[var(--danger)]" />
+                    <AlertOctagon className="w-10 h-10 text-[var(--danger-strong)]" />
                 </div>
 
                 <h1 className="text-3xl font-bold text-[var(--foreground)] mb-2">

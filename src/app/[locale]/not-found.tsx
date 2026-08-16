@@ -15,7 +15,7 @@ export default function NotFound() {
                         404
                     </div>
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <AlertTriangle className="w-16 h-16 text-[var(--warning)]" />
+                        <AlertTriangle className="w-16 h-16 text-[var(--warning-strong)]" />
                     </div>
                 </div>
 

@@ -2,11 +2,20 @@ import createIntlMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
 import { decrypt } from "@/lib/auth";
 
+const LOCALES = ["ru", "uz"] as const;
+const DEFAULT_LOCALE = "ru";
+
 const intlMiddleware = createIntlMiddleware({
-  locales: ["ru", "uz"],
-  defaultLocale: "ru",
+  locales: [...LOCALES],
+  defaultLocale: DEFAULT_LOCALE,
   localePrefix: "always",
 });
+
+/** First path segment, but only when it is a locale we actually serve. */
+function localeOf(pathname: string): string {
+  const segment = pathname.split("/")[1];
+  return (LOCALES as readonly string[]).includes(segment) ? segment : DEFAULT_LOCALE;
+}
 
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -16,6 +25,7 @@ export default async function middleware(request: NextRequest) {
 
   // 2. Auth protection logic
   const session = request.cookies.get("session")?.value;
+  const locale = localeOf(pathname);
 
   // Public routes that don't need auth (but might need locale prefix)
   const isAuthPage = pathname.includes("/auth/login") || pathname.includes("/auth/signup");
@@ -27,7 +37,6 @@ export default async function middleware(request: NextRequest) {
 
   if (isProtectedPage) {
     if (!session) {
-      const locale = pathname.split("/")[1] || "ru";
       return NextResponse.redirect(new URL(`/${locale}/auth/login`, request.url));
     }
 
@@ -35,7 +44,6 @@ export default async function middleware(request: NextRequest) {
     try {
       await decrypt(session);
     } catch {
-      const locale = pathname.split("/")[1] || "ru";
       const res = NextResponse.redirect(new URL(`/${locale}/auth/login`, request.url));
       res.cookies.delete("session");
       return res;
@@ -45,7 +53,6 @@ export default async function middleware(request: NextRequest) {
   if (isAuthPage && session) {
     try {
       await decrypt(session);
-      const locale = pathname.split("/")[1] || "ru";
       return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url));
     } catch {
       // Invalid session, let them stay on the auth page

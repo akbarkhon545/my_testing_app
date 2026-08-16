@@ -316,7 +316,7 @@ export default function ProfilePage() {
                                             <Clock className="w-4 h-4" />
                                             {t("profile.remaining")}
                                         </div>
-                                        <p className={`font-semibold ${getDaysRemaining() <= 7 ? "text-[var(--warning)]" : "text-[var(--foreground)]"}`}>
+                                        <p className={`font-semibold ${getDaysRemaining() <= 7 ? "text-[var(--warning-strong)]" : "text-[var(--foreground)]"}`}>
                                             {getDaysRemaining()} {t("profile.days")}
                                         </p>
                                     </div>
@@ -339,7 +339,7 @@ export default function ProfilePage() {
                         ) : (
                             <div className="text-center py-6">
                                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--warning-light)] mb-4">
-                                    <Crown className="w-8 h-8 text-[var(--warning)]" />
+                                    <Crown className="w-8 h-8 text-[var(--warning-strong)]" />
                                 </div>
                                 <h4 className="font-semibold text-[var(--foreground)] mb-2">{t("profile.noActiveSubscription")}</h4>
                                 <p className="text-[var(--foreground-secondary)] mb-4">

@@ -153,7 +153,7 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
 
                             <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--success-light)] flex items-center justify-center">
-                                    <span className="text-[var(--success)] font-semibold text-sm">2</span>
+                                    <span className="text-[var(--success-strong)] font-semibold text-sm">2</span>
                                 </div>
                                 <div>
                                     <h3 className="font-medium text-[var(--foreground)]">Без ограничения времени</h3>
@@ -165,7 +165,7 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
 
                             <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--info-light)] flex items-center justify-center">
-                                    <span className="text-[var(--info)] font-semibold text-sm">3</span>
+                                    <span className="text-[var(--info-strong)] font-semibold text-sm">3</span>
                                 </div>
                                 <div>
                                     <h3 className="font-medium text-[var(--foreground)]">Полная проверка знаний</h3>
@@ -182,9 +182,9 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
             {/* Tips */}
             <div className="bg-[var(--info-light)] border border-[var(--info)]/20 rounded-lg p-4 mb-8">
                 <div className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-[var(--info)] flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-[var(--info-strong)] flex-shrink-0 mt-0.5" />
                     <div>
-                        <p className="font-medium text-[var(--info)]">Советы для успешного прохождения</p>
+                        <p className="font-medium text-[var(--info-strong)]">Советы для успешного прохождения</p>
                         <ul className="mt-2 text-sm text-[var(--foreground-secondary)] space-y-1">
                             <li>• Внимательно читайте каждый вопрос</li>
                             <li>• Не торопитесь с ответом</li>

@@ -151,7 +151,7 @@ export default function NavBar() {
                         <div className="h-px bg-[var(--border)] my-2" />
                         <button
                           onClick={handleSignOut}
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[var(--danger)] hover:bg-[var(--danger-light)] w-full"
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[var(--danger-strong)] hover:bg-[var(--danger-light)] w-full"
                         >
                           <LogOut className="w-4 h-4" />
                           {t("nav.logout")}
@@ -240,7 +240,7 @@ export default function NavBar() {
                   </Link>
                   <button
                     onClick={() => { handleSignOut(); setIsOpen(false); }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[var(--danger)] hover:bg-[var(--danger-light)]"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[var(--danger-strong)] hover:bg-[var(--danger-light)]"
                   >
                     <LogOut className="w-5 h-5" />
                     {t("nav.logout")}

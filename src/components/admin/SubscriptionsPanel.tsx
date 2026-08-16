@@ -30,17 +30,17 @@ export default function SubscriptionsPanel({
             <div className="grid sm:grid-cols-3 gap-4">
                 <div className="p-4 rounded-lg bg-[var(--success-light)] border border-[var(--success)]/20">
                     <div className="flex items-center gap-2 mb-2">
-                        <Crown className="w-5 h-5 text-[var(--success)]" />
+                        <Crown className="w-5 h-5 text-[var(--success-strong)]" />
                         <span className="font-medium text-[var(--foreground)]">{t("admin.activeSubscriptions")}</span>
                     </div>
-                    <p className="text-2xl font-bold text-[var(--success)]">{usersWithSub.length}</p>
+                    <p className="text-2xl font-bold text-[var(--success-strong)]">{usersWithSub.length}</p>
                 </div>
                 <div className="p-4 rounded-lg bg-[var(--warning-light)] border border-[var(--warning)]/20">
                     <div className="flex items-center gap-2 mb-2">
-                        <Clock className="w-5 h-5 text-[var(--warning)]" />
+                        <Clock className="w-5 h-5 text-[var(--warning-strong)]" />
                         <span className="font-medium text-[var(--foreground)]">{t("admin.withoutSubscription")}</span>
                     </div>
-                    <p className="text-2xl font-bold text-[var(--warning)]">{usersWithoutSub.length}</p>
+                    <p className="text-2xl font-bold text-[var(--warning-strong)]">{usersWithoutSub.length}</p>
                 </div>
                 <div className="p-4 rounded-lg bg-[var(--primary-light)] border border-[var(--primary)]/20">
                     <div className="flex items-center gap-2 mb-2">
@@ -56,7 +56,7 @@ export default function SubscriptionsPanel({
             {/* Active subscriptions */}
             <div>
                 <h3 className="font-semibold text-[var(--foreground)] mb-4 flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-[var(--success)]" />
+                    <CheckCircle className="w-5 h-5 text-[var(--success-strong)]" />
                     {t("admin.activeSubscriptionsTitle")}
                 </h3>
                 {usersWithSub.length === 0 ? (
@@ -78,7 +78,7 @@ export default function SubscriptionsPanel({
                                     <tr key={user.id} className="border-b border-[var(--border)] hover:bg-[var(--border)]/30">
                                         <td className="py-3 px-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="avatar w-8 h-8 text-xs bg-gradient-to-br from-yellow-400 to-orange-500 text-white">
+                                                <div className="avatar w-8 h-8 text-xs bg-gradient-to-br from-[var(--premium)] to-[var(--warning)] text-[var(--on-premium)]">
                                                     {initial(user)}
                                                 </div>
                                                 <span className="font-medium text-[var(--foreground)]">{displayName(user)}</span>
@@ -129,7 +129,7 @@ export default function SubscriptionsPanel({
             {/* Users without subscription */}
             <div>
                 <h3 className="font-semibold text-[var(--foreground)] mb-4 flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-[var(--warning)]" />
+                    <Clock className="w-5 h-5 text-[var(--warning-strong)]" />
                     {t("admin.studentsWithoutSub")}
                 </h3>
                 {usersWithoutSub.length === 0 ? (

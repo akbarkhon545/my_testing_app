@@ -83,7 +83,7 @@ export default function ResultPage({ params }: ResultPageProps) {
             {/* Result Card */}
             <div className="card overflow-hidden">
                 {/* Header */}
-                <div className={`p-8 text-center ${passed ? "bg-gradient-to-br from-green-500 to-emerald-600" : "bg-gradient-to-br from-red-500 to-rose-600"}`}>
+                <div className={`p-8 text-center ${passed ? "bg-gradient-to-br from-[var(--success)] to-[var(--success-strong)]" : "bg-gradient-to-br from-[var(--danger)] to-[var(--danger-strong)]"}`}>
                     <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/20 mb-4">
                         {passed ? (
                             <Trophy className="w-10 h-10 text-white" />
@@ -127,7 +127,7 @@ export default function ResultPage({ params }: ResultPageProps) {
                                 />
                             </svg>
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <span className={`text-4xl font-bold ${passed ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>
+                                <span className={`text-4xl font-bold ${passed ? "text-[var(--success-strong)]" : "text-[var(--danger-strong)]"}`}>
                                     {animatedScore}%
                                 </span>
                             </div>
@@ -137,7 +137,7 @@ export default function ResultPage({ params }: ResultPageProps) {
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                         <div className="stats-card">
-                            <div className="stats-icon text-[var(--success)]">
+                            <div className="stats-icon text-[var(--success-strong)]">
                                 <CheckCircle className="w-8 h-8 mx-auto" />
                             </div>
                             <div className="stats-number">{result.correct}/{result.total}</div>
@@ -153,7 +153,7 @@ export default function ResultPage({ params }: ResultPageProps) {
                         </div>
 
                         <div className="stats-card">
-                            <div className={`stats-icon ${passed ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>
+                            <div className={`stats-icon ${passed ? "text-[var(--success-strong)]" : "text-[var(--danger-strong)]"}`}>
                                 <Award className="w-8 h-8 mx-auto" />
                             </div>
                             <div className="stats-number">{passingScore}%</div>

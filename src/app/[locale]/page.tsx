@@ -76,12 +76,12 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#2a3a4a] via-[#3a4a5a] to-[#4a5a6a] p-8 md:p-12 mb-12">
         {/* Background decorations */}
-        <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-[#4fc8e8]/20 blur-3xl" />
+        <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-[var(--accent)]/20 blur-3xl" />
         <div className="absolute -bottom-24 -left-24 w-64 h-64 rounded-full bg-[#5a7a94]/30 blur-3xl" />
 
         <div className="relative z-10 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 text-white text-sm font-medium mb-6 backdrop-blur-sm border border-white/20">
-            <Sparkles className="w-4 h-4 text-[#4fc8e8]" />
+            <Sparkles className="w-4 h-4 text-[var(--accent)]" />
             {t("hero.badge")}
           </div>
 
@@ -103,7 +103,7 @@ export default function HomePage() {
             </Link>
             <Link
               href={`/${locale}/tests`}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#4fc8e8]/20 font-semibold hover:bg-[#4fc8e8]/30 transition-all border border-[#4fc8e8]/50"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[var(--accent)]/20 font-semibold hover:bg-[var(--accent)]/30 transition-all border border-[var(--accent)]/50"
               style={{ color: '#ffffff' }}
             >
               {t("hero.startTesting")}
@@ -141,8 +141,8 @@ export default function HomePage() {
       {/* Pricing Section */}
       <section className="mb-12">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 text-sm font-medium mb-4">
-            <Crown className="w-4 h-4 text-yellow-500" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-[var(--premium)]/10 to-[var(--warning)]/10 border border-[var(--premium)]/20 text-sm font-medium mb-4">
+            <Crown className="w-4 h-4 text-[var(--premium-strong)]" />
             <span className="text-[var(--foreground)]">{t("pricing.title")}</span>
           </div>
           <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">
@@ -171,7 +171,7 @@ export default function HomePage() {
             <ul className="space-y-2 mb-6">
               {monthlyFeatures.map((item, i) => (
                 <li key={i} className="flex items-center gap-2 text-sm text-[var(--foreground-secondary)]">
-                  <Check className="w-4 h-4 text-[var(--success)]" />
+                  <Check className="w-4 h-4 text-[var(--success-strong)]" />
                   {item}
                 </li>
               ))}
@@ -189,8 +189,8 @@ export default function HomePage() {
               </span>
             </div>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                <Crown className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[var(--premium)] to-[var(--warning)] flex items-center justify-center">
+                <Crown className="w-6 h-6 text-[var(--on-premium)]" />
               </div>
               <div>
                 <h3 className="font-semibold text-[var(--foreground)]">{t("pricing.yearly")}</h3>
@@ -203,7 +203,7 @@ export default function HomePage() {
             <ul className="space-y-2 mb-6">
               {yearlyFeatures.map((item, i) => (
                 <li key={i} className="flex items-center gap-2 text-sm text-[var(--foreground-secondary)]">
-                  <Check className="w-4 h-4 text-[var(--success)]" />
+                  <Check className="w-4 h-4 text-[var(--success-strong)]" />
                   {item}
                 </li>
               ))}

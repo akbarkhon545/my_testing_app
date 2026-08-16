@@ -101,7 +101,7 @@ export default function SignupPage() {
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-sm text-[var(--danger)] mt-1">{errors.email.message}</p>
+                  <p className="text-sm text-[var(--danger-strong)] mt-1">{errors.email.message}</p>
                 )}
               </div>
 
@@ -129,8 +129,8 @@ export default function SignupPage() {
                 <div className="mt-2 space-y-1">
                   {passwordChecks.map((check, idx) => (
                     <div key={idx} className="flex items-center gap-2 text-xs">
-                      <Check className={`w-3 h-3 ${check.valid ? "text-[var(--success)]" : "text-[var(--foreground-muted)]"}`} />
-                      <span className={check.valid ? "text-[var(--success)]" : "text-[var(--foreground-muted)]"}>
+                      <Check className={`w-3 h-3 ${check.valid ? "text-[var(--success-strong)]" : "text-[var(--foreground-muted)]"}`} />
+                      <span className={check.valid ? "text-[var(--success-strong)]" : "text-[var(--foreground-muted)]"}>
                         {check.label}
                       </span>
                     </div>
@@ -138,7 +138,7 @@ export default function SignupPage() {
                 </div>
 
                 {errors.password && (
-                  <p className="text-sm text-[var(--danger)] mt-1">{errors.password.message}</p>
+                  <p className="text-sm text-[var(--danger-strong)] mt-1">{errors.password.message}</p>
                 )}
               </div>
 
@@ -155,7 +155,7 @@ export default function SignupPage() {
                   />
                 </div>
                 {errors.confirmPassword && (
-                  <p className="text-sm text-[var(--danger)] mt-1">{errors.confirmPassword.message}</p>
+                  <p className="text-sm text-[var(--danger-strong)] mt-1">{errors.confirmPassword.message}</p>
                 )}
               </div>
 

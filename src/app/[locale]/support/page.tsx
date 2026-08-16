@@ -59,7 +59,7 @@ export default function SupportPage() {
                     className="card p-6 text-center hover:scale-105 transition-transform group"
                 >
                     <div className="w-14 h-14 rounded-full bg-[var(--primary-light)] flex items-center justify-center mx-auto mb-4 group-hover:bg-[var(--primary)] transition-colors">
-                        <Mail className="w-6 h-6 text-[var(--primary)] group-hover:text-white transition-colors" />
+                        <Mail className="w-6 h-6 text-[var(--primary)] group-hover:text-[var(--on-success)] transition-colors" />
                     </div>
                     <h3 className="font-semibold text-[var(--foreground)] mb-1">Email</h3>
                     <p className="text-sm text-[var(--foreground-secondary)] mb-2">akbarkhon545@gmail.com</p>
@@ -73,7 +73,7 @@ export default function SupportPage() {
                     className="card p-6 text-center hover:scale-105 transition-transform group"
                 >
                     <div className="w-14 h-14 rounded-full bg-[#229ED9]/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-[#229ED9] transition-colors">
-                        <Send className="w-6 h-6 text-[#229ED9] group-hover:text-white transition-colors" />
+                        <Send className="w-6 h-6 text-[#229ED9] group-hover:text-[var(--on-success)] transition-colors" />
                     </div>
                     <h3 className="font-semibold text-[var(--foreground)] mb-1">Telegram</h3>
                     <p className="text-sm text-[var(--foreground-secondary)] mb-2">@akbarkhonfakhriddinov</p>
@@ -85,11 +85,11 @@ export default function SupportPage() {
                     className="card p-6 text-center hover:scale-105 transition-transform group"
                 >
                     <div className="w-14 h-14 rounded-full bg-[var(--success-light)] flex items-center justify-center mx-auto mb-4 group-hover:bg-[var(--success)] transition-colors">
-                        <Phone className="w-6 h-6 text-[var(--success)] group-hover:text-white transition-colors" />
+                        <Phone className="w-6 h-6 text-[var(--success-strong)] group-hover:text-[var(--on-success)] transition-colors" />
                     </div>
                     <h3 className="font-semibold text-[var(--foreground)] mb-1">{t("support.phone")}</h3>
                     <p className="text-sm text-[var(--foreground-secondary)] mb-2">+998 93 167 49 59</p>
-                    <span className="text-xs text-[var(--success)]">{t("support.call")}</span>
+                    <span className="text-xs text-[var(--success-strong)]">{t("support.call")}</span>
                 </a>
             </div>
 

@@ -114,7 +114,7 @@ export default function Footer() {
                         © {currentYear} EduPlatform. {t("footer.allRights")}
                     </p>
                     <p className="flex items-center gap-1 text-sm text-[var(--foreground-muted)]">
-                        {t("footer.madeWith")} <Heart className="w-4 h-4 text-red-500" /> {t("footer.inUzbekistan")}
+                        {t("footer.madeWith")} <Heart className="w-4 h-4 text-[var(--danger)]" /> {t("footer.inUzbekistan")}
                     </p>
                 </div>
             </div>

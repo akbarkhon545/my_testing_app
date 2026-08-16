@@ -123,16 +123,16 @@ export default function SubjectTestPage() {
     }
   };
 
-  if (loading) return <div className="text-sm text-gray-600">Загрузка...</div>;
-  if (error) return <div className="text-sm text-red-600">{error}</div>;
-  if (!subject) return <div className="text-sm text-gray-600">Предмет не найден</div>;
+  if (loading) return <div className="text-sm text-[var(--foreground-secondary)]">Загрузка...</div>;
+  if (error) return <div className="text-sm text-[var(--danger-strong)]">{error}</div>;
+  if (!subject) return <div className="text-sm text-[var(--foreground-secondary)]">Предмет не найден</div>;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Тест: {subject.name}</h1>
         {!started && (
-          <p className="text-gray-600 mt-1">Выберите режим и начните тест</p>
+          <p className="text-[var(--foreground-secondary)] mt-1">Выберите режим и начните тест</p>
         )}
       </div>
 
@@ -161,17 +161,17 @@ export default function SubjectTestPage() {
           <button
             onClick={startTest}
             disabled={total === 0}
-            className="inline-flex h-10 items-center justify-center rounded-md bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+            className="inline-flex h-10 items-center justify-center rounded-md bg-[var(--primary)] px-4 text-sm font-medium text-[var(--on-primary)] hover:bg-[var(--primary-hover)] disabled:opacity-50"
           >
             Начать
           </button>
           {total === 0 && (
-            <p className="text-sm text-gray-600">Для этого предмета нет вопросов</p>
+            <p className="text-sm text-[var(--foreground-secondary)]">Для этого предмета нет вопросов</p>
           )}
         </div>
       ) : !finished ? (
         <div className="space-y-4">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-[var(--foreground-secondary)]">
             Вопрос {currentIndex + 1} из {total}
           </div>
           <div className="text-base font-medium">{current?.question_text}</div>
@@ -191,7 +191,7 @@ export default function SubjectTestPage() {
             <button
               onClick={next}
               disabled={!current || answersMap[current.id] === undefined}
-              className="inline-flex h-10 items-center justify-center rounded-md bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50"
+              className="inline-flex h-10 items-center justify-center rounded-md bg-[var(--primary)] px-4 text-sm font-medium text-[var(--on-primary)] hover:bg-[var(--primary-hover)] disabled:opacity-50"
             >
               {currentIndex === total - 1 ? "Завершить" : "Далее"}
             </button>
@@ -215,20 +215,20 @@ function ResultsView({
   onExit: () => void;
 }) {
   if (!summary) {
-    return <div className="text-sm text-gray-600">Подсчёт результата...</div>;
+    return <div className="text-sm text-[var(--foreground-secondary)]">Подсчёт результата...</div>;
   }
 
   return (
     <div className="space-y-4">
       <div>
         <h2 className="text-xl font-semibold">Результат</h2>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-[var(--foreground-secondary)]">
           Верных ответов: {summary.correct} из {summary.total} ({summary.score}%)
         </p>
       </div>
       <button
         onClick={onExit}
-        className="inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium hover:bg-gray-50"
+        className="inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium hover:bg-[var(--border)]/40"
       >
         Вернуться к выбору предмета
       </button>

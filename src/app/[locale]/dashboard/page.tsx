@@ -189,7 +189,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="stats-card">
-                <div className="stats-icon text-yellow-500">
+                <div className="stats-icon text-[var(--premium-strong)]">
                   <Trophy className="w-8 h-8 mx-auto" />
                 </div>
                 <div className="stats-number">{avgTotalScore}%</div>
@@ -216,15 +216,15 @@ export default function DashboardPage() {
             </p>
             <ul className="space-y-2 mb-6">
               <li className="flex items-center gap-2 text-[var(--foreground-secondary)]">
-                <CheckCircle className="w-4 h-4 text-[var(--success)]" />
+                <CheckCircle className="w-4 h-4 text-[var(--success-strong)]" />
                 {t("dashboard.selectSubject")}
               </li>
               <li className="flex items-center gap-2 text-[var(--foreground-secondary)]">
-                <CheckCircle className="w-4 h-4 text-[var(--success)]" />
+                <CheckCircle className="w-4 h-4 text-[var(--success-strong)]" />
                 {t("dashboard.answerQuestions")}
               </li>
               <li className="flex items-center gap-2 text-[var(--foreground-secondary)]">
-                <CheckCircle className="w-4 h-4 text-[var(--success)]" />
+                <CheckCircle className="w-4 h-4 text-[var(--success-strong)]" />
                 {t("dashboard.getResult")}
               </li>
             </ul>
