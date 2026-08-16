@@ -8,7 +8,7 @@ import { loginUser } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
-import { Mail, Lock, LogIn, Eye, EyeOff, Sparkles, MessageCircle, Phone, Send } from "lucide-react";
+import { Mail, Lock, LogIn, Eye, EyeOff, Sparkles, Phone, Send } from "lucide-react";
 
 const schema = z.object({
   email: z.string().email("Введите корректный email"),
@@ -44,7 +44,7 @@ export default function LoginPage() {
       } else {
         router.push(`/${locale}/dashboard`);
       }
-    } catch (err: any) {
+    } catch {
       setError("Ошибка при входе. Попробуйте позже.");
     } finally {
       setLoading(false);

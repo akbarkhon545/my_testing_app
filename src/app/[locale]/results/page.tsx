@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import Link from "next/link";
 import { getUserSession } from "@/app/actions/auth";
 import { getUserResults } from "@/app/actions/admin";
@@ -23,7 +23,6 @@ export default function ResultsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const locale = useLocale();
-  const t = useTranslations();
 
   useEffect(() => {
     (async () => {

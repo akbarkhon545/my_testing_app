@@ -2,9 +2,9 @@
 
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
-import { useLocale, useTranslations } from "next-intl";
-import { Clock, CheckCircle, AlertCircle, ArrowRight, Book, Award, Crown, Lock } from "lucide-react";
-import { getUserSession, getUserProfile } from "@/app/actions/auth";
+import { useLocale } from "next-intl";
+import { CheckCircle, AlertCircle, ArrowRight, Book, Award, Crown, Lock } from "lucide-react";
+import { getUserProfile } from "@/app/actions/auth";
 
 interface InstructionsPageProps {
     params: Promise<{ locale: string; subjectId: string }>;
@@ -15,7 +15,6 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
     const resolvedParams = use(params);
     const resolvedSearchParams = use(searchParams);
     const locale = useLocale();
-    const t = useTranslations();
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [hasSubscription, setHasSubscription] = useState(false);

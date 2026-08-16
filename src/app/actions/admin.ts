@@ -1,5 +1,7 @@
 "use server";
 
+import { z } from "zod";
+import bcrypt from "bcryptjs";
 import prisma from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { ADMIN_EMAIL, isAdmin, requireAdmin, requireUser } from "@/lib/access";
@@ -7,19 +9,46 @@ import { ADMIN_EMAIL, isAdmin, requireAdmin, requireUser } from "@/lib/access";
 // Access checks live in @/lib/access — they read the user fresh from the
 // database instead of trusting the (up to 2h stale) session cookie.
 
+const idSchema = z.coerce.number().int().positive();
+const nameSchema = z.string().trim().min(1, "Название не может быть пустым").max(200);
+const roleSchema = z
+    .string()
+    .trim()
+    .toUpperCase()
+    .pipe(z.enum(["STUDENT", "TEACHER", "ADMIN"]));
+
+/** Everything the admin UI needs about a user — the password hash never leaves the server. */
+const USER_SELECT = {
+    id: true,
+    name: true,
+    email: true,
+    role: true,
+    avatarUrl: true,
+    subscriptionPlan: true,
+    subscriptionExpiresAt: true,
+    createdAt: true,
+} as const;
+
+function firstIssue(error: z.ZodError): string {
+    return error.issues[0]?.message || "Некорректные данные";
+}
+
 // --- Faculties ---
 
 export async function getFaculties() {
     await requireUser();
-    return await (prisma as any).faculty.findMany({
+    return await prisma.faculty.findMany({
         orderBy: { name: "asc" },
     });
 }
 
 export async function addFaculty(name: string) {
     await requireAdmin();
-    const res = await (prisma as any).faculty.create({
-        data: { name },
+    const parsed = nameSchema.safeParse(name);
+    if (!parsed.success) throw new Error(firstIssue(parsed.error));
+
+    const res = await prisma.faculty.create({
+        data: { name: parsed.data },
     });
     revalidatePath("/");
     return res;
@@ -27,9 +56,12 @@ export async function addFaculty(name: string) {
 
 export async function updateFaculty(id: number, name: string) {
     await requireAdmin();
-    const res = await (prisma as any).faculty.update({
-        where: { id },
-        data: { name },
+    const parsed = z.object({ id: idSchema, name: nameSchema }).safeParse({ id, name });
+    if (!parsed.success) throw new Error(firstIssue(parsed.error));
+
+    const res = await prisma.faculty.update({
+        where: { id: parsed.data.id },
+        data: { name: parsed.data.name },
     });
     revalidatePath("/");
     return res;
@@ -37,8 +69,16 @@ export async function updateFaculty(id: number, name: string) {
 
 export async function deleteFaculty(id: number) {
     await requireAdmin();
-    await (prisma as any).faculty.delete({
-        where: { id },
+    const parsed = idSchema.safeParse(id);
+    if (!parsed.success) throw new Error("Неверный идентификатор");
+
+    const subjectCount = await prisma.subject.count({ where: { faculty_id: parsed.data } });
+    if (subjectCount > 0) {
+        throw new Error(`Нельзя удалить факультет: к нему привязано предметов — ${subjectCount}`);
+    }
+
+    await prisma.faculty.delete({
+        where: { id: parsed.data },
     });
     revalidatePath("/");
 }
@@ -47,7 +87,7 @@ export async function deleteFaculty(id: number) {
 
 export async function getSubjects() {
     await requireUser();
-    return await (prisma as any).subject.findMany({
+    return await prisma.subject.findMany({
         include: { faculty: true },
         orderBy: { name: "asc" },
     });
@@ -55,10 +95,13 @@ export async function getSubjects() {
 
 export async function addSubject(name: string, facultyId: number) {
     await requireAdmin();
-    const res = await (prisma as any).subject.create({
+    const parsed = z.object({ name: nameSchema, facultyId: idSchema }).safeParse({ name, facultyId });
+    if (!parsed.success) throw new Error(firstIssue(parsed.error));
+
+    const res = await prisma.subject.create({
         data: {
-            name,
-            faculty_id: facultyId,
+            name: parsed.data.name,
+            faculty_id: parsed.data.facultyId,
         },
     });
     revalidatePath("/");
@@ -67,11 +110,16 @@ export async function addSubject(name: string, facultyId: number) {
 
 export async function updateSubject(id: number, name: string, facultyId: number) {
     await requireAdmin();
-    const res = await (prisma as any).subject.update({
-        where: { id },
+    const parsed = z
+        .object({ id: idSchema, name: nameSchema, facultyId: idSchema })
+        .safeParse({ id, name, facultyId });
+    if (!parsed.success) throw new Error(firstIssue(parsed.error));
+
+    const res = await prisma.subject.update({
+        where: { id: parsed.data.id },
         data: {
-            name,
-            faculty_id: facultyId,
+            name: parsed.data.name,
+            faculty_id: parsed.data.facultyId,
         },
     });
     revalidatePath("/");
@@ -80,16 +128,27 @@ export async function updateSubject(id: number, name: string, facultyId: number)
 
 export async function deleteSubject(id: number) {
     await requireAdmin();
-    await (prisma as any).subject.delete({
-        where: { id },
+    const parsed = idSchema.safeParse(id);
+    if (!parsed.success) throw new Error("Неверный идентификатор");
+
+    const questionCount = await prisma.question.count({ where: { subject_id: parsed.data } });
+    if (questionCount > 0) {
+        throw new Error(`Нельзя удалить предмет: в нём вопросов — ${questionCount}`);
+    }
+
+    await prisma.subject.delete({
+        where: { id: parsed.data },
     });
     revalidatePath("/");
 }
 
 export async function getSubjectById(id: number) {
     await requireUser();
-    return await (prisma as any).subject.findUnique({
-        where: { id },
+    const parsed = idSchema.safeParse(id);
+    if (!parsed.success) return null;
+
+    return await prisma.subject.findUnique({
+        where: { id: parsed.data },
         include: { faculty: true },
     });
 }
@@ -97,8 +156,11 @@ export async function getSubjectById(id: number) {
 /** Admin-only: includes correct answers. Students go through @/app/actions/tests. */
 export async function getQuestionsBySubject(subjectId: number) {
     await requireAdmin();
-    return await (prisma as any).question.findMany({
-        where: { subject_id: subjectId },
+    const parsed = idSchema.safeParse(subjectId);
+    if (!parsed.success) throw new Error("Неверный предмет");
+
+    return await prisma.question.findMany({
+        where: { subject_id: parsed.data },
         orderBy: { createdAt: "desc" },
     });
 }
@@ -107,35 +169,63 @@ export async function getQuestionsBySubject(subjectId: number) {
 
 export async function getUsers() {
     await requireAdmin();
-    return await (prisma as any).user.findMany({
+    return await prisma.user.findMany({
+        select: USER_SELECT,
         orderBy: { createdAt: "desc" },
     });
 }
 
-export async function updateSubscription(userId: string, plan: "MONTHLY" | "YEARLY" | "FREE", expiresAt: string | null) {
+export async function updateSubscription(
+    userId: string,
+    plan: "MONTHLY" | "YEARLY" | "FREE",
+    expiresAt: string | null
+) {
     try {
         await requireAdmin();
-        await (prisma as any).user.update({
-            where: { id: userId },
+
+        const parsed = z
+            .object({
+                userId: z.string().min(1),
+                plan: z.enum(["FREE", "MONTHLY", "YEARLY"]),
+                expiresAt: z
+                    .string()
+                    .nullable()
+                    .refine((v) => v === null || !Number.isNaN(Date.parse(v)), "Некорректная дата"),
+            })
+            .safeParse({ userId, plan, expiresAt });
+        if (!parsed.success) throw new Error(firstIssue(parsed.error));
+
+        await prisma.user.update({
+            where: { id: parsed.data.userId },
             data: {
-                subscriptionPlan: plan,
-                subscriptionExpiresAt: expiresAt ? new Date(expiresAt) : null,
+                subscriptionPlan: parsed.data.plan,
+                subscriptionExpiresAt: parsed.data.expiresAt ? new Date(parsed.data.expiresAt) : null,
             },
         });
         revalidatePath("/admin");
         return { success: true };
-    } catch (e: any) {
+    } catch (e) {
         console.error("Update sub error:", e);
-        return { success: false, error: e.message || "Failed to update" };
+        return { success: false, error: e instanceof Error ? e.message : "Failed to update" };
     }
 }
 
-export async function addUser(data: any) {
+const newUserSchema = z.object({
+    name: z.string().trim().min(1, "Введите имя").max(80),
+    email: z.string().trim().toLowerCase().email("Некорректный email").max(254),
+    password: z.string().min(8, "Пароль должен содержать минимум 8 символов").max(128),
+    role: roleSchema,
+});
+
+export async function addUser(data: unknown) {
     await requireAdmin();
-    const { name, email, password, role } = data;
+
+    const parsed = newUserSchema.safeParse(data);
+    if (!parsed.success) throw new Error(firstIssue(parsed.error));
+    const { name, email, password, role } = parsed.data;
 
     // Check if user exists
-    const existingUser = await (prisma as any).user.findUnique({
+    const existingUser = await prisma.user.findUnique({
         where: { email },
     });
 
@@ -143,76 +233,92 @@ export async function addUser(data: any) {
         throw new Error("Пользователь с таким email уже существует");
     }
 
-    const bcrypt = require("bcryptjs");
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const res = await (prisma as any).user.create({
+    const res = await prisma.user.create({
         data: {
             name,
             email,
             password: hashedPassword,
-            role: role.toUpperCase(),
+            role,
         },
+        select: USER_SELECT,
     });
     revalidatePath("/admin");
     return res;
 }
 
-export async function updateUser(id: string, data: any) {
-    await requireAdmin();
-    const { name, email, password, role } = data;
-    const updateData: any = {
-        name,
-        email,
-        role: role.toUpperCase(),
-    };
+const updateUserSchema = newUserSchema.extend({
+    // Empty means "keep the current password"
+    password: z.string().max(128).optional().or(z.literal("")),
+});
 
-    if (password) {
-        const bcrypt = require("bcryptjs");
-        updateData.password = await bcrypt.hash(password, 10);
+export async function updateUser(id: string, data: unknown) {
+    await requireAdmin();
+
+    const parsed = updateUserSchema.safeParse(data);
+    if (!parsed.success) throw new Error(firstIssue(parsed.error));
+    const { name, email, password, role } = parsed.data;
+
+    if (password && password.length < 8) {
+        throw new Error("Пароль должен содержать минимум 8 символов");
     }
 
-    const res = await (prisma as any).user.update({
+    const res = await prisma.user.update({
         where: { id },
-        data: updateData,
+        data: {
+            name,
+            email,
+            role,
+            ...(password ? { password: await bcrypt.hash(password, 10) } : {}),
+        },
+        select: USER_SELECT,
     });
     revalidatePath("/admin");
     return res;
+}
+
+/** Loads a user, refusing to touch the bootstrap admin or the caller's own account. */
+async function loadModifiableUser(id: string, currentUserId: string) {
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) throw new Error("Пользователь не найден");
+    if (user.email?.toLowerCase() === ADMIN_EMAIL) {
+        throw new Error("Невозможно изменить главного администратора");
+    }
+    if (user.id === currentUserId) {
+        throw new Error("Нельзя выполнить это действие над собственной учётной записью");
+    }
+    return user;
 }
 
 export async function deleteUser(id: string) {
-    await requireAdmin();
+    const admin = await requireAdmin();
+    await loadModifiableUser(id, admin.id);
 
-    // Prevent deleting the main admin
-    const user = await (prisma as any).user.findUnique({ where: { id } });
-    if (user?.email?.toLowerCase() === ADMIN_EMAIL) {
-        throw new Error("Невозможно удалить главного администратора");
-    }
-
-    await (prisma as any).user.delete({
+    // Results reference the user, so they go first.
+    await prisma.testResult.deleteMany({ where: { user_id: id } });
+    await prisma.user.delete({
         where: { id },
     });
     revalidatePath("/admin");
 }
 
+const DEACTIVATED_PREFIX = "[ДЕАКТИВИРОВАН]";
+
 // Deactivate user - scramble password so they can't log in
 export async function deactivateUser(id: string) {
-    await requireAdmin();
+    const admin = await requireAdmin();
+    const user = await loadModifiableUser(id, admin.id);
 
-    const user = await (prisma as any).user.findUnique({ where: { id } });
-    if (user?.email?.toLowerCase() === ADMIN_EMAIL) {
-        throw new Error("Невозможно деактивировать главного администратора");
-    }
-
-    const bcrypt = require("bcryptjs");
     // Set password to a random hash that can't be matched
-    const blockedHash = await bcrypt.hash("DEACTIVATED_" + Date.now() + Math.random(), 10);
+    const blockedHash = await bcrypt.hash(`DEACTIVATED_${id}_${Math.random()}`, 10);
+    const baseName = (user.name || "").replace(`${DEACTIVATED_PREFIX} `, "").trim();
 
-    await (prisma as any).user.update({
+    await prisma.user.update({
         where: { id },
         data: {
             password: blockedHash,
-            name: user.name ? `[ДЕАКТИВИРОВАН] ${user.name.replace("[ДЕАКТИВИРОВАН] ", "")}` : "[ДЕАКТИВИРОВАН]",
+            name: baseName ? `${DEACTIVATED_PREFIX} ${baseName}` : DEACTIVATED_PREFIX,
         },
     });
     revalidatePath("/admin");
@@ -220,37 +326,38 @@ export async function deactivateUser(id: string) {
 
 // Activate user - set a new temporary password
 export async function activateUser(id: string, newPassword: string) {
-    await requireAdmin();
+    const admin = await requireAdmin();
+    const user = await loadModifiableUser(id, admin.id);
 
-    const bcrypt = require("bcryptjs");
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const parsed = z.string().min(8, "Пароль должен содержать минимум 8 символов").max(128).safeParse(newPassword);
+    if (!parsed.success) throw new Error(firstIssue(parsed.error));
 
-    const user = await (prisma as any).user.findUnique({ where: { id } });
+    const hashedPassword = await bcrypt.hash(parsed.data, 10);
+    const restoredName = (user.name || "").replace(`${DEACTIVATED_PREFIX} `, "").replace(DEACTIVATED_PREFIX, "").trim();
 
-    await (prisma as any).user.update({
+    await prisma.user.update({
         where: { id },
         data: {
             password: hashedPassword,
-            name: user?.name?.replace("[ДЕАКТИВИРОВАН] ", "") || user?.name,
+            name: restoredName || null,
         },
     });
     revalidatePath("/admin");
 }
 
-
 export async function getAdminStats() {
     await requireAdmin();
-    const [userCount, facultyCount, subjectCount, questionCount] = await Promise.all([
-        (prisma as any).user.count(),
-        (prisma as any).faculty.count(),
-        (prisma as any).subject.count(),
-        (prisma as any).question.count(),
+    const [userCount, facultyCount, subjectCount, questionCount, monthlySubs, yearlySubs] = await Promise.all([
+        prisma.user.count(),
+        prisma.faculty.count(),
+        prisma.subject.count(),
+        prisma.question.count(),
+        prisma.user.count({ where: { subscriptionPlan: "MONTHLY" } }),
+        prisma.user.count({ where: { subscriptionPlan: "YEARLY" } }),
     ]);
 
     // Simple income approximation
-    const monthlySubs = await (prisma as any).user.count({ where: { subscriptionPlan: "MONTHLY" } });
-    const yearlySubs = await (prisma as any).user.count({ where: { subscriptionPlan: "YEARLY" } });
-    const estimatedIncome = (monthlySubs * 25000) + (yearlySubs * 50000);
+    const estimatedIncome = monthlySubs * 25000 + yearlySubs * 50000;
 
     return {
         userCount,
@@ -261,59 +368,106 @@ export async function getAdminStats() {
     };
 }
 
+// --- Questions ---
+
 /** Admin-only: includes correct answers. */
 export async function getQuestions() {
     await requireAdmin();
-    return await (prisma as any).question.findMany({
+    return await prisma.question.findMany({
         include: { subject: true },
         orderBy: { createdAt: "desc" },
     });
 }
 
-export async function addQuestions(questions: any[]) {
+const questionTextSchema = z.string().trim().min(1, "Заполните все поля вопроса").max(2000);
+
+const bulkQuestionSchema = z.object({
+    subject_id: idSchema,
+    question_text: questionTextSchema,
+    correct_answer: questionTextSchema,
+    answer2: questionTextSchema,
+    answer3: questionTextSchema,
+    answer4: questionTextSchema,
+});
+
+export async function addQuestions(questions: unknown[]) {
     await requireAdmin();
-    await (prisma as any).question.createMany({
-        data: questions.map(q => ({
-            subject_id: q.subject_id,
-            question_text: q.question_text,
-            correct_answer: q.correct_answer,
-            answer2: q.answer2,
-            answer3: q.answer3,
-            answer4: q.answer4,
-        }))
+
+    const parsed = z.array(bulkQuestionSchema).min(1, "Нет вопросов для импорта").max(5000).safeParse(questions);
+    if (!parsed.success) {
+        // Point at the offending row so a bad spreadsheet cell is easy to find.
+        const issue = parsed.error.issues[0];
+        const rowIndex = typeof issue?.path[0] === "number" ? issue.path[0] + 1 : null;
+        const field = issue?.path[1];
+        throw new Error(
+            rowIndex
+                ? `Строка ${rowIndex}${field ? ` (${String(field)})` : ""}: ${issue.message}`
+                : firstIssue(parsed.error)
+        );
+    }
+
+    await prisma.question.createMany({
+        data: parsed.data,
     });
     revalidatePath("/admin");
 }
 
-export async function addQuestion(data: any) {
+const newQuestionSchema = z.object({
+    subjectId: idSchema,
+    questionText: questionTextSchema,
+    correctAnswer: questionTextSchema,
+    answer2: questionTextSchema,
+    answer3: questionTextSchema,
+    answer4: questionTextSchema,
+    explanation: z.string().trim().max(2000).nullish(),
+});
+
+export async function addQuestion(data: unknown) {
     await requireAdmin();
-    const res = await (prisma as any).question.create({
+
+    const parsed = newQuestionSchema.safeParse(data);
+    if (!parsed.success) throw new Error(firstIssue(parsed.error));
+    const q = parsed.data;
+
+    const res = await prisma.question.create({
         data: {
-            subject_id: data.subjectId,
-            question_text: data.questionText,
-            correct_answer: data.correctAnswer,
-            answer2: data.answer2,
-            answer3: data.answer3,
-            answer4: data.answer4,
-            explanation: data.explanation || null,
+            subject_id: q.subjectId,
+            question_text: q.questionText,
+            correct_answer: q.correctAnswer,
+            answer2: q.answer2,
+            answer3: q.answer3,
+            answer4: q.answer4,
+            explanation: q.explanation || null,
         },
     });
     revalidatePath("/admin");
     return res;
 }
 
-export async function updateQuestion(id: number, data: any) {
+const editQuestionSchema = bulkQuestionSchema.extend({
+    explanation: z.string().trim().max(2000).nullish(),
+});
+
+export async function updateQuestion(id: number, data: unknown) {
     await requireAdmin();
-    const res = await (prisma as any).question.update({
-        where: { id },
+
+    const parsedId = idSchema.safeParse(id);
+    if (!parsedId.success) throw new Error("Неверный идентификатор");
+
+    const parsed = editQuestionSchema.safeParse(data);
+    if (!parsed.success) throw new Error(firstIssue(parsed.error));
+    const q = parsed.data;
+
+    const res = await prisma.question.update({
+        where: { id: parsedId.data },
         data: {
-            subject_id: data.subject_id,
-            question_text: data.question_text,
-            correct_answer: data.correct_answer,
-            answer2: data.answer2,
-            answer3: data.answer3,
-            answer4: data.answer4,
-            explanation: data.explanation || null,
+            subject_id: q.subject_id,
+            question_text: q.question_text,
+            correct_answer: q.correct_answer,
+            answer2: q.answer2,
+            answer3: q.answer3,
+            answer4: q.answer4,
+            explanation: q.explanation || null,
         },
     });
     revalidatePath("/");
@@ -322,8 +476,11 @@ export async function updateQuestion(id: number, data: any) {
 
 export async function deleteQuestion(id: number) {
     await requireAdmin();
-    await (prisma as any).question.delete({
-        where: { id },
+    const parsed = idSchema.safeParse(id);
+    if (!parsed.success) throw new Error("Неверный идентификатор");
+
+    await prisma.question.delete({
+        where: { id: parsed.data },
     });
     revalidatePath("/");
 }
@@ -337,7 +494,7 @@ export async function getUserResults(userId?: string) {
         throw new Error("Доступ запрещён");
     }
 
-    return await (prisma as any).testResult.findMany({
+    return await prisma.testResult.findMany({
         where: { user_id: targetId },
         include: { subject: true },
         orderBy: { createdAt: "desc" },

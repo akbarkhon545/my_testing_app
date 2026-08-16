@@ -10,7 +10,7 @@ export async function getDashboardStats() {
     const userId = session.user.id;
 
     // Get all test results for this user
-    const results = await (prisma as any).testResult.findMany({
+    const results = await prisma.testResult.findMany({
         where: { user_id: userId },
         include: { subject: true },
     });

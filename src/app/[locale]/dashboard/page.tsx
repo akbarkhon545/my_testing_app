@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getUserSession, signOutUser } from "@/app/actions/auth";
+import { getUserSession } from "@/app/actions/auth";
 import { getDashboardStats } from "@/app/actions/stats";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import {
-  LogOut,
-  User,
   BarChart3,
   CheckCircle,
   Clock,
@@ -61,11 +59,6 @@ export default function DashboardPage() {
     }
     loadDashboard();
   }, [router, locale]);
-
-  const signOut = async () => {
-    await signOutUser();
-    router.replace(`/${locale}/auth/login`);
-  };
 
   const totalAttempts = stats.reduce((sum, s) => sum + s.attempts, 0);
   const avgTotalScore = stats.length > 0

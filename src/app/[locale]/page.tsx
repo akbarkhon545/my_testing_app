@@ -6,7 +6,6 @@ import { useTranslations, useLocale } from "next-intl";
 import { getUserSession } from "@/app/actions/auth";
 import {
   ArrowRight,
-  CheckCircle,
   Sparkles,
   BookOpen,
   Award,

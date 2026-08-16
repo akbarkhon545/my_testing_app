@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
-import { Book, Award, ChevronRight, FileQuestion, GraduationCap, AlertCircle, Crown, Lock } from "lucide-react";
-import { getUserSession, getUserProfile } from "@/app/actions/auth";
+import { Book, Award, ChevronRight, FileQuestion, GraduationCap, Crown, Lock } from "lucide-react";
+import { getUserProfile } from "@/app/actions/auth";
 import { getSubjects } from "@/app/actions/admin";
 
 export default function TestsIndexPage() {
@@ -45,7 +45,7 @@ export default function TestsIndexPage() {
       try {
         const data = await getSubjects();
         setSubjects(data);
-      } catch (e: any) {
+      } catch {
         setError("Не удалось загрузить предметы");
         setSubjects([]);
       }

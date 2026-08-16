@@ -11,8 +11,7 @@ import {
     Clock,
     Zap,
     HelpCircle,
-    ChevronDown,
-    CheckCircle
+    ChevronDown
 } from "lucide-react";
 
 export default function SupportPage() {

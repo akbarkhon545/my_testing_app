@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { getUserProfile, signOutUser } from "@/app/actions/auth";
+import { getUserProfile } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
@@ -16,7 +16,6 @@ import {
     ArrowLeft,
     CheckCircle,
     AlertCircle,
-    GraduationCap,
     Crown,
     CreditCard,
     Clock,
@@ -183,7 +182,7 @@ export default function ProfilePage() {
             }
 
             return formatted;
-        } catch (e) {
+        } catch {
             return date.toLocaleDateString();
         }
     };
@@ -238,6 +237,8 @@ export default function ProfilePage() {
                             <div className="relative">
                                 <div className="avatar avatar-lg w-24 h-24 text-3xl overflow-hidden rounded-full flex items-center justify-center bg-[var(--primary-light)] text-[var(--primary)]">
                                     {avatarUrl ? (
+                                        // Avatars are stored as base64 data URLs, which next/image cannot optimise.
+                                        // eslint-disable-next-line @next/next/no-img-element
                                         <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                                     ) : (
                                         name[0]?.toUpperCase()

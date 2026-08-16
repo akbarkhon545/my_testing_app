@@ -8,8 +8,6 @@ import {
     Crown,
     Sparkles,
     Zap,
-    Shield,
-    Clock,
     Star,
     CreditCard,
     Copy,
@@ -30,35 +28,6 @@ interface PricingPlan {
     savings?: string;
 }
 
-const plans: PricingPlan[] = [
-    {
-        id: "monthly",
-        name: "Месячная подписка",
-        price: 29990,
-        period: "month",
-        periodLabel: "/месяц",
-        features: [
-            "Неограниченные тесты",
-            "Доступ ко всем предметам",
-            "Подробная статистика",
-            "История результатов",
-            "Приоритетная поддержка",
-        ],
-    },
-    {
-        id: "yearly",
-        name: "Годовая подписка",
-        price: 49990,
-        period: "year",
-        periodLabel: "/год",
-        popular: true,
-        features: [
-            "Все преимущества месячной",
-            "Эксклюзивные материалы",
-            "Приоритетная поддержка 24/7",
-        ],
-    },
-];
 
 // Номер карты для оплаты
 const CARD_NUMBER = "9860 1604 1780 2420";

@@ -34,7 +34,7 @@ export default async function middleware(request: NextRequest) {
     // Validate session
     try {
       await decrypt(session);
-    } catch (e) {
+    } catch {
       const locale = pathname.split("/")[1] || "ru";
       const res = NextResponse.redirect(new URL(`/${locale}/auth/login`, request.url));
       res.cookies.delete("session");
@@ -47,7 +47,7 @@ export default async function middleware(request: NextRequest) {
       await decrypt(session);
       const locale = pathname.split("/")[1] || "ru";
       return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url));
-    } catch (e) {
+    } catch {
       // Invalid session, let them stay on the auth page
     }
   }
