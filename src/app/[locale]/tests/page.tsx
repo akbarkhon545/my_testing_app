@@ -28,18 +28,8 @@ export default function TestsIndexPage() {
         return;
       }
 
-      // Admin bypass - full access
-      if (userProfile.role === "ADMIN" || userProfile.email === "akbarkhon545@gmail.com") {
-        setHasSubscription(true);
-        setAuthChecked(true);
-        return;
-      }
-
-      const hasActiveSub = userProfile.subscriptionPlan !== "FREE" &&
-        userProfile.subscriptionExpiresAt &&
-        new Date(userProfile.subscriptionExpiresAt) > new Date();
-
-      setHasSubscription(!!hasActiveSub);
+      // Access (admin bypass included) is decided on the server
+      setHasSubscription(userProfile.hasTestAccess);
       setAuthChecked(true);
     };
     checkAuth();

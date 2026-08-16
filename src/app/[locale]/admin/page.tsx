@@ -54,9 +54,6 @@ import {
 
 type Tab = "faculties" | "subjects" | "questions" | "users" | "subscriptions";
 
-// Admin email - only this user can access admin panel
-const ADMIN_EMAIL = "akbarkhon545@gmail.com";
-
 export default function AdminPage() {
   const locale = useLocale();
   const router = useRouter();
@@ -120,7 +117,7 @@ export default function AdminPage() {
         return;
       }
 
-      if (user.email === ADMIN_EMAIL || user.role === "ADMIN") {
+      if (user.isAdmin) {
         setIsAdmin(true);
         loadAllData();
       } else {

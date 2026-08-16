@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import Link from "next/link";
@@ -13,26 +13,10 @@ import {
     AlertCircle
 } from "lucide-react";
 import { use } from "react";
-import { getUserSession, getUserProfile } from "@/app/actions/auth";
-import { getQuestionsBySubject, saveTestResult } from "@/app/actions/admin";
+import { getUserProfile } from "@/app/actions/auth";
+import { getTestQuestions, revealAnswer, submitTest, type SafeQuestion } from "@/app/actions/tests";
 
-interface Question {
-    id: number;
-    question_text: string;
-    correct_answer: string;
-    answer2: string;
-    answer3: string;
-    answer4: string;
-}
-
-function shuffleArray<T>(array: T[]): T[] {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-}
+const TRAINING_SECONDS = 25 * 60;
 
 function formatTime(seconds: number): string {
     const mins = Math.floor(seconds / 60);
@@ -51,18 +35,20 @@ export default function QuestionPage({ params }: QuestionPageProps) {
     const searchParams = useSearchParams();
     const mode = searchParams.get("mode") || "training";
 
-    const [questions, setQuestions] = useState<any[]>([]);
+    const [questions, setQuestions] = useState<SafeQuestion[]>([]);
+    const [ticket, setTicket] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const [hasSubscription, setHasSubscription] = useState(false);
     const [authChecked, setAuthChecked] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<number, string>>({});
-    const [timeRemaining, setTimeRemaining] = useState(mode === "training" ? 25 * 60 : 0);
+    // Correct answers are fetched one at a time, only after the user commits (full mode).
+    const [revealedAnswers, setRevealedAnswers] = useState<Record<number, string>>({});
+    const [timeRemaining, setTimeRemaining] = useState(mode === "training" ? TRAINING_SECONDS : 0);
     const [isFinishing, setIsFinishing] = useState(false);
 
     const isTraining = mode === "training";
 
-    // Check auth and subscription first
+    // Check auth and subscription first (the server re-checks on every action)
     useEffect(() => {
         const checkAuth = async () => {
             const userProfile = await getUserProfile();
@@ -72,23 +58,11 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                 return;
             }
 
-            // Admin bypass - full access
-            if (userProfile.role === "ADMIN" || userProfile.email === "akbarkhon545@gmail.com") {
-                setHasSubscription(true);
-                setAuthChecked(true);
-                return;
-            }
-
-            const hasActiveSub = userProfile.subscriptionPlan !== "FREE" &&
-                userProfile.subscriptionExpiresAt &&
-                new Date(userProfile.subscriptionExpiresAt) > new Date();
-
-            if (!hasActiveSub) {
+            if (!userProfile.hasTestAccess) {
                 router.push(`/${locale}/pricing`);
                 return;
             }
 
-            setHasSubscription(true);
             setAuthChecked(true);
         };
         checkAuth();
@@ -100,43 +74,64 @@ export default function QuestionPage({ params }: QuestionPageProps) {
         (async () => {
             setLoading(true);
             try {
-                const data = await getQuestionsBySubject(Number(resolvedParams.subjectId));
-                // Shuffle for training mode
-                const shuffled = mode === "training" ? shuffleArray(data || []) : (data || []);
-                setQuestions(mode === "training" ? shuffled.slice(0, 25) : shuffled);
+                const test = await getTestQuestions(resolvedParams.subjectId, mode);
+                setQuestions(test.questions);
+                setTicket(test.ticket);
             } catch (e) {
-                console.error("Connection error:", e);
+                console.error("Failed to load test:", e);
                 setQuestions([]);
+                setTicket(null);
             }
             setLoading(false);
         })();
-    }, [resolvedParams.subjectId, mode, authChecked, hasSubscription]);
+    }, [resolvedParams.subjectId, mode, authChecked]);
 
     const currentQuestion = questions[currentIndex];
 
-    // Memoize shuffled options per question
-    const shuffledOptionsMap = useMemo(() => {
-        const map: Record<number, string[]> = {};
-        questions.forEach(q => {
-            map[q.id] = shuffleArray([
-                q.correct_answer,
-                q.answer2,
-                q.answer3,
-                q.answer4,
-            ]);
-        });
-        return map;
-    }, [questions]);
+    const handleFinish = useCallback(async () => {
+        if (isFinishing || !ticket) return;
+        setIsFinishing(true);
+
+        const timeSpent = isTraining ? TRAINING_SECONDS - timeRemaining : 0;
+
+        try {
+            // Grading happens on the server; the client never sees the answer key.
+            const summary = await submitTest({
+                ticket,
+                answers,
+                totalTime: timeSpent,
+            });
+
+            sessionStorage.setItem("testResult", JSON.stringify({
+                correct: summary.correct,
+                total: summary.total,
+                score: summary.score,
+                timeSpent: summary.timeSpent,
+                mode,
+            }));
+
+            router.push(`/${locale}/tests/${resolvedParams.subjectId}/result`);
+        } catch (error) {
+            console.error("Error submitting test:", error);
+            setIsFinishing(false);
+        }
+    }, [answers, isFinishing, isTraining, locale, mode, resolvedParams.subjectId, router, ticket, timeRemaining]);
+
+    // Keep the timer callback pointed at the latest state
+    const finishRef = useRef(handleFinish);
+    useEffect(() => {
+        finishRef.current = handleFinish;
+    }, [handleFinish]);
 
     // Timer for training mode
     useEffect(() => {
-        if (!isTraining || timeRemaining <= 0) return;
+        if (!isTraining || loading || questions.length === 0) return;
 
         const timer = setInterval(() => {
             setTimeRemaining((prev) => {
                 if (prev <= 1) {
                     clearInterval(timer);
-                    handleFinish();
+                    finishRef.current();
                     return 0;
                 }
                 return prev - 1;
@@ -144,11 +139,22 @@ export default function QuestionPage({ params }: QuestionPageProps) {
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [isTraining]);
+    }, [isTraining, loading, questions.length]);
 
-    const handleAnswer = (answer: string) => {
-        if (!isTraining && answers[currentQuestion.id]) return; // Prevent changing answer only in non-training mode
+    const handleAnswer = async (answer: string) => {
+        if (!currentQuestion) return;
+        if (!isTraining && answers[currentQuestion.id]) return; // answer is final in full mode
         setAnswers((prev) => ({ ...prev, [currentQuestion.id]: answer }));
+
+        // Full mode shows feedback immediately - ask the server for this one answer.
+        if (!isTraining && !revealedAnswers[currentQuestion.id]) {
+            try {
+                const { correctAnswer } = await revealAnswer(currentQuestion.id);
+                setRevealedAnswers((prev) => ({ ...prev, [currentQuestion.id]: correctAnswer }));
+            } catch (e) {
+                console.error("Failed to reveal answer:", e);
+            }
+        }
     };
 
     const handlePrev = () => {
@@ -161,60 +167,6 @@ export default function QuestionPage({ params }: QuestionPageProps) {
         if (currentIndex < questions.length - 1) {
             setCurrentIndex(currentIndex + 1);
         }
-    };
-
-    const handleFinish = async () => {
-        if (isFinishing) return;
-        setIsFinishing(true);
-
-        // Calculate results
-        let correct = 0;
-        questions.forEach((q) => {
-            if (answers[q.id] === q.correct_answer) {
-                correct++;
-            }
-        });
-
-        const score = Math.round((correct / questions.length) * 100);
-        const timeSpent = isTraining ? (25 * 60 - timeRemaining) : 0;
-
-        console.log("=== FINISHING TRAINING TEST ===");
-        console.log("Correct:", correct, "Total:", questions.length, "Score:", score);
-
-        // Save to Database (only for training mode)
-        if (mode === "training") {
-            const user = await getUserSession();
-
-            if (user) {
-                try {
-                    await saveTestResult({
-                        userId: user.id,
-                        subjectId: parseInt(resolvedParams.subjectId),
-                        score: score,
-                        totalQuestions: questions.length,
-                        correctCount: correct,
-                        totalTime: timeSpent,
-                        mode: "TRAINING",
-                    });
-                    console.log("✅ Result saved to database!");
-                } catch (error) {
-                    console.error("Error saving to database:", error);
-                }
-            } else {
-                console.error("No session - cannot save result");
-            }
-        }
-
-        // Store results in sessionStorage for the results page
-        sessionStorage.setItem("testResult", JSON.stringify({
-            correct,
-            total: questions.length,
-            score,
-            timeSpent,
-            mode,
-        }));
-
-        router.push(`/${locale}/tests/${resolvedParams.subjectId}/result`);
     };
 
     // Loading state
@@ -249,7 +201,8 @@ export default function QuestionPage({ params }: QuestionPageProps) {
 
     const progress = ((currentIndex + 1) / questions.length) * 100;
     const timerClass = timeRemaining <= 60 ? "danger" : timeRemaining <= 5 * 60 ? "warning" : "";
-    const shuffledOptions = shuffledOptionsMap[currentQuestion?.id] || [];
+    const options = currentQuestion?.options || [];
+    const correctAnswer = currentQuestion ? revealedAnswers[currentQuestion.id] : undefined;
 
     return (
         <div className="max-w-3xl mx-auto animate-fadeIn">
@@ -296,10 +249,10 @@ export default function QuestionPage({ params }: QuestionPageProps) {
 
                     {/* Answer options */}
                     <div className="space-y-3">
-                        {shuffledOptions.map((option, idx) => {
+                        {options.map((option, idx) => {
                             const isSelected = answers[currentQuestion.id] === option;
-                            const isCorrect = option === currentQuestion.correct_answer;
-                            const isRevealed = !!answers[currentQuestion.id];
+                            const isCorrect = !!correctAnswer && option === correctAnswer;
+                            const isRevealed = !!correctAnswer;
 
                             let statusClass = "";
                             if (isTraining) {
@@ -326,7 +279,7 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                                         name="answer"
                                         value={option}
                                         checked={isSelected}
-                                        disabled={!isTraining && isRevealed}
+                                        disabled={!isTraining && !!answers[currentQuestion.id]}
                                         onChange={() => handleAnswer(option)}
                                         className="accent-[var(--primary)]"
                                     />
@@ -358,6 +311,7 @@ export default function QuestionPage({ params }: QuestionPageProps) {
 
                 <button
                     onClick={handleFinish}
+                    disabled={isFinishing}
                     className="btn btn-danger text-xs sm:text-sm px-2 sm:px-4 py-2"
                 >
                     <StopCircle className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -377,6 +331,7 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                 ) : (
                     <button
                         onClick={handleFinish}
+                        disabled={isFinishing}
                         className="btn btn-success text-xs sm:text-sm px-2 sm:px-4 py-2"
                     >
                         <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />

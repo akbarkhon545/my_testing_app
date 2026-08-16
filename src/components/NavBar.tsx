@@ -32,8 +32,7 @@ export default function NavBar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
-  const [userRole, setUserRole] = useState("");
-  const [userEmail, setUserEmail] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -41,13 +40,11 @@ export default function NavBar() {
       if (user) {
         setIsLoggedIn(true);
         setUserName(user.name || user.email?.split("@")[0] || "User");
-        setUserRole(user.role || "");
-        setUserEmail(user.email || "");
+        setIsAdmin(user.isAdmin);
       } else {
         setIsLoggedIn(false);
         setUserName("");
-        setUserRole("");
-        setUserEmail("");
+        setIsAdmin(false);
       }
     };
     checkSession();
@@ -60,8 +57,6 @@ export default function NavBar() {
     setUserMenuOpen(false);
     window.location.href = `/${locale}/auth/login`;
   };
-
-  const isAdmin = userRole === "ADMIN" || userEmail === "akbarkhon545@gmail.com";
 
   const navLinks = [
     // Home only for non-authenticated users

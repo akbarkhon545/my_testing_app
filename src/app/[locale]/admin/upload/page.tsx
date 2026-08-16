@@ -19,8 +19,6 @@ import {
     Lock
 } from "lucide-react";
 
-const ADMIN_EMAIL = "akbarkhon545@gmail.com";
-
 interface Subject {
     id: number;
     name: string;
@@ -60,7 +58,7 @@ export default function UploadPage() {
                 return;
             }
 
-            setIsAdmin(user.email === ADMIN_EMAIL || user.role === "ADMIN");
+            setIsAdmin(user.isAdmin);
             setAuthLoading(false);
         };
         checkAdmin();

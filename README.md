@@ -1,5 +1,25 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Переменные окружения
+
+| Переменная | Обязательна | Назначение |
+| --- | --- | --- |
+| `DATABASE_URL` | да | Строка подключения к Postgres (Neon/Supabase) |
+| `JWT_SECRET` | **да, в production** | Ключ подписи сессионных cookie и билетов теста. Минимум 32 символа. Без него приложение в production не стартует (fail-closed), иначе сессии можно подделать. |
+| `ADMIN_EMAIL` | нет | Резервный админ-доступ по email. Основной способ — роль `ADMIN` в базе. Используется только на сервере. |
+| `NEXT_PUBLIC_APP_URL` | нет | Публичный адрес приложения |
+
+Сгенерировать секрет: `openssl rand -base64 48`.
+
+При деплое на Vercel эти переменные задаются в Project → Settings → Environment Variables.
+Смена `JWT_SECRET` инвалидирует все активные сессии — пользователям потребуется войти заново.
+
+## Модель доступа
+
+- Все проверки прав живут в [`src/lib/access.ts`](src/lib/access.ts) и читают пользователя из БД, а не из cookie (роль и подписка в токене могут устареть до 2 часов).
+- Вопросы выдаются через [`src/app/actions/tests.ts`](src/app/actions/tests.ts): правильные ответы клиенту не отправляются, а результат считается на сервере по подписанному «билету» теста.
+- Экшены в `src/app/actions/admin.ts`, работающие с ответами и пользователями, требуют роли администратора.
+
 ## Getting Started
 
 First, run the development server:

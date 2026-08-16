@@ -2,27 +2,15 @@
 
 import prisma from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { getSession } from "@/lib/auth";
+import { ADMIN_EMAIL, isAdmin, requireAdmin, requireUser } from "@/lib/access";
 
-const ADMIN_EMAIL = "akbarkhon545@gmail.com";
-
-// --- Security: Server-side admin check ---
-
-async function requireAdmin() {
-    const session = await getSession();
-    if (!session?.user) {
-        throw new Error("Не авторизован");
-    }
-    const { role, email } = session.user;
-    if (role !== "ADMIN" && email !== ADMIN_EMAIL) {
-        throw new Error("Доступ запрещён. Требуется роль администратора.");
-    }
-    return session.user;
-}
+// Access checks live in @/lib/access — they read the user fresh from the
+// database instead of trusting the (up to 2h stale) session cookie.
 
 // --- Faculties ---
 
 export async function getFaculties() {
+    await requireUser();
     return await (prisma as any).faculty.findMany({
         orderBy: { name: "asc" },
     });
@@ -58,6 +46,7 @@ export async function deleteFaculty(id: number) {
 // --- Subjects ---
 
 export async function getSubjects() {
+    await requireUser();
     return await (prisma as any).subject.findMany({
         include: { faculty: true },
         orderBy: { name: "asc" },
@@ -98,38 +87,19 @@ export async function deleteSubject(id: number) {
 }
 
 export async function getSubjectById(id: number) {
+    await requireUser();
     return await (prisma as any).subject.findUnique({
         where: { id },
         include: { faculty: true },
     });
 }
 
+/** Admin-only: includes correct answers. Students go through @/app/actions/tests. */
 export async function getQuestionsBySubject(subjectId: number) {
+    await requireAdmin();
     return await (prisma as any).question.findMany({
         where: { subject_id: subjectId },
         orderBy: { createdAt: "desc" },
-    });
-}
-
-export async function saveTestResult(data: {
-    userId: string;
-    subjectId: number;
-    score: number;
-    totalQuestions: number;
-    correctCount: number;
-    totalTime: number;
-    mode: "TRAINING" | "EXAM";
-}) {
-    return await (prisma as any).testResult.create({
-        data: {
-            user_id: data.userId,
-            subject_id: data.subjectId,
-            score: data.score,
-            total_questions: data.totalQuestions,
-            correct_count: data.correctCount,
-            total_time: data.totalTime,
-            mode: data.mode,
-        },
     });
 }
 
@@ -215,7 +185,7 @@ export async function deleteUser(id: string) {
 
     // Prevent deleting the main admin
     const user = await (prisma as any).user.findUnique({ where: { id } });
-    if (user?.email === ADMIN_EMAIL) {
+    if (user?.email?.toLowerCase() === ADMIN_EMAIL) {
         throw new Error("Невозможно удалить главного администратора");
     }
 
@@ -230,7 +200,7 @@ export async function deactivateUser(id: string) {
     await requireAdmin();
 
     const user = await (prisma as any).user.findUnique({ where: { id } });
-    if (user?.email === ADMIN_EMAIL) {
+    if (user?.email?.toLowerCase() === ADMIN_EMAIL) {
         throw new Error("Невозможно деактивировать главного администратора");
     }
 
@@ -291,7 +261,9 @@ export async function getAdminStats() {
     };
 }
 
+/** Admin-only: includes correct answers. */
 export async function getQuestions() {
+    await requireAdmin();
     return await (prisma as any).question.findMany({
         include: { subject: true },
         orderBy: { createdAt: "desc" },
@@ -356,9 +328,17 @@ export async function deleteQuestion(id: number) {
     revalidatePath("/");
 }
 
-export async function getUserResults(userId: string) {
+export async function getUserResults(userId?: string) {
+    const current = await requireUser();
+
+    // Students may only read their own history; admins may read anyone's.
+    const targetId = !userId || userId === current.id ? current.id : userId;
+    if (targetId !== current.id && !isAdmin(current)) {
+        throw new Error("Доступ запрещён");
+    }
+
     return await (prisma as any).testResult.findMany({
-        where: { user_id: userId },
+        where: { user_id: targetId },
         include: { subject: true },
         orderBy: { createdAt: "desc" },
         take: 50,

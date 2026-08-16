@@ -19,7 +19,11 @@ export default async function middleware(request: NextRequest) {
 
   // Public routes that don't need auth (but might need locale prefix)
   const isAuthPage = pathname.includes("/auth/login") || pathname.includes("/auth/signup");
-  const isProtectedPage = pathname.includes("/dashboard") || pathname.includes("/profile") || pathname.includes("/admin");
+  const isProtectedPage =
+    pathname.includes("/dashboard") ||
+    pathname.includes("/profile") ||
+    pathname.includes("/admin") ||
+    pathname.includes("/tests");
 
   if (isProtectedPage) {
     if (!session) {

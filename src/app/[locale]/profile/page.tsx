@@ -74,14 +74,14 @@ export default function ProfilePage() {
                 let status: "active" | "expired" | "none" = "none";
                 if (plan !== "FREE" && expiryDate) {
                     status = expiryDate > new Date() ? "active" : "expired";
-                } else if (userProfile.role === "ADMIN" || userEmail === "akbarkhon545@gmail.com") {
+                } else if (userProfile.isAdmin) {
                     status = "active";
                 }
 
                 setSubscription({
                     plan,
                     status,
-                    expiresAt: expiryDate || (userProfile.role === "ADMIN" ? new Date("2099-12-31") : null),
+                    expiresAt: expiryDate || (userProfile.isAdmin ? new Date("2099-12-31") : null),
                 });
             }
             setLoading(false);
