@@ -25,6 +25,7 @@ export default function QuestionsFolders({
 }: QuestionsFoldersProps) {
     const t = useTranslations();
     const locale = useLocale();
+    const [selectedFacultyId, setSelectedFacultyId] = useState<number | "ALL">("ALL");
     const [expandedSubjects, setExpandedSubjects] = useState<Record<number, boolean>>({});
 
     const toggleSubjectFolder = (subjectId: number) => {
@@ -39,8 +40,11 @@ export default function QuestionsFolders({
         (questionsBySubject[q.subject_id] ||= []).push(q);
     });
 
-    // Keep subjects that either have matching questions or match by name
+    // Keep subjects that match faculty filter and have matching questions or name
     const filteredSubjects = subjects.filter((subject) => {
+        if (selectedFacultyId !== "ALL" && subject.faculty_id !== selectedFacultyId) {
+            return false;
+        }
         const subjectQuestions = questionsBySubject[subject.id] || [];
         if (!searchQuery) return subjectQuestions.length > 0;
         return (
@@ -51,8 +55,34 @@ export default function QuestionsFolders({
 
     return (
         <div>
-            <div className="flex gap-2 mb-4">
-                <Link href={`/${locale}/admin/upload`} className="btn btn-success">
+            {/* Faculty filter pills & Excel upload button */}
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-5 p-3 rounded-lg bg-[var(--background-secondary)] border border-[var(--border)]">
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)] mr-1">
+                        Факультет:
+                    </span>
+                    <button
+                        type="button"
+                        onClick={() => setSelectedFacultyId("ALL")}
+                        className={`btn btn-sm ${selectedFacultyId === "ALL" ? "btn-primary" : "btn-secondary"}`}
+                    >
+                        Все факультеты
+                    </button>
+                    {faculties.map((f) => {
+                        const count = subjects.filter((s) => s.faculty_id === f.id).length;
+                        return (
+                            <button
+                                key={f.id}
+                                type="button"
+                                onClick={() => setSelectedFacultyId(f.id)}
+                                className={`btn btn-sm ${selectedFacultyId === f.id ? "btn-primary" : "btn-secondary"}`}
+                            >
+                                {f.name} ({count})
+                            </button>
+                        );
+                    })}
+                </div>
+                <Link href={`/${locale}/admin/upload`} className="btn btn-success btn-sm">
                     <FileUp className="w-4 h-4" />
                     {t("admin.uploadExcel")}
                 </Link>

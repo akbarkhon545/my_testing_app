@@ -5,7 +5,7 @@ import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import * as XLSX from "xlsx";
-import { getSubjects } from "@/app/actions/admin";
+import { getSubjects, getFaculties } from "@/app/actions/admin";
 import { getUserSession } from "@/app/actions/auth";
 import {
     FileUp,
@@ -20,6 +20,13 @@ import {
 } from "lucide-react";
 
 interface Subject {
+    id: number;
+    name: string;
+    faculty_id?: number;
+    faculty?: { id: number; name: string };
+}
+
+interface Faculty {
     id: number;
     name: string;
 }
@@ -40,11 +47,13 @@ export default function UploadPage() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [authLoading, setAuthLoading] = useState(true);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [selectedFaculty, setSelectedFaculty] = useState<string>("");
     const [selectedSubject, setSelectedSubject] = useState("");
     const [uploading, setUploading] = useState(false);
     const [result, setResult] = useState<{ type: "success" | "error"; message: string } | null>(null);
     const [dragOver, setDragOver] = useState(false);
     const [subjects, setSubjects] = useState<Subject[]>([]);
+    const [faculties, setFaculties] = useState<Faculty[]>([]);
     const [loadingSubjects, setLoadingSubjects] = useState(true);
     const [parsedQuestions, setParsedQuestions] = useState<ParsedQuestion[]>([]);
 
@@ -64,12 +73,16 @@ export default function UploadPage() {
         checkAdmin();
     }, [locale, router]);
 
-    // Load subjects from database
+    // Load subjects and faculties from database
     useEffect(() => {
         const loadSubjectsData = async () => {
             try {
-                const data = await getSubjects();
+                const [data, facs] = await Promise.all([
+                    getSubjects(),
+                    getFaculties(),
+                ]);
                 setSubjects(data || []);
+                setFaculties(facs || []);
             } catch (e) {
                 console.error("Connection error:", e);
             }
@@ -261,30 +274,53 @@ export default function UploadPage() {
                     </h2>
                 </div>
                 <div className="card-body space-y-6">
-                    {/* Subject select */}
-                    <div>
-                        <label className="label">Выберите предмет</label>
-                        {loadingSubjects ? (
-                            <div className="flex items-center gap-2 text-[var(--foreground-muted)]">
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Загрузка предметов...
-                            </div>
-                        ) : subjects.length === 0 ? (
-                            <div className="text-[var(--warning-strong)]">
-                                Нет доступных предметов. Сначала создайте предмет в админ-панели.
-                            </div>
-                        ) : (
+                    {/* Faculty and Subject select */}
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="label">Факультет (фильтр)</label>
                             <select
                                 className="input"
-                                value={selectedSubject}
-                                onChange={(e) => setSelectedSubject(e.target.value)}
+                                value={selectedFaculty}
+                                onChange={(e) => {
+                                    setSelectedFaculty(e.target.value);
+                                    setSelectedSubject("");
+                                }}
                             >
-                                <option value="">-- Выберите предмет --</option>
-                                {subjects.map(subject => (
-                                    <option key={subject.id} value={subject.id}>{subject.name}</option>
+                                <option value="">Все факультеты</option>
+                                {faculties.map((f) => (
+                                    <option key={f.id} value={f.id}>{f.name}</option>
                                 ))}
                             </select>
-                        )}
+                        </div>
+
+                        <div>
+                            <label className="label">Выберите предмет</label>
+                            {loadingSubjects ? (
+                                <div className="flex items-center gap-2 text-[var(--foreground-muted)] py-2">
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Загрузка предметов...
+                                </div>
+                            ) : subjects.length === 0 ? (
+                                <div className="text-[var(--warning-strong)] py-2 text-sm">
+                                    Нет доступных предметов. Сначала создайте предмет в админ-панели.
+                                </div>
+                            ) : (
+                                <select
+                                    className="input"
+                                    value={selectedSubject}
+                                    onChange={(e) => setSelectedSubject(e.target.value)}
+                                >
+                                    <option value="">-- Выберите предмет --</option>
+                                    {subjects
+                                        .filter((s) => !selectedFaculty || s.faculty_id === Number(selectedFaculty))
+                                        .map((subject) => (
+                                            <option key={subject.id} value={subject.id}>
+                                                {subject.name} {subject.faculty?.name ? `(${subject.faculty.name})` : ""}
+                                            </option>
+                                        ))}
+                                </select>
+                            )}
+                        </div>
                     </div>
 
                     {/* Drop zone */}

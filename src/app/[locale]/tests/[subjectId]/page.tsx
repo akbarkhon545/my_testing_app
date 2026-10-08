@@ -67,6 +67,20 @@ export default function SubjectTestPage() {
           setLoading(false);
           return;
         }
+
+        if (!profile.isAdmin) {
+          if (!profile.facultyId) {
+            setError("Пожалуйста, укажите ваш факультет в профиле");
+            setLoading(false);
+            return;
+          }
+          if (subjData.faculty_id !== profile.facultyId) {
+            setError(`Этот предмет относится к факультету «${subjData.faculty?.name || ""}». У вас нет доступа.`);
+            setLoading(false);
+            return;
+          }
+        }
+
         setSubject(subjData);
         setQuestions(test.questions);
         setTicket(test.ticket);

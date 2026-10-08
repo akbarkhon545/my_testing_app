@@ -37,6 +37,7 @@ export default function QuestionPage({ params }: QuestionPageProps) {
 
     const [questions, setQuestions] = useState<SafeQuestion[]>([]);
     const [ticket, setTicket] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [authChecked, setAuthChecked] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -73,12 +74,14 @@ export default function QuestionPage({ params }: QuestionPageProps) {
 
         (async () => {
             setLoading(true);
+            setErrorMessage(null);
             try {
                 const test = await getTestQuestions(resolvedParams.subjectId, mode);
                 setQuestions(test.questions);
                 setTicket(test.ticket);
-            } catch (e) {
+            } catch (e: any) {
                 console.error("Failed to load test:", e);
+                setErrorMessage(e?.message || "Ошибка загрузки вопросов");
                 setQuestions([]);
                 setTicket(null);
             }
@@ -177,6 +180,24 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                     <div className="w-12 h-12 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                     <p className="text-[var(--foreground-secondary)]">Загрузка вопросов...</p>
                 </div>
+            </div>
+        );
+    }
+
+    // Error or faculty access restriction
+    if (errorMessage) {
+        return (
+            <div className="max-w-xl mx-auto text-center py-12">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--danger-light)] mb-4">
+                    <AlertCircle className="w-8 h-8 text-[var(--danger-strong)]" />
+                </div>
+                <h2 className="text-xl font-bold text-[var(--foreground)] mb-2">Доступ ограничен</h2>
+                <p className="text-[var(--foreground-secondary)] mb-6">
+                    {errorMessage}
+                </p>
+                <Link href={`/${locale}/tests`} className="btn btn-primary">
+                    Вернуться к выбору теста
+                </Link>
             </div>
         );
     }

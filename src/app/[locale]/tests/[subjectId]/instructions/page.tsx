@@ -3,8 +3,9 @@
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { useLocale } from "next-intl";
-import { CheckCircle, AlertCircle, ArrowRight, Book, Award, Crown, Lock } from "lucide-react";
+import { CheckCircle, AlertCircle, ArrowRight, Book, Award, Crown, Lock, GraduationCap } from "lucide-react";
 import { getUserProfile } from "@/app/actions/auth";
+import { getSubjectById } from "@/app/actions/admin";
 
 interface InstructionsPageProps {
     params: Promise<{ locale: string; subjectId: string }>;
@@ -18,6 +19,8 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [hasSubscription, setHasSubscription] = useState(false);
+    const [subject, setSubject] = useState<any>(null);
+    const [facultyMismatch, setFacultyMismatch] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     const mode = resolvedSearchParams.mode || "training";
@@ -29,10 +32,29 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
             const userProfile = await getUserProfile();
             setIsLoggedIn(!!userProfile);
             setHasSubscription(!!userProfile?.hasTestAccess);
+
+            if (userProfile && subjectId) {
+                try {
+                    const subj = await getSubjectById(Number(subjectId));
+                    setSubject(subj);
+
+                    if (!userProfile.isAdmin) {
+                        if (!userProfile.facultyId) {
+                            setFacultyMismatch("Пожалуйста, выберите ваш факультет в профиле перед началом тестирования.");
+                        } else if (subj && subj.faculty_id !== userProfile.facultyId) {
+                            setFacultyMismatch(
+                                `Этот предмет относится к факультету «${subj.faculty?.name || ""}». Ваш факультет: «${userProfile.facultyName || ""}». Доступ к тестам другого факультета закрыт.`
+                            );
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch subject", e);
+                }
+            }
             setLoading(false);
         };
         checkAuth();
-    }, []);
+    }, [subjectId]);
 
     // Show login prompt if not logged in
     if (!loading && !isLoggedIn) {
@@ -59,7 +81,30 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
         );
     }
 
-
+    // Show faculty mismatch warning
+    if (!loading && facultyMismatch) {
+        return (
+            <div className="max-w-xl mx-auto text-center py-12 animate-fadeIn">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[var(--warning-light)] mb-6">
+                    <GraduationCap className="w-10 h-10 text-[var(--warning-strong)]" />
+                </div>
+                <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">
+                    Доступ ограничен
+                </h2>
+                <p className="text-[var(--foreground-secondary)] mb-8">
+                    {facultyMismatch}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <Link href={`/${locale}/tests`} className="btn btn-primary">
+                        Вернуться к выбору теста
+                    </Link>
+                    <Link href={`/${locale}/profile`} className="btn btn-secondary">
+                        Перейти в профиль
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     if (loading) {
         return (
@@ -71,8 +116,6 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
 
     return (
         <div className="max-w-3xl mx-auto animate-fadeIn">
-
-
             {/* Header */}
             <div className="text-center mb-8">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--primary-light)] mb-4">
@@ -82,10 +125,22 @@ export default function InstructionsPage({ params, searchParams }: InstructionsP
                         <Award className="w-8 h-8 text-[var(--primary)]" />
                     )}
                 </div>
-                <h1 className="text-3xl font-bold text-[var(--foreground)] mb-2">
+                <h1 className="text-3xl font-bold text-[var(--foreground)] mb-1">
                     {isTraining ? "Тренировочный режим" : "Полный тест"}
                 </h1>
-                <p className="text-[var(--foreground-secondary)]">
+                {subject && (
+                    <div className="mb-2">
+                        <span className="text-lg font-semibold text-[var(--primary)]">
+                            {subject.name}
+                        </span>
+                        {subject.faculty?.name && (
+                            <span className="text-xs ml-2 px-2.5 py-0.5 rounded-full bg-[var(--background-secondary)] text-[var(--foreground-secondary)] border border-[var(--border)]">
+                                {subject.faculty.name}
+                            </span>
+                        )}
+                    </div>
+                )}
+                <p className="text-[var(--foreground-secondary)] text-sm">
                     Пожалуйста, ознакомьтесь с инструкциями перед началом
                 </p>
             </div>

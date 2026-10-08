@@ -4,15 +4,23 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
-import { Book, Award, ChevronRight, FileQuestion, GraduationCap, Crown, Lock } from "lucide-react";
-import { getUserProfile } from "@/app/actions/auth";
-import { getSubjects } from "@/app/actions/admin";
+import { Book, Award, ChevronRight, FileQuestion, GraduationCap, Crown, Lock, Shield } from "lucide-react";
+import { getUserProfile, getPublicFaculties } from "@/app/actions/auth";
+import { getAvailableSubjects } from "@/app/actions/tests";
+
+interface FacultyItem {
+  id: number;
+  name: string;
+}
 
 export default function TestsIndexPage() {
   const router = useRouter();
   const [subjects, setSubjects] = useState<any[]>([]);
+  const [faculties, setFaculties] = useState<FacultyItem[]>([]);
+  const [selectedFacultyId, setSelectedFacultyId] = useState<number | "ALL">("ALL");
   const [loading, setLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const locale = useLocale();
@@ -21,29 +29,41 @@ export default function TestsIndexPage() {
   // Check authentication first
   useEffect(() => {
     const checkAuth = async () => {
-      const userProfile = await getUserProfile();
+      const profile = await getUserProfile();
 
-      if (!userProfile) {
+      if (!profile) {
         router.push(`/${locale}/auth/login`);
         return;
       }
 
-      // Access (admin bypass included) is decided on the server
-      setHasSubscription(userProfile.hasTestAccess);
+      setUserProfile(profile);
+      setHasSubscription(profile.hasTestAccess);
       setAuthChecked(true);
+
+      if (profile.isAdmin) {
+        try {
+          const facs = await getPublicFaculties();
+          setFaculties(facs);
+        } catch (e) {
+          console.error("Failed to load faculties", e);
+        }
+      }
     };
     checkAuth();
   }, [locale, router]);
 
-  // Load subjects only after auth check
+  // Load subjects based on user's faculty or admin filter
   useEffect(() => {
-    if (!authChecked) return;
+    if (!authChecked || !userProfile) return;
 
     (async () => {
       setError(null);
       setLoading(true);
       try {
-        const data = await getSubjects();
+        const filterId = userProfile.isAdmin && selectedFacultyId !== "ALL"
+          ? Number(selectedFacultyId)
+          : null;
+        const data = await getAvailableSubjects(filterId);
         setSubjects(data);
       } catch {
         setError("Не удалось загрузить предметы");
@@ -51,7 +71,7 @@ export default function TestsIndexPage() {
       }
       setLoading(false);
     })();
-  }, [authChecked]);
+  }, [authChecked, userProfile, selectedFacultyId]);
 
   // Show loading while checking auth
   if (!authChecked) {
@@ -62,12 +82,10 @@ export default function TestsIndexPage() {
     );
   }
 
-
-
   return (
     <div className="animate-fadeIn">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-3xl font-bold text-[var(--foreground)] mb-2 flex items-center gap-3">
           <FileQuestion className="w-8 h-8 text-[var(--primary)]" />
           {t("tests.title")}
@@ -76,6 +94,89 @@ export default function TestsIndexPage() {
           {t("tests.selectSubject")}
         </p>
       </div>
+
+      {/* Faculty Indicator for regular students */}
+      {userProfile && !userProfile.isAdmin && (
+        userProfile.facultyId ? (
+          <div className="flex items-center justify-between flex-wrap gap-4 mb-8 p-4 rounded-xl bg-[var(--background-secondary)] border border-[var(--border)]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-[var(--primary-light)] flex items-center justify-center">
+                <GraduationCap className="w-5 h-5 text-[var(--primary)]" />
+              </div>
+              <div>
+                <span className="text-xs uppercase tracking-wider font-semibold text-[var(--foreground-muted)]">
+                  {t("tests.yourFaculty")}
+                </span>
+                <h2 className="text-lg font-bold text-[var(--foreground)]">
+                  {userProfile.facultyName}
+                </h2>
+              </div>
+            </div>
+            <Link
+              href={`/${locale}/profile`}
+              className="text-sm font-medium text-[var(--primary)] hover:underline flex items-center gap-1"
+            >
+              {t("tests.changeFaculty")} →
+            </Link>
+          </div>
+        ) : (
+          <div className="mb-8 p-6 rounded-xl bg-[var(--warning-light)] border border-[var(--warning)]/30 text-[var(--foreground)]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <GraduationCap className="w-6 h-6 text-[var(--warning-strong)] shrink-0 mt-1" />
+                <div>
+                  <h3 className="font-semibold text-base mb-1">
+                    {t("tests.noFacultySelected")}
+                  </h3>
+                  <p className="text-sm text-[var(--foreground-secondary)]">
+                    {t("tests.selectFacultyPrompt")}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href={`/${locale}/profile`}
+                className="btn btn-warning whitespace-nowrap self-start sm:self-center"
+              >
+                {t("tests.goToProfile")}
+              </Link>
+            </div>
+          </div>
+        )
+      )}
+
+      {/* Admin Faculty Filter Switcher */}
+      {userProfile?.isAdmin && (
+        <div className="mb-8 p-4 rounded-xl bg-[var(--background-secondary)] border border-[var(--border)]">
+          <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
+            <div className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-[var(--primary)]" />
+              <span className="font-semibold text-sm text-[var(--foreground)]">
+                {t("tests.adminFacultyView")}
+              </span>
+            </div>
+            <span className="text-xs text-[var(--foreground-muted)]">
+              {t("tests.adminFacultyHint")}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-[var(--border)]">
+            <button
+              onClick={() => setSelectedFacultyId("ALL")}
+              className={`btn btn-sm ${selectedFacultyId === "ALL" ? "btn-primary" : "btn-secondary"}`}
+            >
+              {t("tests.allFaculties")}
+            </button>
+            {faculties.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setSelectedFacultyId(f.id)}
+                className={`btn btn-sm ${selectedFacultyId === f.id ? "btn-primary" : "btn-secondary"}`}
+              >
+                {f.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="alert alert-danger mb-6">
@@ -98,7 +199,13 @@ export default function TestsIndexPage() {
       ) : subjects.length === 0 ? (
         <div className="alert alert-info">
           <GraduationCap className="w-5 h-5" />
-          <span>Пока нет доступных предметов для тестирования. Обратитесь к администратору.</span>
+          <span>
+            {userProfile?.facultyId
+              ? t("tests.noSubjectsForFaculty")
+              : !userProfile?.isAdmin
+              ? t("tests.selectFacultyPrompt")
+              : t("tests.noSubjects")}
+          </span>
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -106,15 +213,22 @@ export default function TestsIndexPage() {
             <div key={subject.id} className="card group hover:scale-[1.02] transition-transform">
               {/* Card Header with gradient */}
               <div className="p-6 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] rounded-t-lg">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between gap-3 mb-2">
                   <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
                     <Book className="w-6 h-6 text-white" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-white text-lg">{subject.name}</h3>
-                    <p className="text-white/70 text-sm">ID: {subject.id}</p>
-                  </div>
+                  {subject.faculty?.name && (
+                    <span className="text-xs bg-white/20 text-white px-2.5 py-1 rounded-full font-medium">
+                      {subject.faculty.name}
+                    </span>
+                  )}
                 </div>
+                <h3 className="font-semibold text-white text-lg">{subject.name}</h3>
+                <p className="text-white/70 text-xs mt-1">
+                  {subject._count?.questions !== undefined
+                    ? `${subject._count.questions} ${t("tests.question").toLowerCase()}`
+                    : `ID: ${subject.id}`}
+                </p>
               </div>
 
               {/* Card Body */}

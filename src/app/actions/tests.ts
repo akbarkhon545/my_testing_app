@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import prisma from "@/lib/db";
-import { requireTestAccess } from "@/lib/access";
+import { requireTestAccess, requireUser, isAdmin } from "@/lib/access";
 import { signTicket, verifyTicket, type TestMode } from "@/lib/testTicket";
 
 const TRAINING_QUESTION_COUNT = 25;
@@ -44,8 +44,51 @@ function normalizeMode(mode: string | undefined): TestMode {
 const subjectIdSchema = z.coerce.number().int().positive();
 
 /**
+ * Returns subjects accessible to the current user:
+ * - Admin: all subjects, optionally filtered by facultyIdFilter
+ * - Student: strictly subjects belonging to user.faculty_id
+ */
+export async function getAvailableSubjects(facultyIdFilter?: number | null) {
+    const user = await requireUser();
+
+    if (isAdmin(user)) {
+        if (facultyIdFilter && facultyIdFilter > 0) {
+            return await prisma.subject.findMany({
+                where: { faculty_id: facultyIdFilter },
+                include: {
+                    faculty: true,
+                    _count: { select: { questions: true } },
+                },
+                orderBy: { name: "asc" },
+            });
+        }
+        return await prisma.subject.findMany({
+            include: {
+                faculty: true,
+                _count: { select: { questions: true } },
+            },
+            orderBy: [{ faculty: { name: "asc" } }, { name: "asc" }],
+        });
+    }
+
+    if (!user.faculty_id) {
+        return [];
+    }
+
+    return await prisma.subject.findMany({
+        where: { faculty_id: user.faculty_id },
+        include: {
+            faculty: true,
+            _count: { select: { questions: true } },
+        },
+        orderBy: { name: "asc" },
+    });
+}
+
+/**
  * Hand out a test. Requires an active subscription (or admin), never returns
  * `correct_answer`, and returns a signed ticket listing the issued question ids.
+ * Strictly verifies that the subject belongs to the user's faculty (unless admin).
  */
 export async function getTestQuestions(subjectIdInput: number | string, modeInput?: string): Promise<TestPayload> {
     const user = await requireTestAccess();
@@ -53,6 +96,21 @@ export async function getTestQuestions(subjectIdInput: number | string, modeInpu
     const parsedSubjectId = subjectIdSchema.safeParse(subjectIdInput);
     if (!parsedSubjectId.success) throw new Error("Неверный предмет");
     const subjectId = parsedSubjectId.data;
+
+    const subject = await prisma.subject.findUnique({
+        where: { id: subjectId },
+        include: { faculty: true },
+    });
+    if (!subject) throw new Error("Предмет не найден");
+
+    if (!isAdmin(user)) {
+        if (!user.faculty_id) {
+            throw new Error("Пожалуйста, укажите ваш факультет в профиле перед началом тестирования");
+        }
+        if (subject.faculty_id !== user.faculty_id) {
+            throw new Error(`Этот предмет относится к факультету «${subject.faculty?.name || ""}». У вас нет доступа.`);
+        }
+    }
 
     const mode = normalizeMode(modeInput);
 
