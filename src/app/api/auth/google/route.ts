@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
 
     const redirectUri = `${baseUrl}/api/auth/google/callback`;
 
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+
     if (!clientId) {
         return NextResponse.json(
             { error: "GOOGLE_CLIENT_ID не настроен в Environment Variables на Vercel" },
