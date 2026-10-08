@@ -119,6 +119,24 @@ export default function EntityModal({
                         </select>
                     </div>
                     <div>
+                        <label className="label" htmlFor="admin-user-faculty">
+                            {t("admin.faculty")}
+                        </label>
+                        <select
+                            id="admin-user-faculty"
+                            className="input"
+                            value={form.facultyId}
+                            onChange={(e) => onChange("facultyId", e.target.value)}
+                        >
+                            <option value="">{t("admin.selectFaculty") || "Не выбран"}</option>
+                            {faculties.map((f) => (
+                                <option key={f.id} value={String(f.id)}>
+                                    {f.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
                         <label className="label" htmlFor="admin-user-password">
                             {isEditing ? "Новый пароль (оставьте пустым, чтобы не менять)" : "Пароль"}
                         </label>

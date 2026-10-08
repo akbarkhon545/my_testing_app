@@ -15,6 +15,8 @@ export interface AccessUser {
     role: string;
     subscriptionPlan: "FREE" | "MONTHLY" | "YEARLY";
     subscriptionExpiresAt: Date | null;
+    faculty_id?: number | null;
+    faculty?: { id: number; name: string } | null;
 }
 
 const ACCESS_USER_SELECT = {
@@ -25,6 +27,8 @@ const ACCESS_USER_SELECT = {
     role: true,
     subscriptionPlan: true,
     subscriptionExpiresAt: true,
+    faculty_id: true,
+    faculty: { select: { id: true, name: true } },
 } as const;
 
 export function isAdmin(user: Pick<AccessUser, "role" | "email"> | null | undefined): boolean {

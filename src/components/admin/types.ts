@@ -33,6 +33,8 @@ export interface AdminUser {
     avatarUrl?: string | null;
     subscriptionPlan: SubscriptionPlan;
     subscriptionExpiresAt: Date | string | null;
+    faculty_id?: number | null;
+    faculty?: Faculty | null;
     createdAt?: Date | string;
 }
 

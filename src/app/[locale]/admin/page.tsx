@@ -209,6 +209,7 @@ export default function AdminPage() {
           email: form.email,
           password: form.password,
           role: form.role,
+          facultyId: form.facultyId ? Number(form.facultyId) : null,
         };
         if (editingId !== undefined) {
           await updateUser(String(editingId), userData);

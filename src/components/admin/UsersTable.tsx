@@ -40,6 +40,7 @@ export default function UsersTable({
                     <tr className="border-b border-[var(--border)]">
                         <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.users")}</th>
                         <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.email")}</th>
+                        <th className="text-left py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.faculty")}</th>
                         <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.role")}</th>
                         <th className="text-center py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.subscription")}</th>
                         <th className="text-right py-3 px-4 font-medium text-[var(--foreground)]">{t("admin.actions")}</th>
@@ -58,6 +59,7 @@ export default function UsersTable({
                                     </div>
                                 </td>
                                 <td className="py-3 px-4 text-[var(--foreground-secondary)]">{user.email}</td>
+                                <td className="py-3 px-4 text-[var(--foreground-secondary)]">{user.faculty?.name || "—"}</td>
                                 <td className="py-3 px-4 text-center">
                                     <RoleBadge role={user.role} />
                                 </td>

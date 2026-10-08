@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { getUserProfile } from "@/app/actions/auth";
+import { getUserProfile, getPublicFaculties } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
@@ -19,7 +19,8 @@ import {
     Crown,
     CreditCard,
     Clock,
-    AlertTriangle
+    AlertTriangle,
+    GraduationCap
 } from "lucide-react";
 
 interface Subscription {
@@ -41,6 +42,8 @@ export default function ProfilePage() {
     const [email, setEmail] = useState("student@example.com");
     const [phone, setPhone] = useState("");
     const [birthDate, setBirthDate] = useState("");
+    const [facultyId, setFacultyId] = useState("");
+    const [faculties, setFaculties] = useState<Array<{ id: number; name: string }>>([]);
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
     // Password change
@@ -58,13 +61,24 @@ export default function ProfilePage() {
 
     useEffect(() => {
         async function loadProfile() {
-            const userProfile = await getUserProfile();
+            const [userProfile, facultiesList] = await Promise.all([
+                getUserProfile(),
+                getPublicFaculties(),
+            ]);
+
+            if (facultiesList) {
+                setFaculties(facultiesList);
+            }
+
             if (userProfile) {
                 const userEmail = userProfile.email || "";
                 setEmail(userEmail);
                 setName(userProfile.name || userEmail.split("@")[0] || "Student");
                 if (userProfile.avatarUrl) {
                     setAvatarUrl(userProfile.avatarUrl);
+                }
+                if (userProfile.facultyId) {
+                    setFacultyId(String(userProfile.facultyId));
                 }
 
                 const plan = userProfile.subscriptionPlan as "FREE" | "MONTHLY" | "YEARLY";
@@ -120,12 +134,15 @@ export default function ProfilePage() {
 
         try {
             const { updateUserProfile } = await import("@/app/actions/auth");
-            await updateUserProfile({ name });
+            await updateUserProfile({
+                name,
+                facultyId: facultyId ? Number(facultyId) : null,
+            });
             setMessage({ type: "success", text: t("profile.profileSaved") });
         } catch (error: any) {
             setMessage({ type: "error", text: error.message || "Ошибка сохранения" });
         }
-        
+
         setSaving(false);
     };
 
@@ -421,6 +438,26 @@ export default function ProfilePage() {
                                         value={birthDate}
                                         onChange={(e) => setBirthDate(e.target.value)}
                                     />
+                                </div>
+                            </div>
+
+                            <div className="sm:col-span-2">
+                                <label className="label">{t("profile.faculty")}</label>
+                                <div className="relative">
+                                    <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-muted)]" />
+                                    <select
+                                        className="input pl-10"
+                                        style={{ paddingLeft: "2.5rem" }}
+                                        value={facultyId}
+                                        onChange={(e) => setFacultyId(e.target.value)}
+                                    >
+                                        <option value="">{t("profile.selectFaculty")}</option>
+                                        {faculties.map((f) => (
+                                            <option key={f.id} value={String(f.id)}>
+                                                {f.name}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
                         </div>

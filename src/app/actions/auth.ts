@@ -183,14 +183,28 @@ export async function getUserProfile() {
         role: user.role,
         subscriptionPlan: user.subscriptionPlan,
         subscriptionExpiresAt: user.subscriptionExpiresAt,
+        facultyId: user.faculty_id || null,
+        facultyName: user.faculty?.name || null,
         isAdmin: isAdmin(user),
         hasActiveSubscription: hasActiveSubscription(user),
         hasTestAccess: hasTestAccess(user),
     };
 }
 
+export async function getPublicFaculties() {
+    return await prisma.faculty.findMany({
+        orderBy: { name: "asc" },
+        select: { id: true, name: true },
+    });
+}
+
 export async function updateUserProfile(values: unknown) {
-    const parsed = z.object({ name: z.string().trim().min(1, "Введите имя").max(80) }).safeParse(values);
+    const schema = z.object({
+        name: z.string().trim().min(1, "Введите имя").max(80).optional(),
+        facultyId: z.coerce.number().int().positive().nullable().optional(),
+    });
+
+    const parsed = schema.safeParse(values);
     if (!parsed.success) {
         throw new Error(parsed.error.issues[0]?.message || "Некорректные данные");
     }
@@ -199,7 +213,10 @@ export async function updateUserProfile(values: unknown) {
 
     await prisma.user.update({
         where: { id: user.id },
-        data: { name: parsed.data.name },
+        data: {
+            ...(parsed.data.name !== undefined ? { name: parsed.data.name } : {}),
+            ...(parsed.data.facultyId !== undefined ? { faculty_id: parsed.data.facultyId || null } : {}),
+        },
     });
 
     revalidatePath("/profile");

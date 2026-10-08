@@ -24,9 +24,13 @@ model User {
   role                  Role             @default(STUDENT)
   subscriptionPlan      SubscriptionPlan @default(FREE)
   subscriptionExpiresAt DateTime?
+  faculty_id            Int?
+  faculty               Faculty?         @relation(fields: [faculty_id], references: [id], onDelete: SetNull)
   results               TestResult[]
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
+
+  @@index([faculty_id])
 }
 
 enum SubscriptionPlan {
@@ -39,6 +43,7 @@ model Faculty {
   id        Int       @id @default(autoincrement())
   name      String
   subjects  Subject[]
+  users     User[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }

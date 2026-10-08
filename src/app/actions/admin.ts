@@ -26,6 +26,8 @@ const USER_SELECT = {
     avatarUrl: true,
     subscriptionPlan: true,
     subscriptionExpiresAt: true,
+    faculty_id: true,
+    faculty: { select: { id: true, name: true } },
     createdAt: true,
 } as const;
 
@@ -215,6 +217,7 @@ const newUserSchema = z.object({
     email: z.string().trim().toLowerCase().email("Некорректный email").max(254),
     password: z.string().min(8, "Пароль должен содержать минимум 8 символов").max(128),
     role: roleSchema,
+    facultyId: z.coerce.number().int().positive().nullable().optional(),
 });
 
 export async function addUser(data: unknown) {
@@ -222,7 +225,7 @@ export async function addUser(data: unknown) {
 
     const parsed = newUserSchema.safeParse(data);
     if (!parsed.success) throw new Error(firstIssue(parsed.error));
-    const { name, email, password, role } = parsed.data;
+    const { name, email, password, role, facultyId } = parsed.data;
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
@@ -241,6 +244,7 @@ export async function addUser(data: unknown) {
             email,
             password: hashedPassword,
             role,
+            faculty_id: facultyId ? Number(facultyId) : null,
         },
         select: USER_SELECT,
     });
@@ -258,7 +262,7 @@ export async function updateUser(id: string, data: unknown) {
 
     const parsed = updateUserSchema.safeParse(data);
     if (!parsed.success) throw new Error(firstIssue(parsed.error));
-    const { name, email, password, role } = parsed.data;
+    const { name, email, password, role, facultyId } = parsed.data;
 
     if (password && password.length < 8) {
         throw new Error("Пароль должен содержать минимум 8 символов");
@@ -270,6 +274,7 @@ export async function updateUser(id: string, data: unknown) {
             name,
             email,
             role,
+            faculty_id: facultyId !== undefined ? (facultyId ? Number(facultyId) : null) : undefined,
             ...(password ? { password: await bcrypt.hash(password, 10) } : {}),
         },
         select: USER_SELECT,
