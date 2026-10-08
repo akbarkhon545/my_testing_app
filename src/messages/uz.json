@@ -120,7 +120,14 @@
     "confirmPassword": "Parolni tasdiqlang",
     "agreeTerms": "Foydalanish shartlariga roziman",
     "forgotPassword": "Parolni unutdingizmi?",
-    "platformDesc": "Bilimlarni sinash platformasi"
+    "platformDesc": "Bilimlarni sinash platformasi",
+    "googleSignIn": "Google orqali kirish",
+    "googleSignUp": "Google orqali ro'yxatdan o'tish",
+    "orDivider": "yoki email bilan kiring",
+    "googleCancelled": "Google orqali avtorizatsiya bekor qilindi",
+    "googleNotConfigured": "Google avtorizatsiya sozlanmagan",
+    "googleError": "Google orqali avtorizatsiyada xatolik. Keyinroq urinib ko'ring",
+    "googleNoEmail": "Google'dan email olishda xatolik"
   },
   "dashboard": {
     "title": "Boshqaruv paneli",

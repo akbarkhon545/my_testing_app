@@ -79,6 +79,14 @@ export async function loginUser(values: unknown) {
         return { success: false, error: "Неверный логин или пароль" };
     }
 
+    // Пользователь зарегистрирован только через Google — у него нет пароля
+    if (!user.password) {
+        return {
+            success: false,
+            error: "Этот аккаунт создан через Google. Используйте кнопку «Войти через Google».",
+        };
+    }
+
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
@@ -140,6 +148,10 @@ export async function updateUserPassword(values: unknown) {
     }
 
     // Check old password
+    if (!user.password) {
+        throw new Error("Аккаунт зарегистрирован через Google. Смена пароля недоступна.");
+    }
+
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
 
     if (!isPasswordValid) {

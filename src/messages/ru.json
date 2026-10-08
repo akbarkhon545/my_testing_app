@@ -120,7 +120,14 @@
     "confirmPassword": "Подтвердите пароль",
     "agreeTerms": "Я согласен с условиями использования",
     "forgotPassword": "Забыли пароль?",
-    "platformDesc": "Платформа для тестирования знаний"
+    "platformDesc": "Платформа для тестирования знаний",
+    "googleSignIn": "Войти через Google",
+    "googleSignUp": "Зарегистрироваться через Google",
+    "orDivider": "или войдите с email",
+    "googleCancelled": "Авторизация через Google отменена",
+    "googleNotConfigured": "Google авторизация не настроена",
+    "googleError": "Ошибка авторизации через Google. Попробуйте позже",
+    "googleNoEmail": "Не удалось получить email от Google"
   },
   "dashboard": {
     "title": "Панель управления",
