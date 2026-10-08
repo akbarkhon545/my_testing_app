@@ -25,7 +25,21 @@ export async function GET(request: NextRequest) {
         // Если не получилось — используем "ru"
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+    // Определяем базовый URL приложения
+    let baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+    if (!baseUrl) {
+        const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
+        const proto = request.headers.get("x-forwarded-proto") || (request.url.startsWith("https") ? "https" : "http");
+        if (host) {
+            baseUrl = `${proto}://${host}`;
+        } else {
+            baseUrl = request.nextUrl.origin;
+        }
+    }
+
+    // Удаляем слэш в конце
+    baseUrl = baseUrl.replace(/\/+$/, "");
 
     // Пользователь отменил авторизацию
     if (error || !code) {

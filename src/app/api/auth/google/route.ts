@@ -10,8 +10,22 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
     const locale = request.nextUrl.searchParams.get("locale") || "ru";
 
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+    // Определяем базовый URL приложения
+    let baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+    if (!baseUrl) {
+        const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
+        const proto = request.headers.get("x-forwarded-proto") || (request.url.startsWith("https") ? "https" : "http");
+        if (host) {
+            baseUrl = `${proto}://${host}`;
+        } else {
+            baseUrl = request.nextUrl.origin;
+        }
+    }
+
+    // Удаляем слэш в конце, если есть
+    baseUrl = baseUrl.replace(/\/+$/, "");
+
     const redirectUri = `${baseUrl}/api/auth/google/callback`;
 
     if (!clientId) {
