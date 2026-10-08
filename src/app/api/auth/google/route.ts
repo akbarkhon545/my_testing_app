@@ -11,11 +11,12 @@ export async function GET(request: NextRequest) {
     const locale = request.nextUrl.searchParams.get("locale") || "ru";
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+    const redirectUri = `${baseUrl}/api/auth/google/callback`;
 
     if (!clientId) {
         return NextResponse.json(
-            { error: "Google OAuth is not configured" },
+            { error: "GOOGLE_CLIENT_ID не настроен в Environment Variables на Vercel" },
             { status: 500 }
         );
     }
