@@ -73,7 +73,7 @@ export async function getTestQuestions(subjectIdInput: number | string, modeInpu
     const questions: SafeQuestion[] = picked.map((q) => ({
         id: q.id,
         question_text: q.question_text,
-        options: shuffle([q.correct_answer, q.answer2, q.answer3, q.answer4]),
+        options: shuffle([q.correct_answer, q.answer2, q.answer3, q.answer4].filter((opt): opt is string => Boolean(opt && opt.trim()))),
     }));
 
     const ticket = await signTicket({

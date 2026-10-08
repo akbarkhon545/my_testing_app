@@ -384,46 +384,53 @@ export async function getQuestions() {
     });
 }
 
-const questionTextSchema = z.string().trim().min(1, "Заполните все поля вопроса").max(2000);
+const questionTextSchema = z.string().trim().min(1, "Вопрос не может быть пустым").max(2000);
+const requiredAnswerSchema = z.string().trim().min(1, "Вариант ответа не может быть пустым").max(2000);
+const optionalAnswerSchema = z.string().trim().max(2000).optional().default("");
 
 const bulkQuestionSchema = z.object({
     subject_id: idSchema,
     question_text: questionTextSchema,
-    correct_answer: questionTextSchema,
-    answer2: questionTextSchema,
-    answer3: questionTextSchema,
-    answer4: questionTextSchema,
+    correct_answer: requiredAnswerSchema,
+    answer2: requiredAnswerSchema,
+    answer3: optionalAnswerSchema,
+    answer4: optionalAnswerSchema,
 });
 
-export async function addQuestions(questions: unknown[]) {
-    await requireAdmin();
+export async function addQuestions(questions: unknown[]): Promise<{ success: boolean; error?: string; count?: number }> {
+    try {
+        await requireAdmin();
 
-    const parsed = z.array(bulkQuestionSchema).min(1, "Нет вопросов для импорта").max(5000).safeParse(questions);
-    if (!parsed.success) {
-        // Point at the offending row so a bad spreadsheet cell is easy to find.
-        const issue = parsed.error.issues[0];
-        const rowIndex = typeof issue?.path[0] === "number" ? issue.path[0] + 1 : null;
-        const field = issue?.path[1];
-        throw new Error(
-            rowIndex
+        const parsed = z.array(bulkQuestionSchema).min(1, "Нет вопросов для импорта").max(5000).safeParse(questions);
+        if (!parsed.success) {
+            // Point at the offending row so a bad spreadsheet cell is easy to find.
+            const issue = parsed.error.issues[0];
+            const rowIndex = typeof issue?.path[0] === "number" ? issue.path[0] + 1 : null;
+            const field = issue?.path[1];
+            const msg = rowIndex
                 ? `Строка ${rowIndex}${field ? ` (${String(field)})` : ""}: ${issue.message}`
-                : firstIssue(parsed.error)
-        );
-    }
+                : firstIssue(parsed.error);
+            return { success: false, error: msg };
+        }
 
-    await prisma.question.createMany({
-        data: parsed.data,
-    });
-    revalidatePath("/admin");
+        const res = await prisma.question.createMany({
+            data: parsed.data,
+        });
+        revalidatePath("/admin");
+        return { success: true, count: res.count };
+    } catch (e: any) {
+        console.error("addQuestions error:", e);
+        return { success: false, error: e?.message || "Ошибка сохранения вопросов в базу данных" };
+    }
 }
 
 const newQuestionSchema = z.object({
     subjectId: idSchema,
     questionText: questionTextSchema,
-    correctAnswer: questionTextSchema,
-    answer2: questionTextSchema,
-    answer3: questionTextSchema,
-    answer4: questionTextSchema,
+    correctAnswer: requiredAnswerSchema,
+    answer2: requiredAnswerSchema,
+    answer3: optionalAnswerSchema,
+    answer4: optionalAnswerSchema,
     explanation: z.string().trim().max(2000).nullish(),
 });
 
@@ -440,8 +447,8 @@ export async function addQuestion(data: unknown) {
             question_text: q.questionText,
             correct_answer: q.correctAnswer,
             answer2: q.answer2,
-            answer3: q.answer3,
-            answer4: q.answer4,
+            answer3: q.answer3 || "",
+            answer4: q.answer4 || "",
             explanation: q.explanation || null,
         },
     });
@@ -470,8 +477,8 @@ export async function updateQuestion(id: number, data: unknown) {
             question_text: q.question_text,
             correct_answer: q.correct_answer,
             answer2: q.answer2,
-            answer3: q.answer3,
-            answer4: q.answer4,
+            answer3: q.answer3 || "",
+            answer4: q.answer4 || "",
             explanation: q.explanation || null,
         },
     });

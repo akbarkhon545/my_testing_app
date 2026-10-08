@@ -202,11 +202,20 @@ export default function UploadPage() {
 
             // Insert into Neon via Prisma
             const { addQuestions } = await import("@/app/actions/admin");
-            await addQuestions(questionsToInsert);
+            const res = await addQuestions(questionsToInsert);
+
+            if (!res.success) {
+                setResult({
+                    type: "error",
+                    message: `Ошибка загрузки: ${res.error || "Не удалось сохранить вопросы"}`,
+                });
+                setUploading(false);
+                return;
+            }
 
             setResult({
                 type: "success",
-                message: `Успешно загружено ${parsedQuestions.length} вопросов в базу данных!`
+                message: `Успешно загружено ${res.count || parsedQuestions.length} вопросов в базу данных!`
             });
             setSelectedFile(null);
             setParsedQuestions([]);
