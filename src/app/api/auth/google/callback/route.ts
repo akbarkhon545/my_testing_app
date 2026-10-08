@@ -14,15 +14,16 @@ export async function GET(request: NextRequest) {
     const stateRaw = request.nextUrl.searchParams.get("state");
     const error = request.nextUrl.searchParams.get("error");
 
-    // Парсим locale из state
+    // Парсим locale из state (поддерживаем как обычную строку, так и JSON)
     let locale = "ru";
-    try {
-        if (stateRaw) {
+    if (stateRaw) {
+        try {
             const parsed = JSON.parse(stateRaw);
             if (parsed.locale) locale = parsed.locale;
+            else locale = stateRaw;
+        } catch {
+            locale = stateRaw === "uz" ? "uz" : "ru";
         }
-    } catch {
-        // Если не получилось — используем "ru"
     }
 
     // Определяем базовый URL приложения
@@ -42,8 +43,8 @@ export async function GET(request: NextRequest) {
         }
     }
 
-    // Удаляем слэш в конце
-    baseUrl = baseUrl.replace(/\/+$/, "");
+    // Удаляем слэш и кавычки в конце
+    baseUrl = baseUrl.replace(/\/+$/, "").replace(/^["']|["']$/g, "").trim();
 
     // Пользователь отменил авторизацию
     if (error || !code) {
@@ -52,8 +53,8 @@ export async function GET(request: NextRequest) {
         );
     }
 
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const clientId = process.env.GOOGLE_CLIENT_ID?.replace(/^["']|["']$/g, "").trim();
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.replace(/^["']|["']$/g, "").trim();
     const redirectUri = `${baseUrl}/api/auth/google/callback`;
 
     if (!clientId || !clientSecret) {

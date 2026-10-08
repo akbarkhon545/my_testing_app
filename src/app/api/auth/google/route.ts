@@ -27,12 +27,12 @@ export async function GET(request: NextRequest) {
         }
     }
 
-    // Удаляем слэш в конце, если есть
-    baseUrl = baseUrl.replace(/\/+$/, "");
+    // Удаляем слэш и кавычки в конце, если есть
+    baseUrl = baseUrl.replace(/\/+$/, "").replace(/^["']|["']$/g, "").trim();
 
     const redirectUri = `${baseUrl}/api/auth/google/callback`;
 
-    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientId = process.env.GOOGLE_CLIENT_ID?.replace(/^["']|["']$/g, "").trim();
 
     if (!clientId) {
         return NextResponse.json(
@@ -41,8 +41,8 @@ export async function GET(request: NextRequest) {
         );
     }
 
-    // Build the state payload (carries the locale through the OAuth flow)
-    const state = JSON.stringify({ locale });
+    // Простая строка локали для безопасной передачи без спецсимволов JSON
+    const state = locale || "ru";
 
     const params = new URLSearchParams({
         client_id: clientId,
