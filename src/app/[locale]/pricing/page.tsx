@@ -44,7 +44,7 @@ export default function PricingPage() {
         {
             id: "monthly",
             name: t("pricing.monthly"),
-            price: 29990,
+            price: 25000,
             period: "month",
             periodLabel: "/" + (locale === 'ru' ? 'месяц' : 'oy'),
             features: [
@@ -58,7 +58,7 @@ export default function PricingPage() {
         {
             id: "yearly",
             name: t("pricing.yearly"),
-            price: 49990,
+            price: 50000,
             period: "year",
             periodLabel: "/" + (locale === 'ru' ? 'год' : 'yil'),
             popular: true,
