@@ -29,8 +29,12 @@ export async function GET(request: NextRequest) {
     let baseUrl = process.env.NEXT_PUBLIC_APP_URL;
 
     if (!baseUrl) {
-        const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
-        const proto = request.headers.get("x-forwarded-proto") || (request.url.startsWith("https") ? "https" : "http");
+        const rawHost = request.headers.get("x-forwarded-host") || request.headers.get("host");
+        const rawProto = request.headers.get("x-forwarded-proto");
+
+        const host = rawHost ? rawHost.split(",")[0].trim() : null;
+        const proto = rawProto ? rawProto.split(",")[0].trim() : (request.url.startsWith("https") ? "https" : "http");
+
         if (host) {
             baseUrl = `${proto}://${host}`;
         } else {
